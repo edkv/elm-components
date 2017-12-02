@@ -1,6 +1,6 @@
 {
     "version": "1.0.0",
-    "summary": "helpful summary of your project, less than 80 characters",
+    "summary": "Reusable components in Elm with minimal boilerplate.",
     "repository": "https://github.com/edkv/elm-components.git",
     "license": "BSD3",
     "source-directories": [
