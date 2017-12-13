@@ -35,6 +35,7 @@ type alias Self c m pC pM =
     { id : String
     , send : m -> Signal c m
     , wrapNode : Node c m -> Node pC pM
+    , wrapSignal : Signal c m -> Signal pC pM
     }
 
 
@@ -108,7 +109,7 @@ init spec (( _, set ) as slot) args =
             args.lastComponentId + 1
 
         self =
-            getSelf spec slot args.namespace id
+            getSelf spec slot id args.namespace args.freshContainers
 
         ( localState, nonwrappedLocalCmd, localOutSignals ) =
             spec.init self
@@ -158,7 +159,7 @@ update :
 update state msg spec (( _, set ) as slot) args =
     let
         self =
-            getSelf spec slot args.namespace state.id
+            getSelf spec slot state.id args.namespace args.freshContainers
 
         ( newLocalState, nonwrappedLocalCmd, localOutSignals ) =
             spec.update self msg state.localState
@@ -207,7 +208,7 @@ walkThrough :
 walkThrough state spec (( _, set ) as slot) args =
     let
         self =
-            getSelf spec slot args.namespace state.id
+            getSelf spec slot state.id args.namespace args.freshContainers
 
         localSub =
             spec.subscriptions self state.localState
@@ -241,13 +242,15 @@ walkThrough state spec (( _, set ) as slot) args =
 getSelf :
     Spec c m s pC pM
     -> Slot (Container c m s) pC
-    -> String
     -> Int
+    -> String
+    -> pC
     -> Self c m pC pM
-getSelf spec slot namespace id =
+getSelf spec (( _, set ) as slot) id namespace freshParentContainers =
     { id = "_" ++ namespace ++ "_" ++ toString id
     , send = \msg -> LocalMsgSignal { componentId = id, msg = msg }
     , wrapNode = wrapNode spec slot
+    , wrapSignal = toParentSignal freshParentContainers set
     }
 
 
