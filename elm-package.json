@@ -1,6 +1,6 @@
 {
     "version": "1.0.0",
-    "summary": "Reusable components in Elm with minimal boilerplate.",
+    "summary": "A component-based approach for building UI in Elm",
     "repository": "https://github.com/edkv/elm-components.git",
     "license": "BSD3",
     "source-directories": [
