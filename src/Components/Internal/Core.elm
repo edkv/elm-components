@@ -10,7 +10,7 @@ module Components.Internal.Core
         , Slot
         )
 
-import Components.Internal.VirtualDom as VirtualDom
+import Html.Styled
 
 
 type Node c m
@@ -32,7 +32,7 @@ type alias NodeCall c m =
         , cmd : Cmd (Signal c m)
         , outSignals : List (Signal c m)
         , sub : Sub (Signal c m)
-        , view : VirtualDom.Node (Signal c m)
+        , view : Html.Styled.Html (Signal c m)
         , lastComponentId : Int
         }
 

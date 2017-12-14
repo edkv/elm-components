@@ -19,7 +19,7 @@ import Components.Internal.Core
         , Signal(ChildMsgSignal, LocalMsgSignal)
         , Slot
         )
-import Components.Internal.VirtualDom as VirtualDom
+import Html.Styled
 
 
 type alias Spec c m s pC pM =
@@ -324,7 +324,7 @@ callWrappedNode spec ( get, set ) (Node node) args =
             , cmd = Cmd.map transformSignal callResult.cmd
             , outSignals = List.map transformSignal callResult.outSignals
             , sub = Sub.map transformSignal callResult.sub
-            , view = VirtualDom.map transformSignal callResult.view
+            , view = Html.Styled.map transformSignal callResult.view
             , lastComponentId = callResult.lastComponentId
             }
 
@@ -338,7 +338,7 @@ skipNode args =
     , cmd = Cmd.none
     , outSignals = []
     , sub = Sub.none
-    , view = VirtualDom.text ""
+    , view = Html.Styled.text ""
     , lastComponentId = args.lastComponentId
     }
 
