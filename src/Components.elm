@@ -1,16 +1,11 @@
 module Components
     exposing
-        ( Component
-        , Container
+        ( Container
         , Signal
         , Slot
         )
 
 import Components.Internal.Core as Core
-
-
-type alias Component container pC pM =
-    Core.Component container pC pM
 
 
 type alias Container c m s =
