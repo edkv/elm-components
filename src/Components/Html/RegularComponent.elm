@@ -3,6 +3,7 @@ module Components.Html.RegularComponent
         ( Options
         , Self
         , Spec
+        , SpecWithOptions
         , defaultOptions
         , regularComponent
         , regularComponentWithOptions
@@ -28,6 +29,16 @@ type alias Spec c m s pC pM =
     }
 
 
+type alias SpecWithOptions c m s pC pM =
+    { init : Self c m -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self c m -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self c m -> s -> Sub m
+    , view : Self c m -> s -> Html c m
+    , children : c
+    , options : Options m
+    }
+
+
 type alias Self c m =
     RegularComponent.Self c m
 
@@ -37,22 +48,29 @@ type alias Options m =
 
 
 regularComponent : Spec c m s pC pM -> Component (Container c m s) pC pM
-regularComponent =
-    regularComponentWithOptions defaultOptions
+regularComponent spec =
+    regularComponentWithOptions
+        { init = spec.init
+        , update = spec.update
+        , subscriptions = spec.subscriptions
+        , view = spec.view
+        , children = spec.children
+        , options = defaultOptions
+        }
 
 
 regularComponentWithOptions :
-    Options m
-    -> Spec c m s pC pM
+    SpecWithOptions c m s pC pM
     -> Component (Container c m s) pC pM
-regularComponentWithOptions options spec =
+regularComponentWithOptions spec =
     HtmlComponent <|
-        RegularComponent.regularComponentWithOptions options
+        RegularComponent.regularComponentWithOptions
             { init = spec.init
             , update = spec.update
             , subscriptions = spec.subscriptions
             , view = \self -> spec.view self >> unwrapHtml
             , children = spec.children
+            , options = spec.options
             }
 
 

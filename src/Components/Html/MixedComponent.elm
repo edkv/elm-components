@@ -3,6 +3,7 @@ module Components.Html.MixedComponent
         ( Options
         , Self
         , Spec
+        , SpecWithOptions
         , defaultOptions
         , mixedComponent
         , mixedComponentWithOptions
@@ -28,6 +29,16 @@ type alias Spec c m s pC pM =
     }
 
 
+type alias SpecWithOptions c m s pC pM =
+    { init : Self c m pC pM -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self c m pC pM -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self c m pC pM -> s -> Sub m
+    , view : Self c m pC pM -> s -> Html pC pM
+    , children : c
+    , options : Options m
+    }
+
+
 type alias Self c m pC pM =
     { id : String
     , send : m -> Signal c m
@@ -41,22 +52,29 @@ type alias Options m =
 
 
 mixedComponent : Spec c m s pC pM -> Component (Container c m s) pC pM
-mixedComponent =
-    mixedComponentWithOptions defaultOptions
+mixedComponent spec =
+    mixedComponentWithOptions
+        { init = spec.init
+        , update = spec.update
+        , subscriptions = spec.subscriptions
+        , view = spec.view
+        , children = spec.children
+        , options = defaultOptions
+        }
 
 
 mixedComponentWithOptions :
-    Options m
-    -> Spec c m s pC pM
+    SpecWithOptions c m s pC pM
     -> Component (Container c m s) pC pM
-mixedComponentWithOptions options spec =
+mixedComponentWithOptions spec =
     HtmlComponent <|
-        MixedComponent.mixedComponentWithOptions options
+        MixedComponent.mixedComponentWithOptions
             { init = transformSelf >> spec.init
             , update = transformSelf >> spec.update
             , subscriptions = transformSelf >> spec.subscriptions
             , view = \self -> spec.view (transformSelf self) >> unwrapHtml
             , children = spec.children
+            , options = spec.options
             }
 
 

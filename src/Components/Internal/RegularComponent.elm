@@ -3,6 +3,7 @@ module Components.Internal.RegularComponent
         ( Options
         , Self
         , Spec
+        , SpecWithOptions
         , defaultOptions
         , regularComponent
         , regularComponentWithOptions
@@ -21,6 +22,16 @@ type alias Spec c m s pC pM =
     }
 
 
+type alias SpecWithOptions c m s pC pM =
+    { init : Self c m -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self c m -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self c m -> s -> Sub m
+    , view : Self c m -> s -> Node c m
+    , children : c
+    , options : Options m
+    }
+
+
 type alias Self c m =
     { id : String
     , send : m -> Signal c m
@@ -32,21 +43,28 @@ type alias Options m =
 
 
 regularComponent : Spec c m s pC pM -> Component (Container c m s) pC pM
-regularComponent =
-    regularComponentWithOptions defaultOptions
+regularComponent spec =
+    regularComponentWithOptions
+        { init = spec.init
+        , update = spec.update
+        , subscriptions = spec.subscriptions
+        , view = spec.view
+        , children = spec.children
+        , options = defaultOptions
+        }
 
 
 regularComponentWithOptions :
-    Options m
-    -> Spec c m s pC pM
+    SpecWithOptions c m s pC pM
     -> Component (Container c m s) pC pM
-regularComponentWithOptions options spec =
-    MixedComponent.mixedComponentWithOptions options
+regularComponentWithOptions spec =
+    MixedComponent.mixedComponentWithOptions
         { init = transformSelf >> spec.init
         , update = transformSelf >> spec.update
         , subscriptions = transformSelf >> spec.subscriptions
         , view = \self -> spec.view (transformSelf self) >> self.wrapNode
         , children = spec.children
+        , options = spec.options
         }
 
 

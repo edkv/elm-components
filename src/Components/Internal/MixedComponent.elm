@@ -3,6 +3,7 @@ module Components.Internal.MixedComponent
         ( Options
         , Self
         , Spec
+        , SpecWithOptions
         , defaultOptions
         , mixedComponent
         , mixedComponentWithOptions
@@ -31,6 +32,16 @@ type alias Spec c m s pC pM =
     }
 
 
+type alias SpecWithOptions c m s pC pM =
+    { init : Self c m pC pM -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self c m pC pM -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self c m pC pM -> s -> Sub m
+    , view : Self c m pC pM -> s -> Node pC pM
+    , children : c
+    , options : Options m
+    }
+
+
 type alias Self c m pC pM =
     { id : String
     , send : m -> Signal c m
@@ -45,28 +56,33 @@ type alias Options m =
 
 
 mixedComponent : Spec c m s pC pM -> Component (Container c m s) pC pM
-mixedComponent =
-    mixedComponentWithOptions defaultOptions
+mixedComponent spec =
+    mixedComponentWithOptions
+        { init = spec.init
+        , update = spec.update
+        , subscriptions = spec.subscriptions
+        , view = spec.view
+        , children = spec.children
+        , options = defaultOptions
+        }
 
 
 mixedComponentWithOptions :
-    Options m
-    -> Spec c m s pC pM
+    SpecWithOptions c m s pC pM
     -> Component (Container c m s) pC pM
-mixedComponentWithOptions options spec =
+mixedComponentWithOptions spec =
     Component <|
         \slot ->
             Node
-                { call = call options spec slot
+                { call = call spec slot
                 }
 
 
 call :
-    Options m
-    -> Spec c m s pC pM
+    SpecWithOptions c m s pC pM
     -> Slot (Container c m s) pC
     -> NodeCall pC pM
-call options spec (( get, set ) as slot) args =
+call spec (( get, set ) as slot) args =
     case args.msg of
         Touch ->
             case get args.currentStates of
@@ -74,7 +90,7 @@ call options spec (( get, set ) as slot) args =
                     init spec slot args
 
                 StateContainer state ->
-                    case options.onContextUpdate of
+                    case spec.options.onContextUpdate of
                         Just msg ->
                             update state msg spec slot args
 
@@ -102,7 +118,10 @@ call options spec (( get, set ) as slot) args =
                     skipNode args
 
 
-init : Spec c m s pC pM -> Slot (Container c m s) pC -> NodeCall pC pM
+init :
+    SpecWithOptions c m s pC pM
+    -> Slot (Container c m s) pC
+    -> NodeCall pC pM
 init spec (( _, set ) as slot) args =
     let
         id =
@@ -153,7 +172,7 @@ init spec (( _, set ) as slot) args =
 update :
     ComponentState c s
     -> m
-    -> Spec c m s pC pM
+    -> SpecWithOptions c m s pC pM
     -> Slot (Container c m s) pC
     -> NodeCall pC pM
 update state msg spec (( _, set ) as slot) args =
@@ -202,7 +221,7 @@ update state msg spec (( _, set ) as slot) args =
 
 walkThrough :
     ComponentState c s
-    -> Spec c m s pC pM
+    -> SpecWithOptions c m s pC pM
     -> Slot (Container c m s) pC
     -> NodeCall pC pM
 walkThrough state spec (( _, set ) as slot) args =
@@ -240,7 +259,7 @@ walkThrough state spec (( _, set ) as slot) args =
 
 
 getSelf :
-    Spec c m s pC pM
+    SpecWithOptions c m s pC pM
     -> Slot (Container c m s) pC
     -> Int
     -> String
@@ -255,7 +274,7 @@ getSelf spec (( _, set ) as slot) id namespace freshParentContainers =
 
 
 wrapNode :
-    Spec c m s pC pM
+    SpecWithOptions c m s pC pM
     -> Slot (Container c m s) pC
     -> Node c m
     -> Node pC pM
@@ -266,7 +285,7 @@ wrapNode spec slot node =
 
 
 callWrappedNode :
-    Spec c m s pC pM
+    SpecWithOptions c m s pC pM
     -> Slot (Container c m s) pC
     -> Node c m
     -> NodeCall pC pM
