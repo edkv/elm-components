@@ -3,6 +3,7 @@ module Components.Internal.Elements
         ( Attribute
         , EventOptions
         , attribute
+        , attributeNS
         , defaultEventOptions
         , element
         , htmlStyles
@@ -11,6 +12,7 @@ module Components.Internal.Elements
         , on
         , onWithOptions
         , property
+        , svgStyles
         , text
         )
 
@@ -28,6 +30,8 @@ import Html.Styled.Events
 import Html.Styled.Keyed
 import Json.Decode
 import Json.Encode
+import Svg.Styled.Attributes
+import VirtualDom
 
 
 type alias Attribute c m =
@@ -93,6 +97,12 @@ attribute =
     Html.Styled.Attributes.attribute
 
 
+attributeNS : String -> String -> String -> Attribute c m
+attributeNS namespace key value =
+    VirtualDom.attributeNS namespace key value
+        |> Html.Styled.Attributes.fromUnstyled
+
+
 on : String -> Json.Decode.Decoder (Signal c m) -> Attribute c m
 on =
     Html.Styled.Events.on
@@ -106,6 +116,11 @@ inlineStyles =
 htmlStyles : List Css.Style -> Attribute c m
 htmlStyles =
     Html.Styled.Attributes.css
+
+
+svgStyles : List Css.Style -> Attribute c m
+svgStyles =
+    Svg.Styled.Attributes.css
 
 
 onWithOptions :
