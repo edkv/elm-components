@@ -157,7 +157,7 @@ exactly as you specify.
 -}
 text : String -> Html c m
 text =
-    Elements.textElement >> HtmlNode
+    Elements.text >> HtmlNode
 
 
 none : Html c m

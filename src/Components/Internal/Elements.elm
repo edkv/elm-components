@@ -11,7 +11,7 @@ module Components.Internal.Elements
         , on
         , onWithOptions
         , property
-        , textElement
+        , text
         )
 
 import Components.Internal.Core
@@ -68,8 +68,8 @@ keyedElement tag attributes children =
         }
 
 
-textElement : String -> Node c m
-textElement value =
+text : String -> Node c m
+text value =
     Node
         { call =
             \args ->
