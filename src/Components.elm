@@ -197,16 +197,6 @@ updateNode (Core.Node node) messages prevState prevCmd =
                         , namespace = prevState.namespace
                         }
 
-                cmd =
-                    Cmd.map (transformSignal >> ComponentSignal) result.cmd
-
-                sub =
-                    Sub.map (transformSignal >> ComponentSignal) result.sub
-
-                view =
-                    result.view
-                        |> Html.Styled.map (transformSignal >> ComponentSignal)
-
                 newState =
                     { prevState
                         | componentState = result.newStates
@@ -214,6 +204,18 @@ updateNode (Core.Node node) messages prevState prevCmd =
                         , view = view
                         , lastComponentId = result.lastComponentId
                     }
+
+                cmd =
+                    result.cmd
+                        |> Cmd.map (transformSignal >> ComponentSignal)
+
+                sub =
+                    result.sub
+                        |> Sub.map (transformSignal >> ComponentSignal)
+
+                view =
+                    result.view
+                        |> Html.Styled.map (transformSignal >> ComponentSignal)
 
                 moreMessages =
                     result.outSignals
