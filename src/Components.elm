@@ -1,9 +1,16 @@
 module Components
     exposing
         ( Container
+        , Msg
         , Signal
         , Slot
+        , State
         , child
+        , init
+        , subscriptions
+        , touch
+        , update
+        , view
         , x1
         , x10
         , x11
@@ -57,6 +64,11 @@ module Components
         )
 
 import Components.Internal.Core as Core
+import Components.Internal.Shared exposing (HtmlComponent(HtmlComponent))
+import Html.Styled
+import Random.Pcg as Random
+import Uuid.Barebones as Uuid
+import VirtualDom
 
 
 type alias Container c m s =
@@ -69,6 +81,182 @@ type alias Slot container c =
 
 type alias Signal c m =
     Core.Signal c m
+
+
+type State container
+    = Ready (ReadyState container)
+    | WaitingForNamespace
+
+
+type alias ReadyState container =
+    { componentState : container
+    , lastComponentId : Int
+    , namespace : String
+    , sub : Sub (Msg container)
+    , view : Html.Styled.Html (Msg container)
+    }
+
+
+type Msg container
+    = NamespaceGenerated String
+    | ComponentSignal container
+
+
+init : ( State (Container c m s), Cmd (Msg (Container c m s)) )
+init =
+    ( WaitingForNamespace
+    , Random.generate NamespaceGenerated Uuid.uuidStringGenerator
+    )
+
+
+update :
+    HtmlComponent (Container c m s) (Container c m s) Never
+    -> Msg (Container c m s)
+    -> State (Container c m s)
+    -> ( State (Container c m s), Cmd (Msg (Container c m s)) )
+update (HtmlComponent (Core.Component component)) msg state =
+    case ( state, msg ) of
+        ( WaitingForNamespace, NamespaceGenerated namespace ) ->
+            let
+                readyState =
+                    { componentState = Core.EmptyContainer
+                    , lastComponentId = 0
+                    , namespace = namespace
+                    , sub = Sub.none
+                    , view = Html.Styled.text ""
+                    }
+
+                ( newState, cmd ) =
+                    updateNode
+                        (component identitySlot)
+                        [ Core.Touch ]
+                        readyState
+                        Cmd.none
+            in
+            ( Ready newState, cmd )
+
+        ( Ready readyState, ComponentSignal signal ) ->
+            let
+                ( newState, cmd ) =
+                    updateNode
+                        (component identitySlot)
+                        [ Core.HandleSignal signal ]
+                        readyState
+                        Cmd.none
+            in
+            ( Ready newState, cmd )
+
+        ( WaitingForNamespace, ComponentSignal _ ) ->
+            ( state, Cmd.none )
+
+        ( Ready _, NamespaceGenerated _ ) ->
+            ( state, Cmd.none )
+
+
+touch :
+    HtmlComponent (Container c m s) (Container c m s) Never
+    -> State (Container c m s)
+    -> ( State (Container c m s), Cmd (Msg (Container c m s)) )
+touch (HtmlComponent (Core.Component component)) state =
+    case state of
+        Ready readyState ->
+            let
+                ( newState, cmd ) =
+                    updateNode
+                        (component identitySlot)
+                        [ Core.Touch ]
+                        readyState
+                        Cmd.none
+            in
+            ( Ready newState, cmd )
+
+        WaitingForNamespace ->
+            ( state, Cmd.none )
+
+
+updateNode :
+    Core.Node (Container c m s) Never
+    -> List (Core.NodeMsg (Container c m s))
+    -> ReadyState (Container c m s)
+    -> Cmd (Msg (Container c m s))
+    -> ( ReadyState (Container c m s), Cmd (Msg (Container c m s)) )
+updateNode (Core.Node node) messages prevState prevCmd =
+    case messages of
+        [] ->
+            ( prevState, prevCmd )
+
+        msg :: otherMessages ->
+            let
+                result =
+                    node.call
+                        { newStates = Core.EmptyContainer
+                        , currentStates = prevState.componentState
+                        , msg = msg
+                        , freshContainers = Core.EmptyContainer
+                        , lastComponentId = prevState.lastComponentId
+                        , namespace = prevState.namespace
+                        }
+
+                cmd =
+                    Cmd.map (transformSignal >> ComponentSignal) result.cmd
+
+                sub =
+                    Sub.map (transformSignal >> ComponentSignal) result.sub
+
+                view =
+                    result.view
+                        |> Html.Styled.map (transformSignal >> ComponentSignal)
+
+                newState =
+                    { prevState
+                        | componentState = result.newStates
+                        , sub = sub
+                        , view = view
+                        , lastComponentId = result.lastComponentId
+                    }
+
+                moreMessages =
+                    result.outSignals
+                        |> List.map (transformSignal >> Core.HandleSignal)
+
+                transformSignal signal =
+                    case signal of
+                        Core.LocalMsgSignal localMsgSignal ->
+                            never localMsgSignal.msg
+
+                        Core.ChildMsgSignal container ->
+                            container
+            in
+            updateNode
+                (Core.Node node)
+                (otherMessages ++ moreMessages)
+                newState
+                (Cmd.batch [ prevCmd, cmd ])
+
+
+subscriptions : State (Container c m s) -> Sub (Msg (Container c m s))
+subscriptions state =
+    case state of
+        Ready readyState ->
+            readyState.sub
+
+        WaitingForNamespace ->
+            Sub.none
+
+
+view : State (Container c m s) -> VirtualDom.Node (Msg (Container c m s))
+view state =
+    case state of
+        Ready readyState ->
+            Html.Styled.toUnstyled readyState.view
+
+        WaitingForNamespace ->
+            VirtualDom.text ""
+
+
+identitySlot : Slot a a
+identitySlot =
+    ( \x -> x, \x _ -> x )
 
 
 child : Container c m s
