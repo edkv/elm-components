@@ -9,6 +9,7 @@ module Components.Internal.MixedComponent
         , mixedComponentWithOptions
         , wrapNode
         , wrapSignal
+        , wrapSlot
         )
 
 import Components.Internal.Core
@@ -370,6 +371,70 @@ callWrappedNode (InternalData internalData) (Node node) args =
 
         bug ->
             skipNode args
+
+
+wrapSlot :
+    Self c m s pC
+    -> Slot (Container cC cM cS) c
+    -> Slot (Container cC cM cS) pC
+wrapSlot self ( getChild, setChild ) =
+    let
+        (InternalData internalData) =
+            self.internal
+
+        ( get, set ) =
+            internalData.slot
+
+        wrappedGet parentContainers =
+            case get parentContainers of
+                EmptyContainer ->
+                    EmptyContainer
+
+                StateContainer state ->
+                    getChild state.childStates
+
+                SignalContainer (LocalMsgSignal _) ->
+                    EmptyContainer
+
+                SignalContainer (ChildMsgSignal containers) ->
+                    getChild containers
+
+        wrappedSet childContainer parentContainers =
+            case get parentContainers of
+                EmptyContainer ->
+                    case childContainer of
+                        EmptyContainer ->
+                            parentContainers
+
+                        StateContainer _ ->
+                            -- We don't have current component's local state
+                            -- so we can't do anything here. This situation
+                            -- mustn't occur in practice anyway.
+                            parentContainers
+
+                        SignalContainer _ ->
+                            set (wrapSignal childContainer) parentContainers
+
+                StateContainer state ->
+                    let
+                        newChildStates =
+                            setChild childContainer state.childStates
+
+                        newState =
+                            { state | childStates = newChildStates }
+                    in
+                    set (StateContainer newState) parentContainers
+
+                SignalContainer _ ->
+                    set (wrapSignal childContainer) parentContainers
+
+        wrapSignal childContainer =
+            internalData.freshContainers
+                |> setChild childContainer
+                |> ChildMsgSignal
+                |> SignalContainer
+    in
+    ( wrappedGet, wrappedSet )
 
 
 skipNode : NodeCall c m

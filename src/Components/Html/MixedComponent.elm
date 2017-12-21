@@ -9,9 +9,10 @@ module Components.Html.MixedComponent
         , mixedComponentWithOptions
         , wrapNode
         , wrapSignal
+        , wrapSlot
         )
 
-import Components exposing (Container, Signal)
+import Components exposing (Container, Signal, Slot)
 import Components.Html exposing (Component, Html)
 import Components.Internal.Core exposing (Node)
 import Components.Internal.MixedComponent as MixedComponent
@@ -85,6 +86,14 @@ wrapNode self (HtmlNode node) =
 wrapSignal : Self c m s pC -> Signal c m -> Signal pC pM
 wrapSignal =
     MixedComponent.wrapSignal
+
+
+wrapSlot :
+    Self c m s pC
+    -> Slot (Container cC cM cS) c
+    -> Slot (Container cC cM cS) pC
+wrapSlot =
+    MixedComponent.wrapSlot
 
 
 unwrapHtml : Html c m -> Node c m
