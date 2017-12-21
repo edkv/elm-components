@@ -7,6 +7,8 @@ module Components.Svg.MixedComponent
         , defaultOptions
         , mixedComponent
         , mixedComponentWithOptions
+        , wrapNode
+        , wrapSignal
         )
 
 import Components exposing (Container, Signal)
@@ -21,30 +23,26 @@ import Components.Svg exposing (Component, Svg)
 
 
 type alias Spec c m s pC pM =
-    { init : Self c m pC pM -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self c m pC pM -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self c m pC pM -> s -> Sub m
-    , view : Self c m pC pM -> s -> Svg pC pM
+    { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self c m s pC -> s -> Sub m
+    , view : Self c m s pC -> s -> Svg pC pM
     , children : c
     }
 
 
 type alias SpecWithOptions c m s pC pM =
-    { init : Self c m pC pM -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self c m pC pM -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self c m pC pM -> s -> Sub m
-    , view : Self c m pC pM -> s -> Svg pC pM
+    { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self c m s pC -> s -> Sub m
+    , view : Self c m s pC -> s -> Svg pC pM
     , children : c
     , options : Options m
     }
 
 
-type alias Self c m pC pM =
-    { id : String
-    , send : m -> Signal c m
-    , wrapNode : Svg c m -> Svg pC pM
-    , wrapSignal : Signal c m -> Signal pC pM
-    }
+type alias Self c m s pC =
+    MixedComponent.Self c m s pC
 
 
 type alias Options m =
@@ -69,18 +67,24 @@ mixedComponentWithOptions :
 mixedComponentWithOptions spec =
     SvgComponent <|
         MixedComponent.mixedComponentWithOptions
-            { init = transformSelf >> spec.init
-            , update = transformSelf >> spec.update
-            , subscriptions = transformSelf >> spec.subscriptions
-            , view = \self -> spec.view (transformSelf self) >> unwrapSvg
+            { init = spec.init
+            , update = spec.update
+            , subscriptions = spec.subscriptions
+            , view = \self state -> spec.view self state |> unwrapSvg
             , children = spec.children
             , options = spec.options
             }
 
 
-transformSelf : MixedComponent.Self c m pC pM -> Self c m pC pM
-transformSelf self =
-    { self | wrapNode = unwrapSvg >> self.wrapNode >> SvgNode }
+wrapNode : Self c m s pC -> Svg c m -> Svg pC pM
+wrapNode self (SvgNode node) =
+    MixedComponent.wrapNode self node
+        |> SvgNode
+
+
+wrapSignal : Self c m s pC -> Signal c m -> Signal pC pM
+wrapSignal =
+    MixedComponent.wrapSignal
 
 
 unwrapSvg : Svg c m -> Node c m

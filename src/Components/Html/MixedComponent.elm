@@ -7,6 +7,8 @@ module Components.Html.MixedComponent
         , defaultOptions
         , mixedComponent
         , mixedComponentWithOptions
+        , wrapNode
+        , wrapSignal
         )
 
 import Components exposing (Container, Signal)
@@ -21,30 +23,26 @@ import Components.Internal.Shared
 
 
 type alias Spec c m s pC pM =
-    { init : Self c m pC pM -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self c m pC pM -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self c m pC pM -> s -> Sub m
-    , view : Self c m pC pM -> s -> Html pC pM
+    { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self c m s pC -> s -> Sub m
+    , view : Self c m s pC -> s -> Html pC pM
     , children : c
     }
 
 
 type alias SpecWithOptions c m s pC pM =
-    { init : Self c m pC pM -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self c m pC pM -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self c m pC pM -> s -> Sub m
-    , view : Self c m pC pM -> s -> Html pC pM
+    { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self c m s pC -> s -> Sub m
+    , view : Self c m s pC -> s -> Html pC pM
     , children : c
     , options : Options m
     }
 
 
-type alias Self c m pC pM =
-    { id : String
-    , send : m -> Signal c m
-    , wrapNode : Html c m -> Html pC pM
-    , wrapSignal : Signal c m -> Signal pC pM
-    }
+type alias Self c m s pC =
+    MixedComponent.Self c m s pC
 
 
 type alias Options m =
@@ -69,18 +67,24 @@ mixedComponentWithOptions :
 mixedComponentWithOptions spec =
     HtmlComponent <|
         MixedComponent.mixedComponentWithOptions
-            { init = transformSelf >> spec.init
-            , update = transformSelf >> spec.update
-            , subscriptions = transformSelf >> spec.subscriptions
-            , view = \self -> spec.view (transformSelf self) >> unwrapHtml
+            { init = spec.init
+            , update = spec.update
+            , subscriptions = spec.subscriptions
+            , view = \self state -> spec.view self state |> unwrapHtml
             , children = spec.children
             , options = spec.options
             }
 
 
-transformSelf : MixedComponent.Self c m pC pM -> Self c m pC pM
-transformSelf self =
-    { self | wrapNode = unwrapHtml >> self.wrapNode >> HtmlNode }
+wrapNode : Self c m s pC -> Html c m -> Html pC pM
+wrapNode self (HtmlNode node) =
+    MixedComponent.wrapNode self node
+        |> HtmlNode
+
+
+wrapSignal : Self c m s pC -> Signal c m -> Signal pC pM
+wrapSignal =
+    MixedComponent.wrapSignal
 
 
 unwrapHtml : Html c m -> Node c m

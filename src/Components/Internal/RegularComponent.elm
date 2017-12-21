@@ -10,7 +10,7 @@ module Components.Internal.RegularComponent
         )
 
 import Components.Internal.Core exposing (Component, Container, Node, Signal)
-import Components.Internal.MixedComponent as MixedComponent
+import Components.Internal.MixedComponent as MixedComponent exposing (wrapNode)
 
 
 type alias Spec c m s pC pM =
@@ -62,7 +62,7 @@ regularComponentWithOptions spec =
         { init = transformSelf >> spec.init
         , update = transformSelf >> spec.update
         , subscriptions = transformSelf >> spec.subscriptions
-        , view = \self -> spec.view (transformSelf self) >> self.wrapNode
+        , view = \self -> spec.view (transformSelf self) >> wrapNode self
         , children = spec.children
         , options = spec.options
         }
