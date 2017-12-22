@@ -11,6 +11,7 @@ module Components.Internal.Elements
         , keyedElement
         , on
         , onWithOptions
+        , plainElement
         , property
         , svgStyles
         , text
@@ -73,7 +74,12 @@ keyedElement tag attributes children =
 
 
 text : String -> Node c m
-text value =
+text =
+    VirtualDom.text >> plainElement
+
+
+plainElement : VirtualDom.Node (Signal c m) -> Node c m
+plainElement elem =
     Node
         { call =
             \args ->
@@ -81,7 +87,7 @@ text value =
                 , cmd = Cmd.none
                 , outSignals = []
                 , sub = Sub.none
-                , view = Html.Styled.text value
+                , view = Html.Styled.fromUnstyled elem
                 , lastComponentId = args.lastComponentId
                 }
         }

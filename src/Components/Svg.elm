@@ -59,6 +59,7 @@ module Components.Svg
         , none
         , path
         , pattern
+        , plainSvg
         , polygon
         , polyline
         , radialGradient
@@ -81,7 +82,7 @@ module Components.Svg
         , view
         )
 
-import Components exposing (Container, Slot)
+import Components exposing (Container, Signal, Slot)
 import Components.Html exposing (Html)
 import Components.Internal.Core as Core exposing (Node)
 import Components.Internal.Elements as Elements
@@ -93,6 +94,7 @@ import Components.Internal.Shared
         , SvgNode(SvgNode)
         , svgNamespace
         )
+import VirtualDom
 
 
 type alias Svg c m =
@@ -139,6 +141,11 @@ text =
 none : Svg c m
 none =
     text ""
+
+
+plainSvg : VirtualDom.Node (Signal c m) -> Svg c m
+plainSvg =
+    Elements.plainElement >> SvgNode
 
 
 slot :

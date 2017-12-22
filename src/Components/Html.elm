@@ -71,6 +71,7 @@ module Components.Html
         , output
         , p
         , param
+        , plainHtml
         , pre
         , progress
         , q
@@ -107,7 +108,7 @@ module Components.Html
         , wbr
         )
 
-import Components exposing (Container, Slot)
+import Components exposing (Container, Signal, Slot)
 import Components.Internal.Core as Core
 import Components.Internal.Elements as Elements
 import Components.Internal.Shared
@@ -116,6 +117,7 @@ import Components.Internal.Shared
         , HtmlComponent(HtmlComponent)
         , HtmlNode(HtmlNode)
         )
+import VirtualDom
 
 
 type alias Html c m =
@@ -163,6 +165,11 @@ text =
 none : Html c m
 none =
     text ""
+
+
+plainHtml : VirtualDom.Node (Signal c m) -> Html c m
+plainHtml =
+    Elements.plainElement >> HtmlNode
 
 
 slot :
