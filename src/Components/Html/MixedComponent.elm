@@ -11,12 +11,14 @@ module Components.Html.MixedComponent
         )
 
 import Components exposing (Container, Signal, Slot)
-import Components.Html exposing (Component, Html)
+import Components.Html exposing (Attribute, Component, Html)
 import Components.Internal.Core exposing (Node)
+import Components.Internal.Elements as Elements
 import Components.Internal.MixedComponent as MixedComponent
 import Components.Internal.Shared
     exposing
-        ( HtmlComponent(HtmlComponent)
+        ( HtmlAttribute(HtmlAttribute)
+        , HtmlComponent(HtmlComponent)
         , HtmlNode(HtmlNode)
         )
 
@@ -43,8 +45,9 @@ type alias SpecWithOptions c m s pC pM =
 type alias Self c m s pC pM =
     { id : String
     , send : m -> Signal c m
-    , wrapNode : Html c m -> Html pC pM
     , wrapSignal : Signal c m -> Signal pC pM
+    , wrapNode : Html c m -> Html pC pM
+    , wrapAttribute : Attribute c m -> Attribute pC pM
     , internal : MixedComponent.InternalData c m s pC
     }
 
@@ -90,17 +93,28 @@ wrapSlot self =
 
 transformSelf : MixedComponent.Self c m s pC pM -> Self c m s pC pM
 transformSelf self =
-    { self | wrapNode = unwrapHtml >> self.wrapNode >> HtmlNode }
+    { self
+        | wrapNode = unwrapHtml >> self.wrapNode >> HtmlNode
+        , wrapAttribute = unwrapAttribute >> self.wrapAttribute >> HtmlAttribute
+    }
 
 
 transformSelfBack : Self c m s pC pM -> MixedComponent.Self c m s pC pM
 transformSelfBack self =
-    { self | wrapNode = HtmlNode >> self.wrapNode >> unwrapHtml }
+    { self
+        | wrapNode = HtmlNode >> self.wrapNode >> unwrapHtml
+        , wrapAttribute = HtmlAttribute >> self.wrapAttribute >> unwrapAttribute
+    }
 
 
 unwrapHtml : Html c m -> Node c m
 unwrapHtml (HtmlNode node) =
     node
+
+
+unwrapAttribute : Attribute c m -> Elements.Attribute c m
+unwrapAttribute (HtmlAttribute attr) =
+    attr
 
 
 defaultOptions : Options m

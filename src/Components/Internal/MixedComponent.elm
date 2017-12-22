@@ -22,7 +22,9 @@ import Components.Internal.Core
         , Signal(ChildMsgSignal, LocalMsgSignal)
         , Slot
         )
+import Components.Internal.Elements exposing (Attribute)
 import Html.Styled
+import Html.Styled.Attributes
 
 
 type alias Spec c m s pC pM =
@@ -49,6 +51,7 @@ type alias Self c m s pC pM =
     , send : m -> Signal c m
     , wrapSignal : Signal c m -> Signal pC pM
     , wrapNode : Node c m -> Node pC pM
+    , wrapAttribute : Attribute c m -> Attribute pC pM
     , internal : InternalData c m s pC
     }
 
@@ -276,27 +279,40 @@ getSelf :
     -> pC
     -> Self c m s pC pM
 getSelf spec (( _, set ) as slot) id namespace freshParentContainers =
-    { id = "_" ++ namespace ++ "_" ++ toString id
-    , send = \msg -> LocalMsgSignal { componentId = id, msg = msg }
-    , wrapSignal = toParentSignal freshParentContainers set
-    , wrapNode = wrapNode spec slot
-    , internal =
-        InternalData
-            { slot = slot
-            , freshContainers = spec.children
-            }
+    let
+        namespacedId =
+            "_" ++ namespace ++ "_" ++ toString id
+
+        send msg =
+            LocalMsgSignal
+                { componentId = id
+                , msg = msg
+                }
+
+        wrapNode node =
+            Node
+                { call = callWrappedNode spec slot node
+                }
+
+        wrapSignal =
+            toParentSignal freshParentContainers set
+
+        wrapAttribute =
+            Html.Styled.Attributes.map wrapSignal
+
+        internal =
+            InternalData
+                { slot = slot
+                , freshContainers = spec.children
+                }
+    in
+    { id = namespacedId
+    , send = send
+    , wrapSignal = wrapSignal
+    , wrapNode = wrapNode
+    , wrapAttribute = wrapAttribute
+    , internal = internal
     }
-
-
-wrapNode :
-    SpecWithOptions c m s pC pM
-    -> Slot (Container c m s) pC
-    -> Node c m
-    -> Node pC pM
-wrapNode spec slot node =
-    Node
-        { call = callWrappedNode spec slot node
-        }
 
 
 callWrappedNode :

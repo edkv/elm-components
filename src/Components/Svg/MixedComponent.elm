@@ -12,13 +12,15 @@ module Components.Svg.MixedComponent
 
 import Components exposing (Container, Signal, Slot)
 import Components.Internal.Core exposing (Node)
+import Components.Internal.Elements as Elements
 import Components.Internal.MixedComponent as MixedComponent
 import Components.Internal.Shared
     exposing
-        ( SvgComponent(SvgComponent)
+        ( SvgAttribute(SvgAttribute)
+        , SvgComponent(SvgComponent)
         , SvgNode(SvgNode)
         )
-import Components.Svg exposing (Component, Svg)
+import Components.Svg exposing (Attribute, Component, Svg)
 
 
 type alias Spec c m s pC pM =
@@ -43,8 +45,9 @@ type alias SpecWithOptions c m s pC pM =
 type alias Self c m s pC pM =
     { id : String
     , send : m -> Signal c m
-    , wrapNode : Svg c m -> Svg pC pM
     , wrapSignal : Signal c m -> Signal pC pM
+    , wrapNode : Svg c m -> Svg pC pM
+    , wrapAttribute : Attribute c m -> Attribute pC pM
     , internal : MixedComponent.InternalData c m s pC
     }
 
@@ -90,17 +93,28 @@ wrapSlot self =
 
 transformSelf : MixedComponent.Self c m s pC pM -> Self c m s pC pM
 transformSelf self =
-    { self | wrapNode = unwrapSvg >> self.wrapNode >> SvgNode }
+    { self
+        | wrapNode = unwrapSvg >> self.wrapNode >> SvgNode
+        , wrapAttribute = unwrapAttribute >> self.wrapAttribute >> SvgAttribute
+    }
 
 
 transformSelfBack : Self c m s pC pM -> MixedComponent.Self c m s pC pM
 transformSelfBack self =
-    { self | wrapNode = SvgNode >> self.wrapNode >> unwrapSvg }
+    { self
+        | wrapNode = SvgNode >> self.wrapNode >> unwrapSvg
+        , wrapAttribute = SvgAttribute >> self.wrapAttribute >> unwrapAttribute
+    }
 
 
 unwrapSvg : Svg c m -> Node c m
 unwrapSvg (SvgNode node) =
     node
+
+
+unwrapAttribute : Attribute c m -> Elements.Attribute c m
+unwrapAttribute (SvgAttribute attr) =
+    attr
 
 
 defaultOptions : Options m
