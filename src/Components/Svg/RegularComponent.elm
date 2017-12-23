@@ -7,9 +7,10 @@ module Components.Svg.RegularComponent
         , defaultOptions
         , regularComponent
         , regularComponentWithOptions
+        , sendToChild
         )
 
-import Components exposing (Container, Signal)
+import Components exposing (Container, Signal, Slot)
 import Components.Internal.Core exposing (Node)
 import Components.Internal.RegularComponent as RegularComponent
 import Components.Internal.Shared
@@ -21,26 +22,26 @@ import Components.Svg exposing (Component, Svg)
 
 
 type alias Spec c m s pC pM =
-    { init : Self -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self -> s -> Sub m
-    , view : Self -> s -> Svg c m
+    { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self c m s pC -> s -> Sub m
+    , view : Self c m s pC -> s -> Svg c m
     , children : c
     }
 
 
 type alias SpecWithOptions c m s pC pM =
-    { init : Self -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self -> s -> Sub m
-    , view : Self -> s -> Svg c m
+    { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self c m s pC -> s -> Sub m
+    , view : Self c m s pC -> s -> Svg c m
     , children : c
     , options : Options m
     }
 
 
-type alias Self =
-    RegularComponent.Self
+type alias Self c m s pC =
+    RegularComponent.Self c m s pC
 
 
 type alias Options m =
@@ -68,13 +69,18 @@ regularComponentWithOptions spec =
         |> SvgComponent
 
 
-view : SpecWithOptions c m s pC pM -> Self -> s -> Node c m
+view : SpecWithOptions c m s pC pM -> Self c m s pC -> s -> Node c m
 view spec self state =
     let
         (SvgNode node) =
             spec.view self state
     in
     node
+
+
+sendToChild : Self c m s pC -> Slot (Container cC cM cS) c -> cM -> Signal pC pM
+sendToChild =
+    RegularComponent.sendToChild
 
 
 defaultOptions : Options m

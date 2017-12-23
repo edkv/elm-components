@@ -1,13 +1,13 @@
 module Components.Internal.MixedComponent
     exposing
-        ( InternalData
-        , Options
+        ( Options
         , Self
         , Spec
         , SpecWithOptions
         , defaultOptions
         , mixedComponent
         , mixedComponentWithOptions
+        , sendToChild
         , wrapAttribute
         , wrapNode
         , wrapSignal
@@ -445,6 +445,21 @@ wrapSlot self ( getChild, setChild ) =
                 |> SignalContainer
     in
     ( wrappedGet, wrappedSet )
+
+
+sendToChild : Self c m s pC -> Slot (Container cC cM cS) c -> cM -> Signal pC pM
+sendToChild self ( _, setChild ) childMsg =
+    let
+        (InternalData internalData) =
+            self.internal
+
+        ( _, set ) =
+            internalData.slot
+    in
+    childMsg
+        |> LocalMsg
+        |> toParentSignal internalData.freshContainers setChild
+        |> toParentSignal internalData.freshParentContainers set
 
 
 skipNode : NodeCall c m

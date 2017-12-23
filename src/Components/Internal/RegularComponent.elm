@@ -7,34 +7,41 @@ module Components.Internal.RegularComponent
         , defaultOptions
         , regularComponent
         , regularComponentWithOptions
+        , sendToChild
         )
 
-import Components.Internal.Core exposing (Component, Container, Node, Signal)
+import Components.Internal.Core
+    exposing
+        ( Component
+        , Container
+        , Node
+        , Signal
+        , Slot
+        )
 import Components.Internal.MixedComponent as MixedComponent
 
 
 type alias Spec c m s pC pM =
-    { init : Self -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self -> s -> Sub m
-    , view : Self -> s -> Node c m
+    { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self c m s pC -> s -> Sub m
+    , view : Self c m s pC -> s -> Node c m
     , children : c
     }
 
 
 type alias SpecWithOptions c m s pC pM =
-    { init : Self -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self -> s -> Sub m
-    , view : Self -> s -> Node c m
+    { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self c m s pC -> s -> Sub m
+    , view : Self c m s pC -> s -> Node c m
     , children : c
     , options : Options m
     }
 
 
-type alias Self =
-    { id : String
-    }
+type alias Self c m s pC =
+    MixedComponent.Self c m s pC
 
 
 type alias Options m =
@@ -58,28 +65,12 @@ regularComponentWithOptions :
     -> Component (Container c m s) pC pM
 regularComponentWithOptions spec =
     MixedComponent.mixedComponentWithOptions
-        { spec
-            | init = transformSelf >> spec.init
-            , update = transformSelf >> spec.update
-            , subscriptions = transformSelf >> spec.subscriptions
-            , view = view spec
-        }
+        { spec | view = \self -> spec.view self >> MixedComponent.wrapNode self }
 
 
-view :
-    SpecWithOptions c m s pC pM
-    -> MixedComponent.Self c m s pC
-    -> s
-    -> Node pC pM
-view spec self state =
-    spec.view (transformSelf self) state
-        |> MixedComponent.wrapNode self
-
-
-transformSelf : MixedComponent.Self c m s pC -> Self
-transformSelf self =
-    { id = self.id
-    }
+sendToChild : Self c m s pC -> Slot (Container cC cM cS) c -> cM -> Signal pC pM
+sendToChild =
+    MixedComponent.sendToChild
 
 
 defaultOptions : Options m

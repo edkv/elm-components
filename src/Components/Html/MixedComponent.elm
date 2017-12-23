@@ -7,6 +7,7 @@ module Components.Html.MixedComponent
         , defaultOptions
         , mixedComponent
         , mixedComponentWithOptions
+        , sendToChild
         , wrapAttribute
         , wrapNode
         , wrapSignal
@@ -106,6 +107,11 @@ wrapSlot :
     -> Slot (Container cC cM cS) pC
 wrapSlot =
     MixedComponent.wrapSlot
+
+
+sendToChild : Self c m s pC -> Slot (Container cC cM cS) c -> cM -> Signal pC pM
+sendToChild =
+    MixedComponent.sendToChild
 
 
 defaultOptions : Options m
