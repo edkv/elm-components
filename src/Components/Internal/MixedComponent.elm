@@ -8,6 +8,9 @@ module Components.Internal.MixedComponent
         , defaultOptions
         , mixedComponent
         , mixedComponentWithOptions
+        , wrapAttribute
+        , wrapNode
+        , wrapSignal
         , wrapSlot
         )
 
@@ -28,29 +31,26 @@ import Html.Styled.Attributes
 
 
 type alias Spec c m s pC pM =
-    { init : Self c m s pC pM -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self c m s pC pM -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self c m s pC pM -> s -> Sub m
-    , view : Self c m s pC pM -> s -> Node pC pM
+    { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self c m s pC -> s -> Sub m
+    , view : Self c m s pC -> s -> Node pC pM
     , children : c
     }
 
 
 type alias SpecWithOptions c m s pC pM =
-    { init : Self c m s pC pM -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self c m s pC pM -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self c m s pC pM -> s -> Sub m
-    , view : Self c m s pC pM -> s -> Node pC pM
+    { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self c m s pC -> s -> Sub m
+    , view : Self c m s pC -> s -> Node pC pM
     , children : c
     , options : Options m
     }
 
 
-type alias Self c m s pC pM =
+type alias Self c m s pC =
     { id : String
-    , wrapSignal : Signal c m -> Signal pC pM
-    , wrapNode : Node c m -> Node pC pM
-    , wrapAttribute : Attribute c m -> Attribute pC pM
     , internal : InternalData c m s pC
     }
 
@@ -64,6 +64,7 @@ type InternalData c m s pC
     = InternalData
         { slot : Slot (Container c m s) pC
         , freshContainers : c
+        , freshParentContainers : pC
         }
 
 
@@ -276,56 +277,61 @@ getSelf :
     -> Int
     -> String
     -> pC
-    -> Self c m s pC pM
-getSelf spec (( _, set ) as slot) id namespace freshParentContainers =
-    let
-        namespacedId =
-            "_" ++ namespace ++ "_" ++ toString id
-
-        wrapNode node =
-            Node
-                { call = callWrappedNode spec slot node
-                }
-
-        wrapSignal =
-            toParentSignal freshParentContainers set
-
-        wrapAttribute =
-            Html.Styled.Attributes.map wrapSignal
-
-        internal =
-            InternalData
-                { slot = slot
-                , freshContainers = spec.children
-                }
-    in
-    { id = namespacedId
-    , wrapSignal = wrapSignal
-    , wrapNode = wrapNode
-    , wrapAttribute = wrapAttribute
-    , internal = internal
+    -> Self c m s pC
+getSelf spec slot id namespace freshParentContainers =
+    { id = "_" ++ namespace ++ "_" ++ toString id
+    , internal =
+        InternalData
+            { slot = slot
+            , freshContainers = spec.children
+            , freshParentContainers = freshParentContainers
+            }
     }
 
 
-callWrappedNode :
-    SpecWithOptions c m s pC pM
-    -> Slot (Container c m s) pC
-    -> Node c m
-    -> NodeCall pC pM
-callWrappedNode spec ( get, set ) (Node node) args =
+wrapSignal : Self c m s pC -> Signal c m -> Signal pC pM
+wrapSignal self =
+    let
+        (InternalData internalData) =
+            self.internal
+
+        ( _, set ) =
+            internalData.slot
+    in
+    toParentSignal internalData.freshParentContainers set
+
+
+wrapAttribute : Self c m s pC -> Attribute c m -> Attribute pC pM
+wrapAttribute self =
+    Html.Styled.Attributes.map (wrapSignal self)
+
+
+wrapNode : Self c m s pC -> Node c m -> Node pC pM
+wrapNode self node =
+    let
+        (InternalData { slot, freshContainers }) =
+            self.internal
+    in
+    Node
+        { call = callWrappedNode slot freshContainers node
+        }
+
+
+callWrappedNode : Slot (Container c m s) pC -> c -> Node c m -> NodeCall pC pM
+callWrappedNode ( get, set ) freshContainers (Node node) args =
     case get args.newStates of
         StateContainer parentState ->
             let
                 currentStates =
                     case get args.currentStates of
                         EmptyContainer ->
-                            spec.children
+                            freshContainers
 
                         StateContainer { childStates } ->
                             childStates
 
                         bug ->
-                            spec.children
+                            freshContainers
 
                 msg =
                     case args.msg of
@@ -354,7 +360,7 @@ callWrappedNode spec ( get, set ) (Node node) args =
                         { newStates = parentState.childStates
                         , currentStates = currentStates
                         , msg = msg
-                        , freshContainers = spec.children
+                        , freshContainers = freshContainers
                         , lastComponentId = args.lastComponentId
                         , namespace = args.namespace
                         }
@@ -378,7 +384,7 @@ callWrappedNode spec ( get, set ) (Node node) args =
 
 
 wrapSlot :
-    Self c m s pC pM
+    Self c m s pC
     -> Slot (Container cC cM cS) c
     -> Slot (Container cC cM cS) pC
 wrapSlot self ( getChild, setChild ) =

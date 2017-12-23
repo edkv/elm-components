@@ -63,19 +63,17 @@ regularComponentWithOptions :
     SpecWithOptions c m s pC pM
     -> Component (Container c m s) pC pM
 regularComponentWithOptions spec =
-    HtmlComponent <|
-        RegularComponent.regularComponentWithOptions
-            { init = spec.init
-            , update = spec.update
-            , subscriptions = spec.subscriptions
-            , view = \self -> spec.view self >> unwrapHtml
-            , children = spec.children
-            , options = spec.options
-            }
+    { spec | view = view spec }
+        |> RegularComponent.regularComponentWithOptions
+        |> HtmlComponent
 
 
-unwrapHtml : Html c m -> Node c m
-unwrapHtml (HtmlNode node) =
+view : SpecWithOptions c m s pC pM -> Self -> s -> Node c m
+view spec self state =
+    let
+        (HtmlNode node) =
+            spec.view self state
+    in
     node
 
 

@@ -7,6 +7,9 @@ module Components.Svg.MixedComponent
         , defaultOptions
         , mixedComponent
         , mixedComponentWithOptions
+        , wrapAttribute
+        , wrapNode
+        , wrapSignal
         , wrapSlot
         )
 
@@ -24,31 +27,26 @@ import Components.Svg exposing (Attribute, Component, Svg)
 
 
 type alias Spec c m s pC pM =
-    { init : Self c m s pC pM -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self c m s pC pM -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self c m s pC pM -> s -> Sub m
-    , view : Self c m s pC pM -> s -> Svg pC pM
+    { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self c m s pC -> s -> Sub m
+    , view : Self c m s pC -> s -> Svg pC pM
     , children : c
     }
 
 
 type alias SpecWithOptions c m s pC pM =
-    { init : Self c m s pC pM -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self c m s pC pM -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self c m s pC pM -> s -> Sub m
-    , view : Self c m s pC pM -> s -> Svg pC pM
+    { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self c m s pC -> s -> Sub m
+    , view : Self c m s pC -> s -> Svg pC pM
     , children : c
     , options : Options m
     }
 
 
-type alias Self c m s pC pM =
-    { id : String
-    , wrapSignal : Signal c m -> Signal pC pM
-    , wrapNode : Svg c m -> Svg pC pM
-    , wrapAttribute : Attribute c m -> Attribute pC pM
-    , internal : MixedComponent.InternalData c m s pC
-    }
+type alias Self c m s pC =
+    MixedComponent.Self c m s pC
 
 
 type alias Options m =
@@ -71,49 +69,43 @@ mixedComponentWithOptions :
     SpecWithOptions c m s pC pM
     -> Component (Container c m s) pC pM
 mixedComponentWithOptions spec =
-    SvgComponent <|
-        MixedComponent.mixedComponentWithOptions
-            { init = transformSelf >> spec.init
-            , update = transformSelf >> spec.update
-            , subscriptions = transformSelf >> spec.subscriptions
-            , view = \self -> spec.view (transformSelf self) >> unwrapSvg
-            , children = spec.children
-            , options = spec.options
-            }
+    { spec | view = view spec }
+        |> MixedComponent.mixedComponentWithOptions
+        |> SvgComponent
 
 
-wrapSlot :
-    Self c m s pC pM
-    -> Slot (Container cC cM cS) c
-    -> Slot (Container cC cM cS) pC
-wrapSlot self =
-    MixedComponent.wrapSlot (transformSelfBack self)
-
-
-transformSelf : MixedComponent.Self c m s pC pM -> Self c m s pC pM
-transformSelf self =
-    { self
-        | wrapNode = unwrapSvg >> self.wrapNode >> SvgNode
-        , wrapAttribute = unwrapAttribute >> self.wrapAttribute >> SvgAttribute
-    }
-
-
-transformSelfBack : Self c m s pC pM -> MixedComponent.Self c m s pC pM
-transformSelfBack self =
-    { self
-        | wrapNode = SvgNode >> self.wrapNode >> unwrapSvg
-        , wrapAttribute = SvgAttribute >> self.wrapAttribute >> unwrapAttribute
-    }
-
-
-unwrapSvg : Svg c m -> Node c m
-unwrapSvg (SvgNode node) =
+view : SpecWithOptions c m s pC pM -> Self c m s pC -> s -> Node pC pM
+view spec self state =
+    let
+        (SvgNode node) =
+            spec.view self state
+    in
     node
 
 
-unwrapAttribute : Attribute c m -> Elements.Attribute c m
-unwrapAttribute (SvgAttribute attr) =
-    attr
+wrapSignal : Self c m s pC -> Signal c m -> Signal pC pM
+wrapSignal =
+    MixedComponent.wrapSignal
+
+
+wrapAttribute : Self c m s pC -> Attribute c m -> Attribute pC pM
+wrapAttribute self (SvgAttribute attribute) =
+    MixedComponent.wrapAttribute self attribute
+        |> SvgAttribute
+
+
+wrapNode : Self c m s pC -> Svg c m -> Svg pC pM
+wrapNode self (SvgNode node) =
+    MixedComponent.wrapNode self node
+        |> SvgNode
+
+
+wrapSlot :
+    Self c m s pC
+    -> Slot (Container cC cM cS) c
+    -> Slot (Container cC cM cS) pC
+wrapSlot =
+    MixedComponent.wrapSlot
 
 
 defaultOptions : Options m

@@ -58,16 +58,25 @@ regularComponentWithOptions :
     -> Component (Container c m s) pC pM
 regularComponentWithOptions spec =
     MixedComponent.mixedComponentWithOptions
-        { init = transformSelf >> spec.init
-        , update = transformSelf >> spec.update
-        , subscriptions = transformSelf >> spec.subscriptions
-        , view = \self -> spec.view (transformSelf self) >> self.wrapNode
-        , children = spec.children
-        , options = spec.options
+        { spec
+            | init = transformSelf >> spec.init
+            , update = transformSelf >> spec.update
+            , subscriptions = transformSelf >> spec.subscriptions
+            , view = view spec
         }
 
 
-transformSelf : MixedComponent.Self c m s pC pM -> Self
+view :
+    SpecWithOptions c m s pC pM
+    -> MixedComponent.Self c m s pC
+    -> s
+    -> Node pC pM
+view spec self state =
+    spec.view (transformSelf self) state
+        |> MixedComponent.wrapNode self
+
+
+transformSelf : MixedComponent.Self c m s pC -> Self
 transformSelf self =
     { id = self.id
     }
