@@ -14,27 +14,26 @@ import Components.Internal.MixedComponent as MixedComponent
 
 
 type alias Spec c m s pC pM =
-    { init : Self c m -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self c m -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self c m -> s -> Sub m
-    , view : Self c m -> s -> Node c m
+    { init : Self -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self -> s -> Sub m
+    , view : Self -> s -> Node c m
     , children : c
     }
 
 
 type alias SpecWithOptions c m s pC pM =
-    { init : Self c m -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self c m -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self c m -> s -> Sub m
-    , view : Self c m -> s -> Node c m
+    { init : Self -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self -> s -> Sub m
+    , view : Self -> s -> Node c m
     , children : c
     , options : Options m
     }
 
 
-type alias Self c m =
+type alias Self =
     { id : String
-    , send : m -> Signal c m
     }
 
 
@@ -68,10 +67,9 @@ regularComponentWithOptions spec =
         }
 
 
-transformSelf : MixedComponent.Self c m s pC pM -> Self c m
-transformSelf { id, send } =
-    { id = id
-    , send = send
+transformSelf : MixedComponent.Self c m s pC pM -> Self
+transformSelf self =
+    { id = self.id
     }
 
 

@@ -6,7 +6,7 @@ module Components.Internal.Core
         , Node(Node)
         , NodeCall
         , NodeMsg(HandleSignal, Touch)
-        , Signal(ChildMsgSignal, LocalMsgSignal)
+        , Signal(ChildMsg, LocalMsg)
         , Slot
         )
 
@@ -39,7 +39,7 @@ type alias NodeCall c m =
 
 type NodeMsg c
     = Touch
-    | HandleSignal c
+    | HandleSignal { containers : c, lastComponentId : Int }
 
 
 type Component container c m
@@ -64,5 +64,5 @@ type alias ComponentState c s =
 
 
 type Signal c m
-    = LocalMsgSignal { componentId : Int, msg : m }
-    | ChildMsgSignal c
+    = LocalMsg m
+    | ChildMsg c

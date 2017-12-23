@@ -7,6 +7,7 @@ module Components
         , State
         , child
         , init
+        , send
         , subscriptions
         , touch
         , update
@@ -99,7 +100,12 @@ type alias ReadyState container =
 
 type Msg container
     = NamespaceGenerated String
-    | ComponentSignal container
+    | ComponentMsg (Core.NodeMsg container)
+
+
+send : m -> Signal c m
+send =
+    Core.LocalMsg
 
 
 init : ( State (Container c m s), Cmd (Msg (Container c m s)) )
@@ -135,18 +141,18 @@ update (HtmlComponent (Core.Component component)) msg state =
             in
             ( Ready newState, cmd )
 
-        ( Ready readyState, ComponentSignal signal ) ->
+        ( Ready readyState, ComponentMsg componentMsg ) ->
             let
                 ( newState, cmd ) =
                     updateNode
                         (component identitySlot)
-                        [ Core.HandleSignal signal ]
+                        [ componentMsg ]
                         readyState
                         Cmd.none
             in
             ( Ready newState, cmd )
 
-        ( WaitingForNamespace, ComponentSignal _ ) ->
+        ( WaitingForNamespace, ComponentMsg _ ) ->
             ( state, Cmd.none )
 
         ( Ready _, NamespaceGenerated _ ) ->
@@ -207,27 +213,30 @@ updateNode (Core.Node node) messages prevState prevCmd =
 
                 cmd =
                     result.cmd
-                        |> Cmd.map (transformSignal >> ComponentSignal)
+                        |> Cmd.map (transformSignal >> ComponentMsg)
 
                 sub =
                     result.sub
-                        |> Sub.map (transformSignal >> ComponentSignal)
+                        |> Sub.map (transformSignal >> ComponentMsg)
 
                 view =
                     result.view
-                        |> Html.Styled.map (transformSignal >> ComponentSignal)
+                        |> Html.Styled.map (transformSignal >> ComponentMsg)
 
                 moreMessages =
                     result.outSignals
-                        |> List.map (transformSignal >> Core.HandleSignal)
+                        |> List.map transformSignal
 
                 transformSignal signal =
                     case signal of
-                        Core.LocalMsgSignal localMsgSignal ->
-                            never localMsgSignal.msg
+                        Core.LocalMsg localMsg ->
+                            never localMsg
 
-                        Core.ChildMsgSignal container ->
-                            container
+                        Core.ChildMsg container ->
+                            Core.HandleSignal
+                                { containers = container
+                                , lastComponentId = result.lastComponentId
+                                }
             in
             updateNode
                 (Core.Node node)

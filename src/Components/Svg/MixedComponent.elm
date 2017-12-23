@@ -44,7 +44,6 @@ type alias SpecWithOptions c m s pC pM =
 
 type alias Self c m s pC pM =
     { id : String
-    , send : m -> Signal c m
     , wrapSignal : Signal c m -> Signal pC pM
     , wrapNode : Svg c m -> Svg pC pM
     , wrapAttribute : Attribute c m -> Attribute pC pM

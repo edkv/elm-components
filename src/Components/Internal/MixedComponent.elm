@@ -19,7 +19,7 @@ import Components.Internal.Core
         , Node(Node)
         , NodeCall
         , NodeMsg(HandleSignal, Touch)
-        , Signal(ChildMsgSignal, LocalMsgSignal)
+        , Signal(ChildMsg, LocalMsg)
         , Slot
         )
 import Components.Internal.Elements exposing (Attribute)
@@ -48,7 +48,6 @@ type alias SpecWithOptions c m s pC pM =
 
 type alias Self c m s pC pM =
     { id : String
-    , send : m -> Signal c m
     , wrapSignal : Signal c m -> Signal pC pM
     , wrapNode : Node c m -> Node pC pM
     , wrapAttribute : Attribute c m -> Attribute pC pM
@@ -113,18 +112,18 @@ call spec (( get, set ) as slot) args =
                 bug ->
                     skipNode args
 
-        HandleSignal signalContainers ->
-            case ( get args.currentStates, get signalContainers ) of
+        HandleSignal signalData ->
+            case ( get args.currentStates, get signalData.containers ) of
                 ( StateContainer state, EmptyContainer ) ->
                     walkThrough state spec slot args
 
-                ( StateContainer state, SignalContainer (LocalMsgSignal signal) ) ->
-                    if signal.componentId == state.id then
-                        update state signal.msg spec slot args
+                ( StateContainer state, SignalContainer (LocalMsg msg) ) ->
+                    if state.id <= signalData.lastComponentId then
+                        update state msg spec slot args
                     else
                         walkThrough state spec slot args
 
-                ( StateContainer state, SignalContainer (ChildMsgSignal _) ) ->
+                ( StateContainer state, SignalContainer (ChildMsg _) ) ->
                     walkThrough state spec slot args
 
                 bug ->
@@ -148,11 +147,11 @@ init spec (( _, set ) as slot) args =
 
         localCmd =
             nonwrappedLocalCmd
-                |> Cmd.map (wrapLocalMsg args.freshContainers set id)
+                |> Cmd.map (wrapLocalMsg args.freshContainers set)
 
         localSub =
             spec.subscriptions self localState
-                |> Sub.map (wrapLocalMsg args.freshContainers set id)
+                |> Sub.map (wrapLocalMsg args.freshContainers set)
 
         (Node tree) =
             spec.view self localState
@@ -198,11 +197,11 @@ update state msg spec (( _, set ) as slot) args =
 
         localCmd =
             nonwrappedLocalCmd
-                |> Cmd.map (wrapLocalMsg args.freshContainers set state.id)
+                |> Cmd.map (wrapLocalMsg args.freshContainers set)
 
         localSub =
             spec.subscriptions self newLocalState
-                |> Sub.map (wrapLocalMsg args.freshContainers set state.id)
+                |> Sub.map (wrapLocalMsg args.freshContainers set)
 
         (Node tree) =
             spec.view self newLocalState
@@ -244,7 +243,7 @@ walkThrough state spec (( _, set ) as slot) args =
 
         localSub =
             spec.subscriptions self state.localState
-                |> Sub.map (wrapLocalMsg args.freshContainers set state.id)
+                |> Sub.map (wrapLocalMsg args.freshContainers set)
 
         (Node tree) =
             spec.view self state.localState
@@ -283,12 +282,6 @@ getSelf spec (( _, set ) as slot) id namespace freshParentContainers =
         namespacedId =
             "_" ++ namespace ++ "_" ++ toString id
 
-        send msg =
-            LocalMsgSignal
-                { componentId = id
-                , msg = msg
-                }
-
         wrapNode node =
             Node
                 { call = callWrappedNode spec slot node
@@ -307,7 +300,6 @@ getSelf spec (( _, set ) as slot) id namespace freshParentContainers =
                 }
     in
     { id = namespacedId
-    , send = send
     , wrapSignal = wrapSignal
     , wrapNode = wrapNode
     , wrapAttribute = wrapAttribute
@@ -340,16 +332,19 @@ callWrappedNode spec ( get, set ) (Node node) args =
                         Touch ->
                             Touch
 
-                        HandleSignal signalContainers ->
-                            case get signalContainers of
+                        HandleSignal signalData ->
+                            case get signalData.containers of
                                 EmptyContainer ->
                                     Touch
 
-                                SignalContainer (LocalMsgSignal _) ->
+                                SignalContainer (LocalMsg _) ->
                                     Touch
 
-                                SignalContainer (ChildMsgSignal signal) ->
-                                    HandleSignal signal
+                                SignalContainer (ChildMsg containers) ->
+                                    HandleSignal
+                                        { containers = containers
+                                        , lastComponentId = signalData.lastComponentId
+                                        }
 
                                 bug ->
                                     Touch
@@ -402,10 +397,10 @@ wrapSlot self ( getChild, setChild ) =
                 StateContainer state ->
                     getChild state.childStates
 
-                SignalContainer (LocalMsgSignal _) ->
+                SignalContainer (LocalMsg _) ->
                     EmptyContainer
 
-                SignalContainer (ChildMsgSignal containers) ->
+                SignalContainer (ChildMsg containers) ->
                     getChild containers
 
         wrappedSet childContainer parentContainers =
@@ -440,7 +435,7 @@ wrapSlot self ( getChild, setChild ) =
         wrapSignal childContainer =
             internalData.freshContainers
                 |> setChild childContainer
-                |> ChildMsgSignal
+                |> ChildMsg
                 |> SignalContainer
     in
     ( wrappedGet, wrappedSet )
@@ -460,15 +455,10 @@ skipNode args =
 wrapLocalMsg :
     pC
     -> (Container c m s -> pC -> pC)
-    -> Int
     -> m
     -> Signal pC pM
-wrapLocalMsg freshParentContainers set componentId msg =
-    LocalMsgSignal
-        { componentId = componentId
-        , msg = msg
-        }
-        |> toParentSignal freshParentContainers set
+wrapLocalMsg freshParentContainers set =
+    LocalMsg >> toParentSignal freshParentContainers set
 
 
 toParentSignal :
@@ -479,7 +469,7 @@ toParentSignal :
 toParentSignal freshParentContainers set signal =
     freshParentContainers
         |> set (SignalContainer signal)
-        |> ChildMsgSignal
+        |> ChildMsg
 
 
 defaultOptions : Options m

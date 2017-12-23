@@ -21,26 +21,26 @@ import Components.Internal.Shared
 
 
 type alias Spec c m s pC pM =
-    { init : Self c m -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self c m -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self c m -> s -> Sub m
-    , view : Self c m -> s -> Html c m
+    { init : Self -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self -> s -> Sub m
+    , view : Self -> s -> Html c m
     , children : c
     }
 
 
 type alias SpecWithOptions c m s pC pM =
-    { init : Self c m -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self c m -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self c m -> s -> Sub m
-    , view : Self c m -> s -> Html c m
+    { init : Self -> ( s, Cmd m, List (Signal pC pM) )
+    , update : Self -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
+    , subscriptions : Self -> s -> Sub m
+    , view : Self -> s -> Html c m
     , children : c
     , options : Options m
     }
 
 
-type alias Self c m =
-    RegularComponent.Self c m
+type alias Self =
+    RegularComponent.Self
 
 
 type alias Options m =
