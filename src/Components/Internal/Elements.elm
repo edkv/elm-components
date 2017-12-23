@@ -22,7 +22,7 @@ import Components.Internal.Core
         ( Component
         , Node(Node)
         , NodeCall
-        , Signal
+        , Signal(LocalMsg)
         )
 import Css
 import Html.Styled
@@ -78,8 +78,8 @@ text =
     VirtualDom.text >> plainElement
 
 
-plainElement : VirtualDom.Node (Signal c m) -> Node c m
-plainElement elem =
+plainElement : VirtualDom.Node m -> Node c m
+plainElement node =
     Node
         { call =
             \args ->
@@ -87,7 +87,7 @@ plainElement elem =
                 , cmd = Cmd.none
                 , outSignals = []
                 , sub = Sub.none
-                , view = Html.Styled.fromUnstyled elem
+                , view = Html.Styled.fromUnstyled (VirtualDom.map LocalMsg node)
                 , lastComponentId = args.lastComponentId
                 }
         }

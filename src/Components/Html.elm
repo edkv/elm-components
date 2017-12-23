@@ -167,7 +167,7 @@ none =
     text ""
 
 
-plainHtml : VirtualDom.Node (Signal c m) -> Html c m
+plainHtml : VirtualDom.Node m -> Html c m
 plainHtml =
     Elements.plainElement >> HtmlNode
 

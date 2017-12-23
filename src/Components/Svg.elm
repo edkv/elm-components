@@ -143,7 +143,7 @@ none =
     text ""
 
 
-plainSvg : VirtualDom.Node (Signal c m) -> Svg c m
+plainSvg : VirtualDom.Node m -> Svg c m
 plainSvg =
     Elements.plainElement >> SvgNode
 
