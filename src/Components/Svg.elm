@@ -59,7 +59,7 @@ module Components.Svg
         , none
         , path
         , pattern
-        , plainSvg
+        , plainNode
         , polygon
         , polyline
         , radialGradient
@@ -143,9 +143,9 @@ none =
     text ""
 
 
-plainSvg : VirtualDom.Node m -> Svg c m
-plainSvg =
-    Elements.plainElement >> SvgNode
+plainNode : VirtualDom.Node m -> Svg c m
+plainNode =
+    Elements.plainNode >> SvgNode
 
 
 slot :

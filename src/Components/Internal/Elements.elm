@@ -11,7 +11,7 @@ module Components.Internal.Elements
         , keyedElement
         , on
         , onWithOptions
-        , plainElement
+        , plainNode
         , property
         , svgStyles
         , text
@@ -75,11 +75,11 @@ keyedElement tag attributes children =
 
 text : String -> Node c m
 text =
-    VirtualDom.text >> plainElement
+    VirtualDom.text >> plainNode
 
 
-plainElement : VirtualDom.Node m -> Node c m
-plainElement node =
+plainNode : VirtualDom.Node m -> Node c m
+plainNode node =
     Node
         { call =
             \args ->

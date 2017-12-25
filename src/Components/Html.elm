@@ -71,7 +71,7 @@ module Components.Html
         , output
         , p
         , param
-        , plainHtml
+        , plainNode
         , pre
         , progress
         , q
@@ -167,9 +167,9 @@ none =
     text ""
 
 
-plainHtml : VirtualDom.Node m -> Html c m
-plainHtml =
-    Elements.plainElement >> HtmlNode
+plainNode : VirtualDom.Node m -> Html c m
+plainNode =
+    Elements.plainNode >> HtmlNode
 
 
 slot :
