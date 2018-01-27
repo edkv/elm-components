@@ -139,10 +139,10 @@ updateComponent :
     -> ( s, Cmd m, List (Signal (Container c m s) Never) )
 updateComponent spec self msg state =
     let
-        ( state, cmd, signals ) =
+        ( updatedState, cmd, signals ) =
             spec.update self msg state
     in
-    ( state
+    ( updatedState
     , cmd
     , List.map (Core.SignalContainer >> Core.ChildMsg) signals
     )
