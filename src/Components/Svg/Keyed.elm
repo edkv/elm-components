@@ -14,16 +14,9 @@ removed, etc. Common examples include:
 
 -}
 
+import Components.Core.Internal as Core
+import Components.Core.Shared exposing (svgNamespace)
 import Components.Html exposing (Html)
-import Components.Internal.Core exposing (Node)
-import Components.Internal.Elements as Elements
-import Components.Internal.Shared
-    exposing
-        ( HtmlNode(HtmlNode)
-        , SvgAttribute(SvgAttribute)
-        , SvgNode(SvgNode)
-        , svgNamespace
-        )
 import Components.Svg exposing (Attribute, Svg)
 
 
@@ -34,24 +27,28 @@ make the DOM modifications more efficient.
 -}
 node : String -> List (Attribute c m) -> List ( String, Svg c m ) -> Svg c m
 node tag attributes children =
-    SvgNode (unwrappedNode tag attributes children)
+    Core.KeyedSimpleElement
+        { tag = tag
+        , attributes = svgNamespace :: attributes
+        , children = children
+        }
 
 
 {-| -}
 svg : List (Attribute c m) -> List ( String, Svg c m ) -> Html c m
 svg attributes children =
-    HtmlNode (unwrappedNode "svg" attributes children)
+    Core.KeyedEmbedding
+        { tag = "svg"
+        , attributes = svgNamespace :: attributes
+        , children = children
+        }
 
 
-unwrappedNode :
-    String
-    -> List (Attribute c m)
-    -> List ( String, Svg c m )
-    -> Node c m
-unwrappedNode tag attributes children =
-    Elements.keyedElement tag
-        (attributes
-            |> List.map (\(SvgAttribute attr) -> attr)
-            |> (::) svgNamespace
-        )
-        (List.map (\( key, SvgNode node ) -> ( key, node )) children)
+{-| -}
+foreignObject : List (Attribute c m) -> List ( String, Html c m ) -> Svg c m
+foreignObject attributes children =
+    Core.KeyedReversedEmbedding
+        { tag = "foreignObject"
+        , attributes = svgNamespace :: attributes
+        , children = children
+        }

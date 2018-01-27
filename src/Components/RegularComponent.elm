@@ -1,4 +1,4 @@
-module Components.Html.RegularComponent
+module Components.RegularComponent
     exposing
         ( Options
         , Self
@@ -10,45 +10,38 @@ module Components.Html.RegularComponent
         , sendToChild
         )
 
-import Components exposing (Container, Signal, Slot)
-import Components.Html exposing (Component, Html)
-import Components.Internal.Core exposing (Node)
-import Components.Internal.RegularComponent as RegularComponent
-import Components.Internal.Shared
-    exposing
-        ( HtmlComponent(HtmlComponent)
-        , HtmlNode(HtmlNode)
-        )
+import Components exposing (Component, Container, Node, Signal, Slot)
+import Components.MixedComponent as MixedComponent
 
 
-type alias Spec c m s pC pM =
+type alias Spec x y c m s pC pM =
     { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
     , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
     , subscriptions : Self c m s pC -> s -> Sub m
-    , view : Self c m s pC -> s -> Html c m
+    , view : Self c m s pC -> s -> Node x y c m
     , children : c
     }
 
 
-type alias SpecWithOptions c m s pC pM =
+type alias SpecWithOptions x y c m s pC pM =
     { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
     , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
     , subscriptions : Self c m s pC -> s -> Sub m
-    , view : Self c m s pC -> s -> Html c m
+    , view : Self c m s pC -> s -> Node x y c m
     , children : c
     , options : Options m
     }
 
 
 type alias Self c m s pC =
-    RegularComponent.Self c m s pC
+    MixedComponent.Self c m s pC
 
 
 type alias Options m =
-    RegularComponent.Options m
+    MixedComponent.Options m
 
 
-regularComponent : Spec c m s pC pM -> Component (Container c m s) pC pM
+regularComponent : Spec x y c m s pC pM -> Component x y (Container c m s) pC pM
 regularComponent spec =
     regularComponentWithOptions
         { init = spec.init
@@ -61,28 +54,18 @@ regularComponent spec =
 
 
 regularComponentWithOptions :
-    SpecWithOptions c m s pC pM
-    -> Component (Container c m s) pC pM
+    SpecWithOptions x y c m s pC pM
+    -> Component x y (Container c m s) pC pM
 regularComponentWithOptions spec =
-    { spec | view = view spec }
-        |> RegularComponent.regularComponentWithOptions
-        |> HtmlComponent
-
-
-view : SpecWithOptions c m s pC pM -> Self c m s pC -> s -> Node c m
-view spec self state =
-    let
-        (HtmlNode node) =
-            spec.view self state
-    in
-    node
+    MixedComponent.mixedComponentWithOptions
+        { spec | view = \self -> spec.view self >> MixedComponent.wrapNode self }
 
 
 sendToChild : Self c m s pC -> Slot (Container cC cM cS) c -> cM -> Signal pC pM
 sendToChild =
-    RegularComponent.sendToChild
+    MixedComponent.sendToChild
 
 
 defaultOptions : Options m
 defaultOptions =
-    RegularComponent.defaultOptions
+    MixedComponent.defaultOptions

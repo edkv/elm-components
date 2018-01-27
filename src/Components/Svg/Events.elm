@@ -50,10 +50,10 @@ module Components.Svg.Events
 -}
 
 import Components exposing (Signal)
-import Components.Internal.Elements as Elements
-import Components.Internal.Shared exposing (SvgAttribute(SvgAttribute))
+import Components.Internal.Core as Core
 import Components.Svg exposing (Attribute)
 import Json.Decode as Json
+import VirtualDom
 
 
 {-| Create a custom event listener.
@@ -72,14 +72,16 @@ a message and route it to your `update` function.
 -}
 on : String -> Json.Decoder (Signal c m) -> Attribute c m
 on event decoder =
-    SvgAttribute (Elements.on event decoder)
+    VirtualDom.on event decoder
+        |> Core.PlainAttribute
 
 
 {-| Same as `on` but you can set a few options.
 -}
 onWithOptions : String -> Options -> Json.Decoder (Signal c m) -> Attribute c m
 onWithOptions event decoder options =
-    SvgAttribute (Elements.onWithOptions event decoder options)
+    VirtualDom.onWithOptions event decoder options
+        |> Core.PlainAttribute
 
 
 {-| Options for an event listener. If `stopPropagation` is true, it means the
@@ -89,7 +91,7 @@ to the event is prevented. For example, this is used with touch events when you
 want to treat them as gestures of your own, not as scrolls.
 -}
 type alias Options =
-    Elements.EventOptions
+    VirtualDom.Options
 
 
 {-| Everything is `False` by default.
@@ -102,7 +104,7 @@ type alias Options =
 -}
 defaultOptions : Options
 defaultOptions =
-    Elements.defaultEventOptions
+    VirtualDom.defaultOptions
 
 
 

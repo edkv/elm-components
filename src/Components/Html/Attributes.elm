@@ -200,10 +200,10 @@ Attributes that can be attached to any HTML tag but are less commonly used.
 -}
 
 import Components.Html exposing (Attribute)
-import Components.Internal.Elements as Elements
-import Components.Internal.Shared exposing (HtmlAttribute(HtmlAttribute))
+import Components.Internal.Core as Core
 import Css
-import Json.Encode
+import Json.Encode as Json
+import VirtualDom
 
 
 {-| Create _properties_, like saying `domNode.className = 'greeting'` in
@@ -219,19 +219,20 @@ Read more about the difference between properties and attributes [here].
 [here]: <https://github.com/elm-lang/html/blob/master/properties-vs-attributes.md>
 
 -}
-property : String -> Json.Encode.Value -> Attribute c m
+property : String -> Json.Value -> Attribute c m
 property name value =
-    HtmlAttribute (Elements.property name value)
+    VirtualDom.property name value
+        |> Core.PlainAttribute
 
 
 stringProperty : String -> String -> Attribute c m
 stringProperty name string =
-    property name (Json.Encode.string string)
+    property name (Json.string string)
 
 
 boolProperty : String -> Bool -> Attribute c m
 boolProperty name bool =
-    property name (Json.Encode.bool bool)
+    property name (Json.bool bool)
 
 
 {-| Create _attributes_, like saying `domNode.setAttribute('class', 'greeting')`
@@ -247,7 +248,8 @@ Read more about the difference between properties and attributes [here].
 -}
 attribute : String -> String -> Attribute c m
 attribute name value =
-    HtmlAttribute (Elements.attribute name value)
+    VirtualDom.attribute name value
+        |> Core.PlainAttribute
 
 
 {-| Apply styles to an element. See the
@@ -256,7 +258,7 @@ for an overview of how to use this function.
 -}
 styles : List Css.Style -> Attribute c m
 styles =
-    Elements.htmlStyles >> HtmlAttribute
+    Core.Styles Core.ClassNameProperty
 
 
 {-| Specify a list of inline styles. This will generate a `style` attribute in
@@ -277,7 +279,7 @@ the DOM.
 -}
 inlineStyles : List ( String, String ) -> Attribute c m
 inlineStyles =
-    Elements.inlineStyles >> HtmlAttribute
+    VirtualDom.style >> Core.PlainAttribute
 
 
 {-| This function makes it easier to build a space-separated class attribute.

@@ -57,9 +57,9 @@ kinds of events as seen in the [TodoMVC] example.
 
 import Components exposing (Signal)
 import Components.Html exposing (Attribute)
-import Components.Internal.Elements as Elements
-import Components.Internal.Shared exposing (HtmlAttribute(HtmlAttribute))
+import Components.Internal.Core as Core
 import Json.Decode as Json
+import VirtualDom
 
 
 -- MOUSE EVENTS
@@ -204,14 +204,16 @@ It really does help!
 -}
 on : String -> Json.Decoder (Signal c m) -> Attribute c m
 on event decoder =
-    HtmlAttribute (Elements.on event decoder)
+    VirtualDom.on event decoder
+        |> Core.PlainAttribute
 
 
 {-| Same as `on` but you can set a few options.
 -}
 onWithOptions : String -> Options -> Json.Decoder (Signal c m) -> Attribute c m
 onWithOptions event decoder options =
-    HtmlAttribute (Elements.onWithOptions event decoder options)
+    VirtualDom.onWithOptions event decoder options
+        |> Core.PlainAttribute
 
 
 {-| Options for an event listener. If `stopPropagation` is true, it means the
@@ -221,7 +223,7 @@ to the event is prevented. For example, this is used with touch events when you
 want to treat them as gestures of your own, not as scrolls.
 -}
 type alias Options =
-    Elements.EventOptions
+    VirtualDom.Options
 
 
 {-| Everything is `False` by default.
@@ -234,7 +236,7 @@ type alias Options =
 -}
 defaultOptions : Options
 defaultOptions =
-    Elements.defaultEventOptions
+    VirtualDom.defaultOptions
 
 
 

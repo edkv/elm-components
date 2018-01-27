@@ -66,7 +66,6 @@ module Components.Svg
         , rect
         , script
         , set
-        , slot
         , stop
         , style
         , svg
@@ -82,31 +81,23 @@ module Components.Svg
         , view
         )
 
-import Components exposing (Container, Signal, Slot)
+import Components exposing (Container, Signal, Slot, send)
 import Components.Html exposing (Html)
-import Components.Internal.Core as Core exposing (Node)
-import Components.Internal.Elements as Elements
-import Components.Internal.Shared
-    exposing
-        ( HtmlNode(HtmlNode)
-        , SvgAttribute(SvgAttribute)
-        , SvgComponent(SvgComponent)
-        , SvgNode(SvgNode)
-        , svgNamespace
-        )
+import Components.Internal.Core as Core
+import Components.Internal.Shared exposing (HtmlItem, SvgItem, svgNamespace)
 import VirtualDom
 
 
 type alias Svg c m =
-    SvgNode c m
+    Core.Node SvgItem HtmlItem c m
 
 
 type alias Attribute c m =
-    SvgAttribute c m
+    Core.Attribute SvgItem c m
 
 
 type alias Component container c m =
-    SvgComponent container c m
+    Core.Component SvgItem HtmlItem container c m
 
 
 {-| Create any SVG node. To create a `<rect>` helper function, you would write:
@@ -121,11 +112,11 @@ library though!
 -}
 node : String -> List (Attribute c m) -> List (Svg c m) -> Svg c m
 node tag attributes children =
-    nodeHelp
-        tag
-        attributes
-        (List.map (\(SvgNode node) -> node) children)
-        |> SvgNode
+    Core.SimpleElement
+        { tag = tag
+        , attributes = svgNamespace :: attributes
+        , children = children
+        }
 
 
 {-| A simple text node, no tags at all.
@@ -135,7 +126,7 @@ Warning: not to be confused with `text_` which produces the SVG `<text>` tag!
 -}
 text : String -> Svg c m
 text =
-    Elements.text >> SvgNode
+    Core.Text
 
 
 none : Svg c m
@@ -145,15 +136,7 @@ none =
 
 plainNode : VirtualDom.Node m -> Svg c m
 plainNode =
-    Elements.plainNode >> SvgNode
-
-
-slot :
-    Slot (Container c m s) pC
-    -> Component (Container c m s) pC pM
-    -> Svg pC pM
-slot slot_ (SvgComponent (Core.Component component)) =
-    SvgNode (component slot_)
+    VirtualDom.map send >> Core.PlainNode
 
 
 {-| The root `<svg>` node for any SVG scene. This example shows a scene
@@ -181,31 +164,21 @@ containing a rounded rectangle:
 -}
 svg : List (Attribute c m) -> List (Svg c m) -> Html c m
 svg attributes children =
-    nodeHelp
-        "svg"
-        attributes
-        (List.map (\(SvgNode node) -> node) children)
-        |> HtmlNode
+    Core.Embedding
+        { tag = "svg"
+        , attributes = svgNamespace :: attributes
+        , children = children
+        }
 
 
 {-| -}
 foreignObject : List (Attribute c m) -> List (Html c m) -> Svg c m
 foreignObject attributes children =
-    nodeHelp
-        "foreignObject"
-        attributes
-        (List.map (\(HtmlNode node) -> node) children)
-        |> SvgNode
-
-
-nodeHelp : String -> List (Attribute c m) -> List (Node c m) -> Node c m
-nodeHelp tag attributes children =
-    Elements.element tag
-        (attributes
-            |> List.map (\(SvgAttribute attr) -> attr)
-            |> (::) svgNamespace
-        )
-        children
+    Core.ReversedEmbedding
+        { tag = "foreignObject"
+        , attributes = svgNamespace :: attributes
+        , children = children
+        }
 
 
 

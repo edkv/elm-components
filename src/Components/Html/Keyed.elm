@@ -23,12 +23,7 @@ removed, etc. Common examples include:
 -}
 
 import Components.Html exposing (Attribute, Html)
-import Components.Internal.Elements as Elements
-import Components.Internal.Shared
-    exposing
-        ( HtmlAttribute(HtmlAttribute)
-        , HtmlNode(HtmlNode)
-        )
+import Components.Internal.Core as Core
 
 
 {-| Works just like `Components.Html.node`, but you add a unique identifier to
@@ -38,10 +33,11 @@ make the DOM modifications more efficient.
 -}
 node : String -> List (Attribute c m) -> List ( String, Html c m ) -> Html c m
 node tag attributes children =
-    HtmlNode <|
-        Elements.keyedElement tag
-            (List.map (\(HtmlAttribute attr) -> attr) attributes)
-            (List.map (\( key, HtmlNode node ) -> ( key, node )) children)
+    Core.KeyedSimpleElement
+        { tag = tag
+        , attributes = attributes
+        , children = children
+        }
 
 
 {-| -}

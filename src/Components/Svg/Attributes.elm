@@ -282,10 +282,10 @@ module Components.Svg.Attributes
 
 -}
 
-import Components.Internal.Elements as Elements
-import Components.Internal.Shared exposing (SvgAttribute(SvgAttribute))
+import Components.Internal.Core as Core
 import Components.Svg exposing (Attribute)
 import Css
+import VirtualDom
 
 
 -- Custom attributes
@@ -295,7 +295,8 @@ import Css
 -}
 attribute : String -> String -> Attribute c m
 attribute key value =
-    SvgAttribute (Elements.attribute key value)
+    VirtualDom.attribute key value
+        |> Core.PlainAttribute
 
 
 {-| Create a custom "namespaced" attribute. This corresponds to JavaScript's
@@ -303,7 +304,8 @@ attribute key value =
 -}
 attributeNS : String -> String -> String -> Attribute c m
 attributeNS namespace key value =
-    SvgAttribute (Elements.attributeNS namespace key value)
+    VirtualDom.attributeNS namespace key value
+        |> Core.PlainAttribute
 
 
 
@@ -316,7 +318,7 @@ for an overview of how to use this function.
 -}
 styles : List Css.Style -> Attribute c m
 styles =
-    Elements.svgStyles >> SvgAttribute
+    Core.Styles Core.ClassAttribute
 
 
 {-| Specify a list of inline styles. This will generate a `style` attribute in
@@ -324,7 +326,7 @@ the DOM.
 -}
 inlineStyles : List ( String, String ) -> Attribute c m
 inlineStyles =
-    Elements.inlineStyles >> SvgAttribute
+    VirtualDom.style >> Core.PlainAttribute
 
 
 

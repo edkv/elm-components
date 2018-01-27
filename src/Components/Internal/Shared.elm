@@ -1,43 +1,24 @@
 module Components.Internal.Shared
     exposing
-        ( HtmlAttribute(HtmlAttribute)
-        , HtmlComponent(HtmlComponent)
-        , HtmlNode(HtmlNode)
-        , SvgAttribute(SvgAttribute)
-        , SvgComponent(SvgComponent)
-        , SvgNode(SvgNode)
+        ( HtmlItem(HtmlItem)
+        , SvgItem(SvgItem)
         , svgNamespace
         )
 
-import Components.Internal.Core as Core
-import Components.Internal.Elements as Elements
+import Components.Internal.Core exposing (Attribute(PlainAttribute))
 import Json.Encode as Json
+import VirtualDom
 
 
-type HtmlNode c m
-    = HtmlNode (Core.Node c m)
+type HtmlItem
+    = HtmlItem
 
 
-type HtmlAttribute c m
-    = HtmlAttribute (Elements.Attribute c m)
+type SvgItem
+    = SvgItem
 
 
-type HtmlComponent container c m
-    = HtmlComponent (Core.Component container c m)
-
-
-type SvgNode c m
-    = SvgNode (Core.Node c m)
-
-
-type SvgAttribute c m
-    = SvgAttribute (Elements.Attribute c m)
-
-
-type SvgComponent container c m
-    = SvgComponent (Core.Component container c m)
-
-
-svgNamespace : Elements.Attribute c m
+svgNamespace : Attribute SvgItem c m
 svgNamespace =
-    Elements.property "namespace" (Json.string "http://www.w3.org/2000/svg")
+    VirtualDom.property "namespace" (Json.string "http://www.w3.org/2000/svg")
+        |> PlainAttribute

@@ -82,7 +82,6 @@ module Components.Html
         , samp
         , section
         , select
-        , slot
         , small
         , source
         , span
@@ -108,28 +107,22 @@ module Components.Html
         , wbr
         )
 
-import Components exposing (Container, Signal, Slot)
+import Components exposing (Container, Signal, Slot, send)
 import Components.Internal.Core as Core
-import Components.Internal.Elements as Elements
-import Components.Internal.Shared
-    exposing
-        ( HtmlAttribute(HtmlAttribute)
-        , HtmlComponent(HtmlComponent)
-        , HtmlNode(HtmlNode)
-        )
+import Components.Internal.Shared exposing (HtmlItem, SvgItem)
 import VirtualDom
 
 
 type alias Html c m =
-    HtmlNode c m
+    Core.Node HtmlItem SvgItem c m
 
 
 type alias Attribute c m =
-    HtmlAttribute c m
+    Core.Attribute HtmlItem c m
 
 
 type alias Component container c m =
-    HtmlComponent container c m
+    Core.Component HtmlItem SvgItem container c m
 
 
 {-| General way to create HTML nodes. It is used to define all of the helper
@@ -145,10 +138,11 @@ is not covered by the helper functions in this library.
 -}
 node : String -> List (Attribute c m) -> List (Html c m) -> Html c m
 node tag attributes children =
-    HtmlNode <|
-        Elements.element tag
-            (List.map (\(HtmlAttribute attr) -> attr) attributes)
-            (List.map (\(HtmlNode node) -> node) children)
+    Core.SimpleElement
+        { tag = tag
+        , attributes = attributes
+        , children = children
+        }
 
 
 {-| Just put plain text in the DOM. It will escape the string so that it appears
@@ -159,7 +153,7 @@ exactly as you specify.
 -}
 text : String -> Html c m
 text =
-    Elements.text >> HtmlNode
+    Core.Text
 
 
 none : Html c m
@@ -169,15 +163,7 @@ none =
 
 plainNode : VirtualDom.Node m -> Html c m
 plainNode =
-    Elements.plainNode >> HtmlNode
-
-
-slot :
-    Slot (Container c m s) pC
-    -> Component (Container c m s) pC pM
-    -> Html pC pM
-slot slot_ (HtmlComponent (Core.Component component)) =
-    HtmlNode (component slot_)
+    VirtualDom.map send >> Core.PlainNode
 
 
 
