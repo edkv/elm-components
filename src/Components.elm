@@ -233,19 +233,19 @@ doUpdate signals state cmdAcc =
                 (Core.RenderedComponent component) =
                     state.component
 
-                signalContainer =
+                signalContainers =
                     case signal of
                         Core.LocalMsg nvr ->
                             never nvr
 
-                        Core.ChildMsg container ->
-                            container
+                        Core.ChildMsg containers ->
+                            containers
 
                 maybeChange =
                     component.update
                         { states = state.componentState
                         , cache = state.cache
-                        , signal = signalContainer
+                        , signalContainers = signalContainers
                         , freshContainers = Core.EmptyContainer
                         , lastComponentId = state.lastComponentId
                         , namespace = state.namespace

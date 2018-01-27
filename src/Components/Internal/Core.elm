@@ -134,7 +134,7 @@ type alias TouchArgs c m =
 type alias UpdateArgs c m =
     { states : c
     , cache : Cache c m
-    , signal : c
+    , signalContainers : c
     , freshContainers : c
     , lastComponentId : ComponentId
     , namespace : String

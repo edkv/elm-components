@@ -243,7 +243,7 @@ update :
 update spec (( get, _ ) as slot) args =
     case get args.states of
         StateContainer state ->
-            case get args.signal of
+            case get args.signalContainers of
                 EmptyContainer ->
                     maybeUpdateChild spec slot args state
 
@@ -817,8 +817,8 @@ wrapUpdate self (RenderedComponent component) args =
     case get args.states of
         StateContainer state ->
             let
-                signal =
-                    case get args.signal of
+                signalContainers =
+                    case get args.signalContainers of
                         SignalContainer (ChildMsg containers) ->
                             containers
 
@@ -829,7 +829,7 @@ wrapUpdate self (RenderedComponent component) args =
                     component.update
                         { states = state.childStates
                         , cache = state.cache
-                        , signal = signal
+                        , signalContainers = signalContainers
                         , freshContainers = freshContainers
                         , lastComponentId = args.lastComponentId
                         , namespace = args.namespace
