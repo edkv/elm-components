@@ -18,12 +18,12 @@ import Components exposing (Attribute, Component, Container, Node, Signal, Slot)
 import Components.Internal.BaseComponent as BaseComponent
 
 
-type alias Spec x y c m s pC pM =
-    BaseComponent.Spec x y c m s pC pM
+type alias Spec v w c m s pC pM =
+    BaseComponent.Spec v w c m s pC pM
 
 
-type alias SpecWithOptions x y c m s pC pM =
-    BaseComponent.SpecWithOptions x y c m s pC pM
+type alias SpecWithOptions v w c m s pC pM =
+    BaseComponent.SpecWithOptions v w c m s pC pM
 
 
 type alias Self c m s pC =
@@ -34,14 +34,14 @@ type alias Options m =
     BaseComponent.Options m
 
 
-mixedComponent : Spec x y c m s pC pM -> Component x y (Container c m s) pC pM
+mixedComponent : Spec v w c m s pC pM -> Component v w (Container c m s) pC pM
 mixedComponent =
     BaseComponent.baseComponent
 
 
 mixedComponentWithOptions :
-    SpecWithOptions x y c m s pC pM
-    -> Component x y (Container c m s) pC pM
+    SpecWithOptions v w c m s pC pM
+    -> Component v w (Container c m s) pC pM
 mixedComponentWithOptions =
     BaseComponent.baseComponentWithOptions
 
@@ -51,12 +51,12 @@ wrapSignal =
     BaseComponent.wrapSignal
 
 
-wrapAttribute : Self c m s pC -> Attribute x c m -> Attribute x pC pM
+wrapAttribute : Self c m s pC -> Attribute v c m -> Attribute v pC pM
 wrapAttribute =
     BaseComponent.wrapAttribute
 
 
-wrapNode : Self c m s pC -> Node x y c m -> Node x y pC pM
+wrapNode : Self c m s pC -> Node v w c m -> Node v w pC pM
 wrapNode =
     BaseComponent.wrapNode
 

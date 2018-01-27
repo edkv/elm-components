@@ -18,11 +18,11 @@ type alias Application flags c m s =
     Program flags (State flags c m s) (Msg c m s)
 
 
-type alias Spec x y c m s =
+type alias Spec v w c m s =
     { init : Self c -> ( s, Cmd m, List (Signal c m) )
     , update : Self c -> m -> s -> ( s, Cmd m, List (Signal c m) )
     , subscriptions : Self c -> s -> Sub m
-    , view : Self c -> s -> Node x y c m
+    , view : Self c -> s -> Node v w c m
     , children : c
     }
 
@@ -49,7 +49,7 @@ type InternalStuff c
         }
 
 
-application : Spec x y c m s -> Application Never c m s
+application : Spec v w c m s -> Application Never c m s
 application spec =
     VirtualDom.program
         { init = init spec Nothing
@@ -59,7 +59,7 @@ application spec =
         }
 
 
-applicationWithFlags : (flags -> Spec x y c m s) -> Application flags c m s
+applicationWithFlags : (flags -> Spec v w c m s) -> Application flags c m s
 applicationWithFlags getSpec =
     VirtualDom.programWithFlags
         { init = \flags -> init (getSpec flags) (Just flags)
@@ -69,7 +69,7 @@ applicationWithFlags getSpec =
         }
 
 
-init : Spec x y c m s -> Maybe flags -> ( State flags c m s, Cmd (Msg c m s) )
+init : Spec v w c m s -> Maybe flags -> ( State flags c m s, Cmd (Msg c m s) )
 init spec flags =
     let
         ( componentState, cmd ) =
@@ -104,8 +104,8 @@ view state =
 
 
 buildComponent :
-    Spec x y c m s
-    -> Component x y (Container c m s) (Container c m s) Never
+    Spec v w c m s
+    -> Component v w (Container c m s) (Container c m s) Never
 buildComponent spec =
     RegularComponent.regularComponent
         { spec
@@ -117,7 +117,7 @@ buildComponent spec =
 
 
 initComponent :
-    Spec x y c m s
+    Spec v w c m s
     -> Self c
     -> ( s, Cmd m, List (Signal (Container c m s) Never) )
 initComponent spec self =
@@ -132,7 +132,7 @@ initComponent spec self =
 
 
 updateComponent :
-    Spec x y c m s
+    Spec v w c m s
     -> Self c
     -> m
     -> s
@@ -148,7 +148,7 @@ updateComponent spec self msg state =
     )
 
 
-transformSelf : Spec x y c m s -> RegularComponent.Self c m s pC -> Self c
+transformSelf : Spec v w c m s -> RegularComponent.Self c m s pC -> Self c
 transformSelf spec self =
     { id = self.id
     , internal =

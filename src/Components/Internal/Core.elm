@@ -35,43 +35,43 @@ import Html.Styled
 import VirtualDom
 
 
-type Node x y c m
+type Node v w c m
     = SimpleElement
         { tag : String
-        , attributes : List (Attribute x c m)
-        , children : List (Node x y c m)
+        , attributes : List (Attribute v c m)
+        , children : List (Node v w c m)
         }
     | Embedding
         { tag : String
-        , attributes : List (Attribute y c m)
-        , children : List (Node y x c m)
+        , attributes : List (Attribute w c m)
+        , children : List (Node w v c m)
         }
     | ReversedEmbedding
         { tag : String
-        , attributes : List (Attribute x c m)
-        , children : List (Node y x c m)
+        , attributes : List (Attribute v c m)
+        , children : List (Node w v c m)
         }
     | KeyedSimpleElement
         { tag : String
-        , attributes : List (Attribute x c m)
-        , children : List ( String, Node x y c m )
+        , attributes : List (Attribute v c m)
+        , children : List ( String, Node v w c m )
         }
     | KeyedEmbedding
         { tag : String
-        , attributes : List (Attribute y c m)
-        , children : List ( String, Node y x c m )
+        , attributes : List (Attribute w c m)
+        , children : List ( String, Node w v c m )
         }
     | KeyedReversedEmbedding
         { tag : String
-        , attributes : List (Attribute x c m)
-        , children : List ( String, Node y x c m )
+        , attributes : List (Attribute v c m)
+        , children : List ( String, Node w v c m )
         }
     | Text String
     | PlainNode (VirtualDom.Node (Signal c m))
     | ComponentNode (RenderedComponent c m)
 
 
-type Attribute x c m
+type Attribute v c m
     = PlainAttribute (VirtualDom.Property (Signal c m))
     | Styles StylingStrategy (List Css.Style)
 
@@ -81,8 +81,8 @@ type StylingStrategy
     | ClassAttribute
 
 
-type Component x y container c m
-    = Component (Slot container c -> Node x y c m)
+type Component v w container c m
+    = Component (Slot container c -> Node v w c m)
 
 
 type alias Slot container c =

@@ -76,12 +76,12 @@ import Uuid.Barebones as Uuid
 import VirtualDom
 
 
-type alias Node x y c m =
-    Core.Node x y c m
+type alias Node v w c m =
+    Core.Node v w c m
 
 
-type alias Component x y container c m =
-    Core.Component x y container c m
+type alias Component v w container c m =
+    Core.Component v w container c m
 
 
 type alias Container c m s =
@@ -96,8 +96,8 @@ type alias Slot container c =
     Core.Slot container c
 
 
-type alias Attribute x c m =
-    Core.Attribute x c m
+type alias Attribute v c m =
+    Core.Attribute v c m
 
 
 type State container
@@ -127,14 +127,14 @@ send =
 
 slot :
     Slot (Container c m s) pC
-    -> Component x y (Container c m s) pC pM
-    -> Node x y pC pM
+    -> Component v w (Container c m s) pC pM
+    -> Node v w pC pM
 slot slot_ (Core.Component component) =
     component slot_
 
 
 init :
-    Component x y (Container c m s) (Container c m s) Never
+    Component v w (Container c m s) (Container c m s) Never
     -> ( State (Container c m s), Cmd (Msg (Container c m s)) )
 init (Core.Component component) =
     case component identitySlot of

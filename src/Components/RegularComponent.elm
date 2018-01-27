@@ -14,20 +14,20 @@ import Components exposing (Component, Container, Node, Signal, Slot)
 import Components.Internal.BaseComponent as BaseComponent
 
 
-type alias Spec x y c m s pC pM =
+type alias Spec v w c m s pC pM =
     { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
     , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
     , subscriptions : Self c m s pC -> s -> Sub m
-    , view : Self c m s pC -> s -> Node x y c m
+    , view : Self c m s pC -> s -> Node v w c m
     , children : c
     }
 
 
-type alias SpecWithOptions x y c m s pC pM =
+type alias SpecWithOptions v w c m s pC pM =
     { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
     , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
     , subscriptions : Self c m s pC -> s -> Sub m
-    , view : Self c m s pC -> s -> Node x y c m
+    , view : Self c m s pC -> s -> Node v w c m
     , children : c
     , options : Options m
     }
@@ -41,7 +41,7 @@ type alias Options m =
     BaseComponent.Options m
 
 
-regularComponent : Spec x y c m s pC pM -> Component x y (Container c m s) pC pM
+regularComponent : Spec v w c m s pC pM -> Component v w (Container c m s) pC pM
 regularComponent spec =
     regularComponentWithOptions
         { init = spec.init
@@ -54,8 +54,8 @@ regularComponent spec =
 
 
 regularComponentWithOptions :
-    SpecWithOptions x y c m s pC pM
-    -> Component x y (Container c m s) pC pM
+    SpecWithOptions v w c m s pC pM
+    -> Component v w (Container c m s) pC pM
 regularComponentWithOptions spec =
     BaseComponent.baseComponentWithOptions
         { spec | view = \self -> spec.view self >> BaseComponent.wrapNode self }

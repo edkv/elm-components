@@ -23,20 +23,20 @@ import Svg.Styled.Attributes
 import VirtualDom
 
 
-type alias Spec x y c m s pC pM =
+type alias Spec v w c m s pC pM =
     { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
     , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
     , subscriptions : Self c m s pC -> s -> Sub m
-    , view : Self c m s pC -> s -> Node x y pC pM
+    , view : Self c m s pC -> s -> Node v w pC pM
     , children : c
     }
 
 
-type alias SpecWithOptions x y c m s pC pM =
+type alias SpecWithOptions v w c m s pC pM =
     { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
     , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
     , subscriptions : Self c m s pC -> s -> Sub m
-    , view : Self c m s pC -> s -> Node x y pC pM
+    , view : Self c m s pC -> s -> Node v w pC pM
     , children : c
     , options : Options m
     }
@@ -71,7 +71,7 @@ type alias CommonArgs a c m =
     }
 
 
-baseComponent : Spec x y c m s pC pM -> Component x y (Container c m s) pC pM
+baseComponent : Spec v w c m s pC pM -> Component v w (Container c m s) pC pM
 baseComponent spec =
     baseComponentWithOptions
         { init = spec.init
@@ -84,8 +84,8 @@ baseComponent spec =
 
 
 baseComponentWithOptions :
-    SpecWithOptions x y c m s pC pM
-    -> Component x y (Container c m s) pC pM
+    SpecWithOptions v w c m s pC pM
+    -> Component v w (Container c m s) pC pM
 baseComponentWithOptions spec =
     Component <|
         \slot ->
@@ -110,7 +110,7 @@ getId ( get, _ ) args =
 
 
 touch :
-    SpecWithOptions x y c m s pC pM
+    SpecWithOptions v w c m s pC pM
     -> Slot (Container c m s) pC
     -> TouchArgs pC pM
     -> Maybe (Change pC pM)
@@ -132,7 +132,7 @@ touch spec (( get, _ ) as slot) args =
 
 
 init :
-    SpecWithOptions x y c m s pC pM
+    SpecWithOptions v w c m s pC pM
     -> Slot (Container c m s) pC
     -> TouchArgs pC pM
     -> Change pC pM
@@ -195,7 +195,7 @@ init spec (( _, set ) as slot) args =
 
 
 rebuild :
-    SpecWithOptions x y c m s pC pM
+    SpecWithOptions v w c m s pC pM
     -> Slot (Container c m s) pC
     -> TouchArgs pC pM
     -> ComponentState c m s
@@ -230,7 +230,7 @@ rebuild spec slot args state =
 
 
 update :
-    SpecWithOptions x y c m s pC pM
+    SpecWithOptions v w c m s pC pM
     -> Slot (Container c m s) pC
     -> UpdateArgs pC pM
     -> Maybe (Change pC pM)
@@ -257,7 +257,7 @@ update spec (( get, _ ) as slot) args =
 
 
 doLocalUpdate :
-    SpecWithOptions x y c m s pC pM
+    SpecWithOptions v w c m s pC pM
     -> Slot (Container c m s) pC
     -> CommonArgs a pC pM
     -> ComponentState c m s
@@ -309,7 +309,7 @@ doLocalUpdate spec (( _, set ) as slot) args state msg =
 
 
 maybeUpdateChild :
-    SpecWithOptions x y c m s pC pM
+    SpecWithOptions v w c m s pC pM
     -> Slot (Container c m s) pC
     -> UpdateArgs pC pM
     -> ComponentState c m s
@@ -367,7 +367,7 @@ maybeUpdateChild spec (( _, set ) as slot) args state =
 touchTree :
     CommonArgs a pC pM
     -> ComponentId
-    -> Node x y pC pM
+    -> Node v w pC pM
     ->
         { states : pC
         , cache : Cache pC pM
@@ -454,7 +454,7 @@ touchTree args id tree =
 
 
 collectRenderedComponents :
-    Node x y c m
+    Node v w c m
     -> List (RenderedComponent c m)
     -> List (RenderedComponent c m)
 collectRenderedComponents node acc =
@@ -516,7 +516,7 @@ subscriptions (( get, set ) as slot) localSub args =
 
 view :
     Slot (Container c m s) pC
-    -> Node x y pC pM
+    -> Node v w pC pM
     -> ViewArgs pC pM
     -> Html.Styled.Html (Signal pC pM)
 view (( get, _ ) as slot) tree args =
@@ -536,7 +536,7 @@ view (( get, _ ) as slot) tree args =
 toStyledHtml :
     ViewArgs pC pM
     -> Dict ComponentId (RenderedComponent pC pM)
-    -> Node x y pC pM
+    -> Node v w pC pM
     -> Html.Styled.Html (Signal pC pM)
 toStyledHtml args cache node =
     case node of
@@ -583,7 +583,7 @@ toStyledHtml args cache node =
                 |> Maybe.withDefault (Html.Styled.text "")
 
 
-toStyledAttribute : Attribute x c m -> Html.Styled.Attribute (Signal c m)
+toStyledAttribute : Attribute v c m -> Html.Styled.Attribute (Signal c m)
 toStyledAttribute attribute =
     case attribute of
         PlainAttribute property ->
@@ -597,7 +597,7 @@ toStyledAttribute attribute =
 
 
 getSelf :
-    SpecWithOptions x y c m s pC pM
+    SpecWithOptions v w c m s pC pM
     -> Slot (Container c m s) pC
     -> ComponentId
     -> { a | freshContainers : pC, namespace : String }
@@ -625,7 +625,7 @@ wrapSignal self =
     toParentSignal set freshParentContainers
 
 
-wrapAttribute : Self c m s pC -> Attribute x c m -> Attribute x pC pM
+wrapAttribute : Self c m s pC -> Attribute v c m -> Attribute v pC pM
 wrapAttribute self attribute =
     case attribute of
         PlainAttribute property ->
@@ -637,7 +637,7 @@ wrapAttribute self attribute =
             Styles strategy styles
 
 
-wrapNode : Self c m s pC -> Node x y c m -> Node x y pC pM
+wrapNode : Self c m s pC -> Node v w c m -> Node v w pC pM
 wrapNode self node =
     case node of
         SimpleElement { tag, attributes, children } ->
