@@ -183,7 +183,7 @@ touch state =
                 (Core.RenderedComponent component) =
                     readyState.component
 
-                maybeChange =
+                change =
                     component.touch
                         { states = readyState.componentState
                         , cache = readyState.cache
@@ -191,8 +191,27 @@ touch state =
                         , lastComponentId = readyState.lastComponentId
                         , namespace = readyState.namespace
                         }
+
+                newComponent =
+                    case change.component of
+                        Core.Same ->
+                            readyState.component
+
+                        Core.Changed component ->
+                            component
+
+                newState =
+                    { readyState
+                        | componentState = change.states
+                        , component = newComponent
+                        , cache = change.cache
+                        , lastComponentId = change.lastComponentId
+                    }
+
+                cmd =
+                    Cmd.map ComponentMsg change.cmd
             in
-            handleChange readyState Cmd.none [] maybeChange
+            doUpdate change.signals newState Cmd.none
                 |> Tuple.mapFirst Ready
 
         _ ->
@@ -231,46 +250,36 @@ doUpdate signals state cmdAcc =
                         , lastComponentId = state.lastComponentId
                         , namespace = state.namespace
                         }
-            in
-            handleChange state cmdAcc otherSignals maybeChange
 
+                ( newState, cmd, moreSignals ) =
+                    case maybeChange of
+                        Just change ->
+                            let
+                                newComponent =
+                                    case change.component of
+                                        Core.Same ->
+                                            state.component
 
-handleChange :
-    ReadyState (Container c m s)
-    -> Cmd (Msg (Container c m s))
-    -> List (Signal (Container c m s) Never)
-    -> Maybe (Core.Change (Container c m s) Never)
-    -> ( ReadyState (Container c m s), Cmd (Msg (Container c m s)) )
-handleChange state cmdAcc remainingSignals maybeChange =
-    case maybeChange of
-        Just change ->
-            let
-                newComponent =
-                    case change.component of
-                        Core.Same ->
-                            state.component
+                                        Core.Changed component ->
+                                            component
+                            in
+                            ( { state
+                                | componentState = change.states
+                                , component = newComponent
+                                , cache = change.cache
+                                , lastComponentId = change.lastComponentId
+                              }
+                            , Cmd.map ComponentMsg change.cmd
+                            , change.signals
+                            )
 
-                        Core.Changed component ->
-                            component
-
-                newState =
-                    { state
-                        | componentState = change.states
-                        , component = newComponent
-                        , cache = change.cache
-                        , lastComponentId = change.lastComponentId
-                    }
-
-                cmd =
-                    Cmd.map ComponentMsg change.cmd
+                        Nothing ->
+                            ( state, Cmd.none, [] )
             in
             doUpdate
-                (remainingSignals ++ change.signals)
+                (otherSignals ++ moreSignals)
                 newState
                 (Cmd.batch [ cmdAcc, cmd ])
-
-        Nothing ->
-            ( state, cmdAcc )
 
 
 subscriptions : State (Container c m s) -> Sub (Msg (Container c m s))

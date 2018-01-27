@@ -113,22 +113,28 @@ touch :
     SpecWithOptions v w c m s pC pM
     -> Slot (Container c m s) pC
     -> TouchArgs pC pM
-    -> Maybe (Change pC pM)
+    -> Change pC pM
 touch spec (( get, _ ) as slot) args =
     case get args.states of
         EmptyContainer ->
-            Just (init spec slot args)
+            init spec slot args
 
         StateContainer state ->
             case spec.options.onContextUpdate of
                 Just msg ->
-                    Just (doLocalUpdate spec slot args state msg)
+                    doLocalUpdate spec slot args state msg
 
                 Nothing ->
-                    Just (rebuild spec slot args state)
+                    rebuild spec slot args state
 
         _ ->
-            Nothing
+            { component = Same
+            , states = args.states
+            , cache = args.cache
+            , cmd = Cmd.none
+            , signals = []
+            , lastComponentId = args.lastComponentId
+            }
 
 
 init :
@@ -394,7 +400,7 @@ touchTree args id tree =
 
         touchComponent (RenderedComponent component) acc =
             let
-                maybeChange =
+                change =
                     component.touch
                         { states = acc.states
                         , cache = acc.cache
@@ -402,45 +408,39 @@ touchTree args id tree =
                         , freshContainers = args.freshContainers
                         , namespace = args.namespace
                         }
+
+                newComponent =
+                    case change.component of
+                        Same ->
+                            RenderedComponent component
+
+                        Changed changedComponent ->
+                            changedComponent
+
+                (RenderedComponent destructuredNewComponent) =
+                    newComponent
+
+                maybeId =
+                    destructuredNewComponent.getId
+                        { states = change.states
+                        }
+
+                updatedPairs =
+                    case maybeId of
+                        Just id ->
+                            ( id, newComponent ) :: acc.idComponentPairs
+
+                        Nothing ->
+                            -- It should never be Nothing after a touch.
+                            acc.idComponentPairs
             in
-            case maybeChange of
-                Just change ->
-                    let
-                        newComponent =
-                            case change.component of
-                                Same ->
-                                    RenderedComponent component
-
-                                Changed changedComponent ->
-                                    changedComponent
-
-                        (RenderedComponent destructuredNewComponent) =
-                            newComponent
-
-                        maybeId =
-                            destructuredNewComponent.getId
-                                { states = change.states
-                                }
-
-                        updatedPairs =
-                            case maybeId of
-                                Just id ->
-                                    ( id, newComponent ) :: acc.idComponentPairs
-
-                                Nothing ->
-                                    -- It should never be Nothing after a touch.
-                                    acc.idComponentPairs
-                    in
-                    { idComponentPairs = updatedPairs
-                    , states = change.states
-                    , cache = change.cache
-                    , cmd = Cmd.batch [ acc.cmd, change.cmd ]
-                    , signals = acc.signals ++ change.signals
-                    , lastComponentId = change.lastComponentId
-                    }
-
-                Nothing ->
-                    acc
+            { idComponentPairs = updatedPairs
+            , states = change.states
+            , cache = change.cache
+            , cmd = Cmd.batch [ acc.cmd, change.cmd ]
+            , signals = acc.signals ++ change.signals
+            , lastComponentId = change.lastComponentId
+            }
 
         updatedRenderedComponents =
             Dict.fromList result.idComponentPairs
@@ -732,7 +732,7 @@ wrapTouch :
     Self c m s pC
     -> RenderedComponent c m
     -> TouchArgs pC pM
-    -> Maybe (Change pC pM)
+    -> Change pC pM
 wrapTouch self (RenderedComponent component) args =
     let
         (InternalStuff { slot, freshContainers, freshParentContainers }) =
@@ -744,7 +744,7 @@ wrapTouch self (RenderedComponent component) args =
     case get args.states of
         StateContainer state ->
             let
-                maybeChange =
+                change =
                     component.touch
                         { states = state.childStates
                         , cache = state.cache
@@ -752,54 +752,53 @@ wrapTouch self (RenderedComponent component) args =
                         , lastComponentId = args.lastComponentId
                         , namespace = args.namespace
                         }
+
+                updatedState =
+                    { state
+                        | childStates = change.states
+                        , cache = change.cache
+                    }
+
+                updatedStates =
+                    set
+                        (StateContainer updatedState)
+                        args.states
+
+                newComponent =
+                    case change.component of
+                        Same ->
+                            Same
+
+                        Changed changedComponent ->
+                            wrapRenderedComponent self changedComponent
+                                |> Changed
+
+                cmd =
+                    Cmd.map
+                        (toParentSignal set freshParentContainers)
+                        change.cmd
+
+                signals =
+                    List.map
+                        (toParentSignal set freshParentContainers)
+                        change.signals
             in
-            case maybeChange of
-                Just change ->
-                    let
-                        updatedState =
-                            { state
-                                | childStates = change.states
-                                , cache = change.cache
-                            }
-
-                        updatedStates =
-                            set
-                                (StateContainer updatedState)
-                                args.states
-
-                        newComponent =
-                            case change.component of
-                                Same ->
-                                    Same
-
-                                Changed changedComponent ->
-                                    wrapRenderedComponent self changedComponent
-                                        |> Changed
-
-                        cmd =
-                            Cmd.map
-                                (toParentSignal set freshParentContainers)
-                                change.cmd
-
-                        signals =
-                            List.map
-                                (toParentSignal set freshParentContainers)
-                                change.signals
-                    in
-                    Just
-                        { component = newComponent
-                        , states = updatedStates
-                        , cache = args.cache
-                        , cmd = cmd
-                        , signals = signals
-                        , lastComponentId = change.lastComponentId
-                        }
-
-                Nothing ->
-                    Nothing
+            { component = newComponent
+            , states = updatedStates
+            , cache = args.cache
+            , cmd = cmd
+            , signals = signals
+            , lastComponentId = change.lastComponentId
+            }
 
         _ ->
-            Nothing
+            { component = Same
+            , states = args.states
+            , cache = args.cache
+            , cmd = Cmd.none
+            , signals = []
+            , lastComponentId = args.lastComponentId
+            }
 
 
 wrapUpdate :
