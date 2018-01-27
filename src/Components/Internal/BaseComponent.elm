@@ -814,17 +814,9 @@ wrapUpdate self (RenderedComponent component) args =
         ( get, set ) =
             slot
     in
-    case get args.states of
-        StateContainer state ->
+    case ( get args.states, get args.signalContainers ) of
+        ( StateContainer state, SignalContainer (ChildMsg signalContainers) ) ->
             let
-                signalContainers =
-                    case get args.signalContainers of
-                        SignalContainer (ChildMsg containers) ->
-                            containers
-
-                        _ ->
-                            freshContainers
-
                 maybeChange =
                     component.update
                         { states = state.childStates
@@ -880,7 +872,7 @@ wrapUpdate self (RenderedComponent component) args =
                 Nothing ->
                     Nothing
 
-        _ ->
+        ( _, _ ) ->
             Nothing
 
 
