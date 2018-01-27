@@ -11,7 +11,7 @@ module Components.RegularComponent
         )
 
 import Components exposing (Component, Container, Node, Signal, Slot)
-import Components.MixedComponent as MixedComponent
+import Components.Internal.BaseComponent as BaseComponent
 
 
 type alias Spec x y c m s pC pM =
@@ -34,11 +34,11 @@ type alias SpecWithOptions x y c m s pC pM =
 
 
 type alias Self c m s pC =
-    MixedComponent.Self c m s pC
+    BaseComponent.Self c m s pC
 
 
 type alias Options m =
-    MixedComponent.Options m
+    BaseComponent.Options m
 
 
 regularComponent : Spec x y c m s pC pM -> Component x y (Container c m s) pC pM
@@ -57,15 +57,15 @@ regularComponentWithOptions :
     SpecWithOptions x y c m s pC pM
     -> Component x y (Container c m s) pC pM
 regularComponentWithOptions spec =
-    MixedComponent.mixedComponentWithOptions
-        { spec | view = \self -> spec.view self >> MixedComponent.wrapNode self }
+    BaseComponent.baseComponentWithOptions
+        { spec | view = \self -> spec.view self >> BaseComponent.wrapNode self }
 
 
 sendToChild : Self c m s pC -> Slot (Container cC cM cS) c -> cM -> Signal pC pM
 sendToChild =
-    MixedComponent.sendToChild
+    BaseComponent.sendToChild
 
 
 defaultOptions : Options m
 defaultOptions =
-    MixedComponent.defaultOptions
+    BaseComponent.defaultOptions
