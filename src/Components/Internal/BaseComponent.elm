@@ -91,7 +91,7 @@ baseComponentWithOptions spec =
         \slot ->
             ComponentNode <|
                 RenderedComponent
-                    { getId = getId slot
+                    { identify = identify slot
                     , touch = touch spec slot
                     , update = update spec slot
                     , subscriptions = \_ -> Sub.none
@@ -99,8 +99,8 @@ baseComponentWithOptions spec =
                     }
 
 
-getId : Slot (Container c m s) pC -> { states : pC } -> Maybe ComponentId
-getId ( get, _ ) args =
+identify : Slot (Container c m s) pC -> { states : pC } -> Maybe ComponentId
+identify ( get, _ ) args =
     case get args.states of
         StateContainer state ->
             Just state.id
@@ -184,7 +184,7 @@ init spec (( _, set ) as slot) args =
 
         component =
             RenderedComponent
-                { getId = getId slot
+                { identify = identify slot
                 , touch = touch spec slot
                 , update = update spec slot
                 , subscriptions = subscriptions slot localSub
@@ -219,7 +219,7 @@ rebuild spec slot args state =
 
         component =
             RenderedComponent
-                { getId = getId slot
+                { identify = identify slot
                 , touch = touch spec slot
                 , update = update spec slot
                 , subscriptions = subscriptions slot localSub
@@ -298,7 +298,7 @@ doLocalUpdate spec (( _, set ) as slot) args state msg =
 
         component =
             RenderedComponent
-                { getId = getId slot
+                { identify = identify slot
                 , touch = touch spec slot
                 , update = update spec slot
                 , subscriptions = subscriptions slot localSub
@@ -421,7 +421,7 @@ touchTree args id tree =
                     newComponent
 
                 maybeId =
-                    destructuredNewComponent.getId
+                    destructuredNewComponent.identify
                         { states = change.states
                         }
 
@@ -577,7 +577,7 @@ toStyledHtml args cache node =
             Html.Styled.fromUnstyled node
 
         ComponentNode (RenderedComponent component) ->
-            component.getId { states = args.states }
+            component.identify { states = args.states }
                 |> Maybe.andThen (\id -> Dict.get id cache)
                 |> Maybe.andThen (\(RenderedComponent c) -> Just (c.view args))
                 |> Maybe.withDefault (Html.Styled.text "")
@@ -699,7 +699,7 @@ wrapRenderedComponent :
     -> RenderedComponent pC pM
 wrapRenderedComponent self component =
     RenderedComponent <|
-        { getId = wrapGetId self component
+        { identify = wrapIdentify self component
         , touch = wrapTouch self component
         , update = wrapUpdate self component
         , subscriptions = wrapSubscriptions self component
@@ -707,12 +707,12 @@ wrapRenderedComponent self component =
         }
 
 
-wrapGetId :
+wrapIdentify :
     Self c m s pC
     -> RenderedComponent c m
     -> { states : pC }
     -> Maybe ComponentId
-wrapGetId self (RenderedComponent component) args =
+wrapIdentify self (RenderedComponent component) args =
     let
         (InternalStuff { slot }) =
             self.internal
@@ -722,7 +722,7 @@ wrapGetId self (RenderedComponent component) args =
     in
     case get args.states of
         StateContainer state ->
-            component.getId { states = state.childStates }
+            component.identify { states = state.childStates }
 
         _ ->
             Nothing

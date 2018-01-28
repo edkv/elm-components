@@ -114,7 +114,7 @@ type alias Cache c m =
 
 type RenderedComponent c m
     = RenderedComponent
-        { getId : { states : c } -> Maybe ComponentId
+        { identify : { states : c } -> Maybe ComponentId
         , touch : TouchArgs c m -> Change c m
         , update : UpdateArgs c m -> Maybe (Change c m)
         , subscriptions : SubscriptionsArgs c m -> Sub (Signal c m)
