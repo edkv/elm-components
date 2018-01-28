@@ -150,11 +150,11 @@ init spec (( _, set ) as slot) args =
         self =
             getSelf spec slot id args
 
-        ( localState, nonwrappedLocalCmd, localSignals ) =
+        ( localState, nonmappedLocalCmd, localSignals ) =
             spec.init self
 
         localCmd =
-            nonwrappedLocalCmd
+            nonmappedLocalCmd
                 |> Cmd.map (wrapLocalMsg set args.freshContainers)
 
         localSub =
@@ -274,11 +274,11 @@ doLocalUpdate spec (( _, set ) as slot) args state msg =
         self =
             getSelf spec slot state.id args
 
-        ( updatedLocalState, nonwrappedLocalCmd, localSignals ) =
+        ( updatedLocalState, nonmappedLocalCmd, localSignals ) =
             spec.update self msg state.localState
 
         localCmd =
-            nonwrappedLocalCmd
+            nonmappedLocalCmd
                 |> Cmd.map (wrapLocalMsg set args.freshContainers)
 
         localSub =
