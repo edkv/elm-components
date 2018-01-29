@@ -90,13 +90,7 @@ baseComponentWithOptions spec =
     Component <|
         \slot ->
             ComponentNode <|
-                RenderedComponent
-                    { identify = identify slot
-                    , touch = touch spec slot
-                    , update = update spec slot
-                    , subscriptions = \_ -> Sub.none
-                    , view = \_ -> Html.Styled.text ""
-                    }
+                buildComponent spec slot Sub.none (Text "")
 
 
 identify : Slot (Container c m s) pC -> { states : pC } -> Maybe ComponentId
@@ -112,9 +106,11 @@ identify ( get, _ ) args =
 touch :
     SpecWithOptions v w c m s pC pM
     -> Slot (Container c m s) pC
+    -> Sub (Signal pC pM)
+    -> Node v w pC pM
     -> TouchArgs pC pM
     -> Change pC pM
-touch spec (( get, _ ) as slot) args =
+touch spec (( get, _ ) as slot) localSub tree args =
     case get args.states of
         EmptyContainer ->
             init spec slot args
@@ -128,7 +124,7 @@ touch spec (( get, _ ) as slot) args =
                     rebuild spec slot args state
 
         _ ->
-            { component = Same
+            { component = buildComponent spec slot localSub tree
             , states = args.states
             , cache = args.cache
             , cmd = Cmd.none
@@ -159,6 +155,7 @@ init spec (( _, set ) as slot) args =
 
         localSub =
             spec.subscriptions self localState
+                |> Sub.map (wrapLocalMsg set args.freshContainers)
 
         tree =
             spec.view self localState
@@ -181,17 +178,8 @@ init spec (( _, set ) as slot) args =
                 }
                 id
                 tree
-
-        component =
-            RenderedComponent
-                { identify = identify slot
-                , touch = touch spec slot
-                , update = update spec slot
-                , subscriptions = subscriptions slot localSub
-                , view = view slot tree
-                }
     in
-    { component = Changed component
+    { component = buildComponent spec slot localSub tree
     , states = treeTouchResult.states
     , cache = treeTouchResult.cache
     , cmd = Cmd.batch [ localCmd, treeTouchResult.cmd ]
@@ -206,27 +194,19 @@ rebuild :
     -> TouchArgs pC pM
     -> ComponentState c m s
     -> Change pC pM
-rebuild spec slot args state =
+rebuild spec (( get, set ) as slot) args state =
     let
         self =
             getSelf spec slot state.id args
 
         localSub =
             spec.subscriptions self state.localState
+                |> Sub.map (wrapLocalMsg set args.freshContainers)
 
         tree =
             spec.view self state.localState
-
-        component =
-            RenderedComponent
-                { identify = identify slot
-                , touch = touch spec slot
-                , update = update spec slot
-                , subscriptions = subscriptions slot localSub
-                , view = view slot tree
-                }
     in
-    { component = Changed component
+    { component = buildComponent spec slot localSub tree
     , states = args.states
     , cache = args.cache
     , cmd = Cmd.none
@@ -238,14 +218,16 @@ rebuild spec slot args state =
 update :
     SpecWithOptions v w c m s pC pM
     -> Slot (Container c m s) pC
+    -> Sub (Signal pC pM)
+    -> Node v w pC pM
     -> UpdateArgs pC pM
     -> Maybe (Change pC pM)
-update spec (( get, _ ) as slot) args =
+update spec (( get, _ ) as slot) localSub tree args =
     case get args.states of
         StateContainer state ->
             case get args.signalContainers of
                 EmptyContainer ->
-                    maybeUpdateChild spec slot args state
+                    maybeUpdateChild spec slot localSub tree args state
 
                 SignalContainer signal ->
                     case signal of
@@ -253,7 +235,7 @@ update spec (( get, _ ) as slot) args =
                             Just (doLocalUpdate spec slot args state msg)
 
                         ChildMsg _ ->
-                            maybeUpdateChild spec slot args state
+                            maybeUpdateChild spec slot localSub tree args state
 
                 _ ->
                     Nothing
@@ -283,6 +265,7 @@ doLocalUpdate spec (( _, set ) as slot) args state msg =
 
         localSub =
             spec.subscriptions self updatedLocalState
+                |> Sub.map (wrapLocalMsg set args.freshContainers)
 
         tree =
             spec.view self updatedLocalState
@@ -295,17 +278,8 @@ doLocalUpdate spec (( _, set ) as slot) args state msg =
 
         treeTouchResult =
             touchTree { args | states = updatedStates } state.id tree
-
-        component =
-            RenderedComponent
-                { identify = identify slot
-                , touch = touch spec slot
-                , update = update spec slot
-                , subscriptions = subscriptions slot localSub
-                , view = view slot tree
-                }
     in
-    { component = Changed component
+    { component = buildComponent spec slot localSub tree
     , states = treeTouchResult.states
     , cache = treeTouchResult.cache
     , cmd = Cmd.batch [ localCmd, treeTouchResult.cmd ]
@@ -317,10 +291,12 @@ doLocalUpdate spec (( _, set ) as slot) args state msg =
 maybeUpdateChild :
     SpecWithOptions v w c m s pC pM
     -> Slot (Container c m s) pC
+    -> Sub (Signal pC pM)
+    -> Node v w pC pM
     -> UpdateArgs pC pM
     -> ComponentState c m s
     -> Maybe (Change pC pM)
-maybeUpdateChild spec (( _, set ) as slot) args state =
+maybeUpdateChild spec (( _, set ) as slot) localSub tree args state =
     let
         renderedComponents =
             Dict.get state.id args.cache
@@ -333,27 +309,22 @@ maybeUpdateChild spec (( _, set ) as slot) args state =
                     case component.update args of
                         Just change ->
                             let
-                                newComponent =
-                                    case change.component of
-                                        Same ->
-                                            RenderedComponent component
-
-                                        Changed changedComponent ->
-                                            changedComponent
-
                                 updatedRenderedComponents =
                                     Dict.get state.id change.cache
                                         |> Maybe.withDefault Dict.empty
-                                        |> Dict.insert id newComponent
+                                        |> Dict.insert id change.component
 
                                 updatedCache =
                                     Dict.insert
                                         state.id
                                         updatedRenderedComponents
                                         change.cache
+
+                                component =
+                                    buildComponent spec slot localSub tree
                             in
                             Just
-                                { component = Same
+                                { component = component
                                 , states = change.states
                                 , cache = updatedCache
                                 , cmd = change.cmd
@@ -409,26 +380,13 @@ touchTree args id tree =
                         , namespace = args.namespace
                         }
 
-                newComponent =
-                    case change.component of
-                        Same ->
-                            RenderedComponent component
-
-                        Changed changedComponent ->
-                            changedComponent
-
-                (RenderedComponent destructuredNewComponent) =
-                    newComponent
-
-                maybeId =
-                    destructuredNewComponent.identify
-                        { states = change.states
-                        }
+                (RenderedComponent changedComponent) =
+                    change.component
 
                 updatedPairs =
-                    case maybeId of
+                    case changedComponent.identify { states = change.states } of
                         Just id ->
-                            ( id, newComponent ) :: acc.idComponentPairs
+                            ( id, change.component ) :: acc.idComponentPairs
 
                         Nothing ->
                             -- It should never be Nothing after a touch.
@@ -487,9 +445,25 @@ collectRenderedComponents node acc =
             component :: acc
 
 
+buildComponent :
+    SpecWithOptions v w c m s pC pM
+    -> Slot (Container c m s) pC
+    -> Sub (Signal pC pM)
+    -> Node v w pC pM
+    -> RenderedComponent pC pM
+buildComponent spec slot localSub tree =
+    RenderedComponent
+        { identify = identify slot
+        , touch = touch spec slot localSub tree
+        , update = update spec slot localSub tree
+        , subscriptions = subscriptions slot localSub
+        , view = view slot tree
+        }
+
+
 subscriptions :
     Slot (Container c m s) pC
-    -> Sub m
+    -> Sub (Signal pC pM)
     -> SubscriptionsArgs pC pM
     -> Sub (Signal pC pM)
 subscriptions (( get, set ) as slot) localSub args =
@@ -507,7 +481,7 @@ subscriptions (( get, set ) as slot) localSub args =
                         , component.subscriptions args
                         ]
                 )
-                (Sub.map (wrapLocalMsg set args.freshContainers) localSub)
+                localSub
                 renderedComponents
 
         _ ->
@@ -753,6 +727,9 @@ wrapTouch self (RenderedComponent component) args =
                         , namespace = args.namespace
                         }
 
+                newComponent =
+                    wrapRenderedComponent self change.component
+
                 updatedState =
                     { state
                         | childStates = change.states
@@ -760,18 +737,7 @@ wrapTouch self (RenderedComponent component) args =
                     }
 
                 updatedStates =
-                    set
-                        (StateContainer updatedState)
-                        args.states
-
-                newComponent =
-                    case change.component of
-                        Same ->
-                            Same
-
-                        Changed changedComponent ->
-                            wrapRenderedComponent self changedComponent
-                                |> Changed
+                    set (StateContainer updatedState) args.states
 
                 cmd =
                     Cmd.map
@@ -792,7 +758,11 @@ wrapTouch self (RenderedComponent component) args =
             }
 
         _ ->
-            { component = Same
+            let
+                sameComponent =
+                    wrapRenderedComponent self (RenderedComponent component)
+            in
+            { component = sameComponent
             , states = args.states
             , cache = args.cache
             , cmd = Cmd.none
@@ -830,6 +800,9 @@ wrapUpdate self (RenderedComponent component) args =
             case maybeChange of
                 Just change ->
                     let
+                        newComponent =
+                            wrapRenderedComponent self change.component
+
                         updatedState =
                             { state
                                 | childStates = change.states
@@ -837,18 +810,7 @@ wrapUpdate self (RenderedComponent component) args =
                             }
 
                         updatedStates =
-                            set
-                                (StateContainer updatedState)
-                                args.states
-
-                        newComponent =
-                            case change.component of
-                                Same ->
-                                    Same
-
-                                Changed changedComponent ->
-                                    wrapRenderedComponent self changedComponent
-                                        |> Changed
+                            set (StateContainer updatedState) args.states
 
                         cmd =
                             Cmd.map
@@ -894,7 +856,6 @@ wrapSubscriptions self (RenderedComponent component) args =
             component.subscriptions
                 { states = state.childStates
                 , cache = state.cache
-                , freshContainers = freshContainers
                 }
                 |> Sub.map (toParentSignal set freshParentContainers)
 

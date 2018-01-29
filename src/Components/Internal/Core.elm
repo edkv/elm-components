@@ -7,7 +7,6 @@ module Components.Internal.Core
         , ComponentId
         , ComponentState
         , Container(EmptyContainer, SignalContainer, StateContainer)
-        , NewComponent(Changed, Same)
         , Node
             ( ComponentNode
             , Embedding
@@ -142,7 +141,7 @@ type alias UpdateArgs c m =
 
 
 type alias Change c m =
-    { component : NewComponent c m
+    { component : RenderedComponent c m
     , states : c
     , cache : Cache c m
     , cmd : Cmd (Signal c m)
@@ -151,15 +150,9 @@ type alias Change c m =
     }
 
 
-type NewComponent c m
-    = Same
-    | Changed (RenderedComponent c m)
-
-
 type alias SubscriptionsArgs c m =
     { states : c
     , cache : Cache c m
-    , freshContainers : c
     }
 
 

@@ -192,18 +192,10 @@ touch state =
                         , namespace = readyState.namespace
                         }
 
-                newComponent =
-                    case change.component of
-                        Core.Same ->
-                            readyState.component
-
-                        Core.Changed component ->
-                            component
-
                 newState =
                     { readyState
                         | componentState = change.states
-                        , component = newComponent
+                        , component = change.component
                         , cache = change.cache
                         , lastComponentId = change.lastComponentId
                     }
@@ -254,18 +246,9 @@ doUpdate signals state cmdAcc =
                 ( newState, cmd, moreSignals ) =
                     case maybeChange of
                         Just change ->
-                            let
-                                newComponent =
-                                    case change.component of
-                                        Core.Same ->
-                                            state.component
-
-                                        Core.Changed component ->
-                                            component
-                            in
                             ( { state
                                 | componentState = change.states
-                                , component = newComponent
+                                , component = change.component
                                 , cache = change.cache
                                 , lastComponentId = change.lastComponentId
                               }
@@ -293,7 +276,6 @@ subscriptions state =
             component.subscriptions
                 { states = readyState.componentState
                 , cache = readyState.cache
-                , freshContainers = Core.EmptyContainer
                 }
                 |> Sub.map ComponentMsg
 
