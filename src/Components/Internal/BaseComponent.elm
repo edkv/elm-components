@@ -205,13 +205,16 @@ rebuild spec (( get, set ) as slot) args state =
 
         tree =
             spec.view self state.localState
+
+        treeTouchResult =
+            touchTree args state.id tree
     in
     { component = buildComponent spec slot localSub tree
-    , states = args.states
-    , cache = args.cache
-    , cmd = Cmd.none
-    , signals = []
-    , lastComponentId = args.lastComponentId
+    , states = treeTouchResult.states
+    , cache = treeTouchResult.cache
+    , cmd = treeTouchResult.cmd
+    , signals = treeTouchResult.signals
+    , lastComponentId = treeTouchResult.lastComponentId
     }
 
 
