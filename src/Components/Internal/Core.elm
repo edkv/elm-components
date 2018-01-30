@@ -7,6 +7,8 @@ module Components.Internal.Core
         , ComponentId
         , ComponentState
         , Container(EmptyContainer, SignalContainer, StateContainer)
+        , Element
+        , KeyedElement
         , Node
             ( ComponentNode
             , Embedding
@@ -22,10 +24,8 @@ module Components.Internal.Core
         , Signal(ChildMsg, LocalMsg)
         , Slot
         , StylingStrategy(ClassAttribute, ClassNameProperty)
-        , SubscriptionsArgs
         , TouchArgs
         , UpdateArgs
-        , ViewArgs
         )
 
 import Css
@@ -35,39 +35,29 @@ import VirtualDom
 
 
 type Node v w c m
-    = SimpleElement
-        { tag : String
-        , attributes : List (Attribute v c m)
-        , children : List (Node v w c m)
-        }
-    | Embedding
-        { tag : String
-        , attributes : List (Attribute w c m)
-        , children : List (Node w v c m)
-        }
-    | ReversedEmbedding
-        { tag : String
-        , attributes : List (Attribute v c m)
-        , children : List (Node w v c m)
-        }
-    | KeyedSimpleElement
-        { tag : String
-        , attributes : List (Attribute v c m)
-        , children : List ( String, Node v w c m )
-        }
-    | KeyedEmbedding
-        { tag : String
-        , attributes : List (Attribute w c m)
-        , children : List ( String, Node w v c m )
-        }
-    | KeyedReversedEmbedding
-        { tag : String
-        , attributes : List (Attribute v c m)
-        , children : List ( String, Node w v c m )
-        }
+    = SimpleElement (Element v v w c m)
+    | Embedding (Element w w v c m)
+    | ReversedEmbedding (Element v w v c m)
+    | KeyedSimpleElement (KeyedElement v v w c m)
+    | KeyedEmbedding (KeyedElement w w v c m)
+    | KeyedReversedEmbedding (KeyedElement v w v c m)
     | Text String
     | PlainNode (VirtualDom.Node (Signal c m))
     | ComponentNode (RenderedComponent c m)
+
+
+type alias Element x y z c m =
+    { tag : String
+    , attributes : List (Attribute x c m)
+    , children : List (Node y z c m)
+    }
+
+
+type alias KeyedElement x y z c m =
+    { tag : String
+    , attributes : List (Attribute x c m)
+    , children : List ( String, Node y z c m )
+    }
 
 
 type Attribute v c m
@@ -116,8 +106,8 @@ type RenderedComponent c m
         { identify : { states : c } -> Maybe ComponentId
         , touch : TouchArgs c m -> Change c m
         , update : UpdateArgs c m -> Maybe (Change c m)
-        , subscriptions : SubscriptionsArgs c m -> Sub (Signal c m)
-        , view : ViewArgs c m -> Html.Styled.Html (Signal c m)
+        , subscriptions : () -> Sub (Signal c m)
+        , view : () -> Html.Styled.Html (Signal c m)
         }
 
 
@@ -147,18 +137,6 @@ type alias Change c m =
     , cmd : Cmd (Signal c m)
     , signals : List (Signal c m)
     , lastComponentId : ComponentId
-    }
-
-
-type alias SubscriptionsArgs c m =
-    { states : c
-    , cache : Cache c m
-    }
-
-
-type alias ViewArgs c m =
-    { states : c
-    , cache : Cache c m
     }
 
 

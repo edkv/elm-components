@@ -273,10 +273,7 @@ subscriptions state =
                 (Core.RenderedComponent component) =
                     readyState.component
             in
-            component.subscriptions
-                { states = readyState.componentState
-                , cache = readyState.cache
-                }
+            component.subscriptions ()
                 |> Sub.map ComponentMsg
 
         _ ->
@@ -291,10 +288,7 @@ view state =
                 (Core.RenderedComponent component) =
                     readyState.component
             in
-            component.view
-                { states = readyState.componentState
-                , cache = readyState.cache
-                }
+            component.view ()
                 |> Html.Styled.toUnstyled
                 |> VirtualDom.map ComponentMsg
 
