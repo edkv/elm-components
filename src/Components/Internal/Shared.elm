@@ -18,7 +18,7 @@ type SvgItem
     = SvgItem
 
 
-svgNamespace : Attribute SvgItem c m
+svgNamespace : Attribute SvgItem m c
 svgNamespace =
     VirtualDom.property "namespace" (Json.string "http://www.w3.org/2000/svg")
         |> PlainAttribute

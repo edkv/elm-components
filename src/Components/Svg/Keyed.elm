@@ -25,7 +25,7 @@ each child node. You want this when you have a list of nodes that is changing:
 adding nodes, removing nodes, etc. In these cases, the unique identifiers help
 make the DOM modifications more efficient.
 -}
-node : String -> List (Attribute c m) -> List ( String, Svg c m ) -> Svg c m
+node : String -> List (Attribute m c) -> List ( String, Svg m c ) -> Svg m c
 node tag attributes children =
     Core.KeyedSimpleElement
         { tag = tag
@@ -35,7 +35,7 @@ node tag attributes children =
 
 
 {-| -}
-svg : List (Attribute c m) -> List ( String, Svg c m ) -> Html c m
+svg : List (Attribute m c) -> List ( String, Svg m c ) -> Html m c
 svg attributes children =
     Core.KeyedEmbedding
         { tag = "svg"
@@ -45,7 +45,7 @@ svg attributes children =
 
 
 {-| -}
-foreignObject : List (Attribute c m) -> List ( String, Html c m ) -> Svg c m
+foreignObject : List (Attribute m c) -> List ( String, Html m c ) -> Svg m c
 foreignObject attributes children =
     Core.KeyedReversedEmbedding
         { tag = "foreignObject"

@@ -14,34 +14,34 @@ import Components exposing (Component, Container, Node, Signal, Slot)
 import Components.Internal.BaseComponent as BaseComponent
 
 
-type alias Spec v w c m s pC pM =
-    { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self c m s pC -> s -> Sub m
-    , view : Self c m s pC -> s -> Node v w c m
+type alias Spec v w s m c pM pC =
+    { init : Self s m c pC -> ( s, Cmd m, List (Signal pM pC) )
+    , update : Self s m c pC -> m -> s -> ( s, Cmd m, List (Signal pM pC) )
+    , subscriptions : Self s m c pC -> s -> Sub m
+    , view : Self s m c pC -> s -> Node v w m c
     , children : c
     }
 
 
-type alias SpecWithOptions v w c m s pC pM =
-    { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self c m s pC -> s -> Sub m
-    , view : Self c m s pC -> s -> Node v w c m
+type alias SpecWithOptions v w s m c pM pC =
+    { init : Self s m c pC -> ( s, Cmd m, List (Signal pM pC) )
+    , update : Self s m c pC -> m -> s -> ( s, Cmd m, List (Signal pM pC) )
+    , subscriptions : Self s m c pC -> s -> Sub m
+    , view : Self s m c pC -> s -> Node v w m c
     , children : c
     , options : Options m
     }
 
 
-type alias Self c m s pC =
-    BaseComponent.Self c m s pC
+type alias Self s m c pC =
+    BaseComponent.Self s m c pC
 
 
 type alias Options m =
     BaseComponent.Options m
 
 
-regularComponent : Spec v w c m s pC pM -> Component v w (Container c m s) pC pM
+regularComponent : Spec v w s m c pM pC -> Component v w (Container s m c) pM pC
 regularComponent spec =
     regularComponentWithOptions
         { init = spec.init
@@ -54,14 +54,14 @@ regularComponent spec =
 
 
 regularComponentWithOptions :
-    SpecWithOptions v w c m s pC pM
-    -> Component v w (Container c m s) pC pM
+    SpecWithOptions v w s m c pM pC
+    -> Component v w (Container s m c) pM pC
 regularComponentWithOptions spec =
     BaseComponent.baseComponentWithOptions
         { spec | view = \self -> spec.view self >> BaseComponent.wrapNode self }
 
 
-sendToChild : Self c m s pC -> Slot (Container cC cM cS) c -> cM -> Signal pC pM
+sendToChild : Self s m c pC -> Slot (Container cS cM cC) c -> cM -> Signal pM pC
 sendToChild =
     BaseComponent.sendToChild
 

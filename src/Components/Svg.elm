@@ -88,21 +88,21 @@ import Components.Internal.Shared exposing (HtmlItem, SvgItem, svgNamespace)
 import VirtualDom
 
 
-type alias Svg c m =
-    Core.Node SvgItem HtmlItem c m
+type alias Svg m c =
+    Core.Node SvgItem HtmlItem m c
 
 
-type alias Attribute c m =
-    Core.Attribute SvgItem c m
+type alias Attribute m c =
+    Core.Attribute SvgItem m c
 
 
-type alias Component container c m =
-    Core.Component SvgItem HtmlItem container c m
+type alias Component container m c =
+    Core.Component SvgItem HtmlItem container m c
 
 
 {-| Create any SVG node. To create a `<rect>` helper function, you would write:
 
-    rect : List (Attribute c m) -> List (Svg c m) -> Svg c m
+    rect : List (Attribute m c) -> List (Svg m c) -> Svg m c
     rect attributes children =
         node "rect" attributes children
 
@@ -110,7 +110,7 @@ You should always be able to use the helper functions already defined in this
 library though!
 
 -}
-node : String -> List (Attribute c m) -> List (Svg c m) -> Svg c m
+node : String -> List (Attribute m c) -> List (Svg m c) -> Svg m c
 node tag attributes children =
     Core.SimpleElement
         { tag = tag
@@ -124,17 +124,17 @@ node tag attributes children =
 Warning: not to be confused with `text_` which produces the SVG `<text>` tag!
 
 -}
-text : String -> Svg c m
+text : String -> Svg m c
 text =
     Core.Text
 
 
-none : Svg c m
+none : Svg m c
 none =
     text ""
 
 
-plainNode : VirtualDom.Node m -> Svg c m
+plainNode : VirtualDom.Node m -> Svg m c
 plainNode =
     VirtualDom.map send >> Core.PlainNode
 
@@ -146,7 +146,7 @@ containing a rounded rectangle:
     import Svg exposing (..)
     import Svg.Attributes exposing (..)
 
-    roundRect : Html c m
+    roundRect : Html m c
     roundRect =
         svg
             [ width "120", height "120", viewBox "0 0 120 120" ]
@@ -162,7 +162,7 @@ containing a rounded rectangle:
             ]
 
 -}
-svg : List (Attribute c m) -> List (Svg c m) -> Html c m
+svg : List (Attribute m c) -> List (Svg m c) -> Html m c
 svg attributes children =
     Core.Embedding
         { tag = "svg"
@@ -172,7 +172,7 @@ svg attributes children =
 
 
 {-| -}
-foreignObject : List (Attribute c m) -> List (Html c m) -> Svg c m
+foreignObject : List (Attribute m c) -> List (Html m c) -> Svg m c
 foreignObject attributes children =
     Core.ReversedEmbedding
         { tag = "foreignObject"
@@ -186,37 +186,37 @@ foreignObject attributes children =
 
 
 {-| -}
-animate : List (Attribute c m) -> List (Svg c m) -> Svg c m
+animate : List (Attribute m c) -> List (Svg m c) -> Svg m c
 animate =
     node "animate"
 
 
 {-| -}
-animateColor : List (Attribute c m) -> List (Svg c m) -> Svg c m
+animateColor : List (Attribute m c) -> List (Svg m c) -> Svg m c
 animateColor =
     node "animateColor"
 
 
 {-| -}
-animateMotion : List (Attribute c m) -> List (Svg c m) -> Svg c m
+animateMotion : List (Attribute m c) -> List (Svg m c) -> Svg m c
 animateMotion =
     node "animateMotion"
 
 
 {-| -}
-animateTransform : List (Attribute c m) -> List (Svg c m) -> Svg c m
+animateTransform : List (Attribute m c) -> List (Svg m c) -> Svg m c
 animateTransform =
     node "animateTransform"
 
 
 {-| -}
-mpath : List (Attribute c m) -> List (Svg c m) -> Svg c m
+mpath : List (Attribute m c) -> List (Svg m c) -> Svg m c
 mpath =
     node "mpath"
 
 
 {-| -}
-set : List (Attribute c m) -> List (Svg c m) -> Svg c m
+set : List (Attribute m c) -> List (Svg m c) -> Svg m c
 set =
     node "set"
 
@@ -227,49 +227,49 @@ set =
 
 {-| The SVG Anchor Element defines a hyperlink.
 -}
-a : List (Attribute c m) -> List (Svg c m) -> Svg c m
+a : List (Attribute m c) -> List (Svg m c) -> Svg m c
 a =
     node "a"
 
 
 {-| -}
-defs : List (Attribute c m) -> List (Svg c m) -> Svg c m
+defs : List (Attribute m c) -> List (Svg m c) -> Svg m c
 defs =
     node "defs"
 
 
 {-| -}
-g : List (Attribute c m) -> List (Svg c m) -> Svg c m
+g : List (Attribute m c) -> List (Svg m c) -> Svg m c
 g =
     node "g"
 
 
 {-| -}
-marker : List (Attribute c m) -> List (Svg c m) -> Svg c m
+marker : List (Attribute m c) -> List (Svg m c) -> Svg m c
 marker =
     node "marker"
 
 
 {-| -}
-mask : List (Attribute c m) -> List (Svg c m) -> Svg c m
+mask : List (Attribute m c) -> List (Svg m c) -> Svg m c
 mask =
     node "mask"
 
 
 {-| -}
-pattern : List (Attribute c m) -> List (Svg c m) -> Svg c m
+pattern : List (Attribute m c) -> List (Svg m c) -> Svg m c
 pattern =
     node "pattern"
 
 
 {-| -}
-switch : List (Attribute c m) -> List (Svg c m) -> Svg c m
+switch : List (Attribute m c) -> List (Svg m c) -> Svg m c
 switch =
     node "switch"
 
 
 {-| -}
-symbol : List (Attribute c m) -> List (Svg c m) -> Svg c m
+symbol : List (Attribute m c) -> List (Svg m c) -> Svg m c
 symbol =
     node "symbol"
 
@@ -279,19 +279,19 @@ symbol =
 
 
 {-| -}
-desc : List (Attribute c m) -> List (Svg c m) -> Svg c m
+desc : List (Attribute m c) -> List (Svg m c) -> Svg m c
 desc =
     node "desc"
 
 
 {-| -}
-metadata : List (Attribute c m) -> List (Svg c m) -> Svg c m
+metadata : List (Attribute m c) -> List (Svg m c) -> Svg m c
 metadata =
     node "metadata"
 
 
 {-| -}
-title : List (Attribute c m) -> List (Svg c m) -> Svg c m
+title : List (Attribute m c) -> List (Svg m c) -> Svg m c
 title =
     node "title"
 
@@ -301,127 +301,127 @@ title =
 
 
 {-| -}
-feBlend : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feBlend : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feBlend =
     node "feBlend"
 
 
 {-| -}
-feColorMatrix : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feColorMatrix : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feColorMatrix =
     node "feColorMatrix"
 
 
 {-| -}
-feComponentTransfer : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feComponentTransfer : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feComponentTransfer =
     node "feComponentTransfer"
 
 
 {-| -}
-feComposite : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feComposite : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feComposite =
     node "feComposite"
 
 
 {-| -}
-feConvolveMatrix : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feConvolveMatrix : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feConvolveMatrix =
     node "feConvolveMatrix"
 
 
 {-| -}
-feDiffuseLighting : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feDiffuseLighting : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feDiffuseLighting =
     node "feDiffuseLighting"
 
 
 {-| -}
-feDisplacementMap : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feDisplacementMap : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feDisplacementMap =
     node "feDisplacementMap"
 
 
 {-| -}
-feFlood : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feFlood : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feFlood =
     node "feFlood"
 
 
 {-| -}
-feFuncA : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feFuncA : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feFuncA =
     node "feFuncA"
 
 
 {-| -}
-feFuncB : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feFuncB : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feFuncB =
     node "feFuncB"
 
 
 {-| -}
-feFuncG : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feFuncG : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feFuncG =
     node "feFuncG"
 
 
 {-| -}
-feFuncR : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feFuncR : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feFuncR =
     node "feFuncR"
 
 
 {-| -}
-feGaussianBlur : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feGaussianBlur : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feGaussianBlur =
     node "feGaussianBlur"
 
 
 {-| -}
-feImage : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feImage : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feImage =
     node "feImage"
 
 
 {-| -}
-feMerge : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feMerge : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feMerge =
     node "feMerge"
 
 
 {-| -}
-feMergeNode : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feMergeNode : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feMergeNode =
     node "feMergeNode"
 
 
 {-| -}
-feMorphology : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feMorphology : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feMorphology =
     node "feMorphology"
 
 
 {-| -}
-feOffset : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feOffset : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feOffset =
     node "feOffset"
 
 
 {-| -}
-feSpecularLighting : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feSpecularLighting : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feSpecularLighting =
     node "feSpecularLighting"
 
 
 {-| -}
-feTile : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feTile : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feTile =
     node "feTile"
 
 
 {-| -}
-feTurbulence : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feTurbulence : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feTurbulence =
     node "feTurbulence"
 
@@ -431,7 +431,7 @@ feTurbulence =
 
 
 {-| -}
-font : List (Attribute c m) -> List (Svg c m) -> Svg c m
+font : List (Attribute m c) -> List (Svg m c) -> Svg m c
 font =
     node "font"
 
@@ -441,19 +441,19 @@ font =
 
 
 {-| -}
-linearGradient : List (Attribute c m) -> List (Svg c m) -> Svg c m
+linearGradient : List (Attribute m c) -> List (Svg m c) -> Svg m c
 linearGradient =
     node "linearGradient"
 
 
 {-| -}
-radialGradient : List (Attribute c m) -> List (Svg c m) -> Svg c m
+radialGradient : List (Attribute m c) -> List (Svg m c) -> Svg m c
 radialGradient =
     node "radialGradient"
 
 
 {-| -}
-stop : List (Attribute c m) -> List (Svg c m) -> Svg c m
+stop : List (Attribute m c) -> List (Svg m c) -> Svg m c
 stop =
     node "stop"
 
@@ -468,37 +468,37 @@ a center point and a radius.
     circle [ cx "60", cy "60", r "50" ]
 
 -}
-circle : List (Attribute c m) -> List (Svg c m) -> Svg c m
+circle : List (Attribute m c) -> List (Svg m c) -> Svg m c
 circle =
     node "circle"
 
 
 {-| -}
-ellipse : List (Attribute c m) -> List (Svg c m) -> Svg c m
+ellipse : List (Attribute m c) -> List (Svg m c) -> Svg m c
 ellipse =
     node "ellipse"
 
 
 {-| -}
-image : List (Attribute c m) -> List (Svg c m) -> Svg c m
+image : List (Attribute m c) -> List (Svg m c) -> Svg m c
 image =
     node "image"
 
 
 {-| -}
-line : List (Attribute c m) -> List (Svg c m) -> Svg c m
+line : List (Attribute m c) -> List (Svg m c) -> Svg m c
 line =
     node "line"
 
 
 {-| -}
-path : List (Attribute c m) -> List (Svg c m) -> Svg c m
+path : List (Attribute m c) -> List (Svg m c) -> Svg m c
 path =
     node "path"
 
 
 {-| -}
-polygon : List (Attribute c m) -> List (Svg c m) -> Svg c m
+polygon : List (Attribute m c) -> List (Svg m c) -> Svg m c
 polygon =
     node "polygon"
 
@@ -510,19 +510,19 @@ create open shapes.
     polyline [ fill "none", stroke "black", points "20,100 40,60 70,80 100,20" ]
 
 -}
-polyline : List (Attribute c m) -> List (Svg c m) -> Svg c m
+polyline : List (Attribute m c) -> List (Svg m c) -> Svg m c
 polyline =
     node "polyline"
 
 
 {-| -}
-rect : List (Attribute c m) -> List (Svg c m) -> Svg c m
+rect : List (Attribute m c) -> List (Svg m c) -> Svg m c
 rect =
     node "rect"
 
 
 {-| -}
-use : List (Attribute c m) -> List (Svg c m) -> Svg c m
+use : List (Attribute m c) -> List (Svg m c) -> Svg m c
 use =
     node "use"
 
@@ -532,19 +532,19 @@ use =
 
 
 {-| -}
-feDistantLight : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feDistantLight : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feDistantLight =
     node "feDistantLight"
 
 
 {-| -}
-fePointLight : List (Attribute c m) -> List (Svg c m) -> Svg c m
+fePointLight : List (Attribute m c) -> List (Svg m c) -> Svg m c
 fePointLight =
     node "fePointLight"
 
 
 {-| -}
-feSpotLight : List (Attribute c m) -> List (Svg c m) -> Svg c m
+feSpotLight : List (Attribute m c) -> List (Svg m c) -> Svg m c
 feSpotLight =
     node "feSpotLight"
 
@@ -554,55 +554,55 @@ feSpotLight =
 
 
 {-| -}
-altGlyph : List (Attribute c m) -> List (Svg c m) -> Svg c m
+altGlyph : List (Attribute m c) -> List (Svg m c) -> Svg m c
 altGlyph =
     node "altGlyph"
 
 
 {-| -}
-altGlyphDef : List (Attribute c m) -> List (Svg c m) -> Svg c m
+altGlyphDef : List (Attribute m c) -> List (Svg m c) -> Svg m c
 altGlyphDef =
     node "altGlyphDef"
 
 
 {-| -}
-altGlyphItem : List (Attribute c m) -> List (Svg c m) -> Svg c m
+altGlyphItem : List (Attribute m c) -> List (Svg m c) -> Svg m c
 altGlyphItem =
     node "altGlyphItem"
 
 
 {-| -}
-glyph : List (Attribute c m) -> List (Svg c m) -> Svg c m
+glyph : List (Attribute m c) -> List (Svg m c) -> Svg m c
 glyph =
     node "glyph"
 
 
 {-| -}
-glyphRef : List (Attribute c m) -> List (Svg c m) -> Svg c m
+glyphRef : List (Attribute m c) -> List (Svg m c) -> Svg m c
 glyphRef =
     node "glyphRef"
 
 
 {-| -}
-textPath : List (Attribute c m) -> List (Svg c m) -> Svg c m
+textPath : List (Attribute m c) -> List (Svg m c) -> Svg m c
 textPath =
     node "textPath"
 
 
 {-| -}
-text_ : List (Attribute c m) -> List (Svg c m) -> Svg c m
+text_ : List (Attribute m c) -> List (Svg m c) -> Svg m c
 text_ =
     node "text"
 
 
 {-| -}
-tref : List (Attribute c m) -> List (Svg c m) -> Svg c m
+tref : List (Attribute m c) -> List (Svg m c) -> Svg m c
 tref =
     node "tref"
 
 
 {-| -}
-tspan : List (Attribute c m) -> List (Svg c m) -> Svg c m
+tspan : List (Attribute m c) -> List (Svg m c) -> Svg m c
 tspan =
     node "tspan"
 
@@ -612,42 +612,42 @@ tspan =
 
 
 {-| -}
-clipPath : List (Attribute c m) -> List (Svg c m) -> Svg c m
+clipPath : List (Attribute m c) -> List (Svg m c) -> Svg m c
 clipPath =
     node "clipPath"
 
 
 {-| -}
-colorProfile : List (Attribute c m) -> List (Svg c m) -> Svg c m
+colorProfile : List (Attribute m c) -> List (Svg m c) -> Svg m c
 colorProfile =
     node "colorProfile"
 
 
 {-| -}
-cursor : List (Attribute c m) -> List (Svg c m) -> Svg c m
+cursor : List (Attribute m c) -> List (Svg m c) -> Svg m c
 cursor =
     node "cursor"
 
 
 {-| -}
-filter : List (Attribute c m) -> List (Svg c m) -> Svg c m
+filter : List (Attribute m c) -> List (Svg m c) -> Svg m c
 filter =
     node "filter"
 
 
 {-| -}
-script : List (Attribute c m) -> List (Svg c m) -> Svg c m
+script : List (Attribute m c) -> List (Svg m c) -> Svg m c
 script =
     node "script"
 
 
 {-| -}
-style : List (Attribute c m) -> List (Svg c m) -> Svg c m
+style : List (Attribute m c) -> List (Svg m c) -> Svg m c
 style =
     node "style"
 
 
 {-| -}
-view : List (Attribute c m) -> List (Svg c m) -> Svg c m
+view : List (Attribute m c) -> List (Svg m c) -> Svg m c
 view =
     node "view"

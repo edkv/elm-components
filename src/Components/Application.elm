@@ -14,15 +14,15 @@ import Components.RegularComponent as RegularComponent
 import VirtualDom
 
 
-type alias Application flags c m s =
-    Program flags (State flags c m s) (Msg c m s)
+type alias Application flags s m c =
+    Program flags (State flags s m c) (Msg s m c)
 
 
-type alias Spec v w c m s =
-    { init : Self c -> ( s, Cmd m, List (Signal c m) )
-    , update : Self c -> m -> s -> ( s, Cmd m, List (Signal c m) )
+type alias Spec v w s m c =
+    { init : Self c -> ( s, Cmd m, List (Signal m c) )
+    , update : Self c -> m -> s -> ( s, Cmd m, List (Signal m c) )
     , subscriptions : Self c -> s -> Sub m
-    , view : Self c -> s -> Node v w c m
+    , view : Self c -> s -> Node v w m c
     , children : c
     }
 
@@ -33,14 +33,14 @@ type alias Self c =
     }
 
 
-type alias State flags c m s =
-    { componentState : Components.State (Container c m s)
+type alias State flags s m c =
+    { componentState : Components.State (Container s m c)
     , flags : Maybe flags
     }
 
 
-type alias Msg c m s =
-    Components.Msg (Container c m s)
+type alias Msg s m c =
+    Components.Msg (Container s m c)
 
 
 type InternalStuff c
@@ -49,7 +49,7 @@ type InternalStuff c
         }
 
 
-application : Spec v w c m s -> Application Never c m s
+application : Spec v w s m c -> Application Never s m c
 application spec =
     VirtualDom.program
         { init = init spec Nothing
@@ -59,7 +59,7 @@ application spec =
         }
 
 
-applicationWithFlags : (flags -> Spec v w c m s) -> Application flags c m s
+applicationWithFlags : (flags -> Spec v w s m c) -> Application flags s m c
 applicationWithFlags getSpec =
     VirtualDom.programWithFlags
         { init = \flags -> init (getSpec flags) (Just flags)
@@ -69,7 +69,7 @@ applicationWithFlags getSpec =
         }
 
 
-init : Spec v w c m s -> Maybe flags -> ( State flags c m s, Cmd (Msg c m s) )
+init : Spec v w s m c -> Maybe flags -> ( State flags s m c, Cmd (Msg s m c) )
 init spec flags =
     let
         ( componentState, cmd ) =
@@ -82,7 +82,7 @@ init spec flags =
     )
 
 
-update : Msg c m s -> State flags c m s -> ( State flags c m s, Cmd (Msg c m s) )
+update : Msg s m c -> State flags s m c -> ( State flags s m c, Cmd (Msg s m c) )
 update msg state =
     let
         ( componentState, cmd ) =
@@ -93,19 +93,19 @@ update msg state =
     )
 
 
-subscriptions : State flags c m s -> Sub (Msg c m s)
+subscriptions : State flags s m c -> Sub (Msg s m c)
 subscriptions state =
     Components.subscriptions state.componentState
 
 
-view : State flags c m s -> VirtualDom.Node (Msg c m s)
+view : State flags s m c -> VirtualDom.Node (Msg s m c)
 view state =
     Components.view state.componentState
 
 
 buildComponent :
-    Spec v w c m s
-    -> Component v w (Container c m s) (Container c m s) Never
+    Spec v w s m c
+    -> Component v w (Container s m c) Never (Container s m c)
 buildComponent spec =
     RegularComponent.regularComponent
         { spec
@@ -117,9 +117,9 @@ buildComponent spec =
 
 
 initComponent :
-    Spec v w c m s
+    Spec v w s m c
     -> Self c
-    -> ( s, Cmd m, List (Signal (Container c m s) Never) )
+    -> ( s, Cmd m, List (Signal Never (Container s m c)) )
 initComponent spec self =
     let
         ( state, cmd, signals ) =
@@ -132,11 +132,11 @@ initComponent spec self =
 
 
 updateComponent :
-    Spec v w c m s
+    Spec v w s m c
     -> Self c
     -> m
     -> s
-    -> ( s, Cmd m, List (Signal (Container c m s) Never) )
+    -> ( s, Cmd m, List (Signal Never (Container s m c)) )
 updateComponent spec self msg state =
     let
         ( updatedState, cmd, signals ) =
@@ -148,7 +148,7 @@ updateComponent spec self msg state =
     )
 
 
-transformSelf : Spec v w c m s -> RegularComponent.Self c m s pC -> Self c
+transformSelf : Spec v w s m c -> RegularComponent.Self s m c pC -> Self c
 transformSelf spec self =
     { id = self.id
     , internal =
@@ -158,7 +158,7 @@ transformSelf spec self =
     }
 
 
-sendToChild : Self c -> Slot (Container cC cM cS) c -> cM -> Signal c m
+sendToChild : Self c -> Slot (Container cS cM cC) c -> cM -> Signal m c
 sendToChild self ( _, set ) msg =
     let
         (InternalStuff { freshContainers }) =

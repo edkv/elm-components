@@ -66,49 +66,49 @@ import VirtualDom
 
 
 {-| -}
-onClick : Signal c m -> Attribute c m
+onClick : Signal m c -> Attribute m c
 onClick signal =
     on "click" (Json.succeed signal)
 
 
 {-| -}
-onDoubleClick : Signal c m -> Attribute c m
+onDoubleClick : Signal m c -> Attribute m c
 onDoubleClick signal =
     on "dblclick" (Json.succeed signal)
 
 
 {-| -}
-onMouseDown : Signal c m -> Attribute c m
+onMouseDown : Signal m c -> Attribute m c
 onMouseDown signal =
     on "mousedown" (Json.succeed signal)
 
 
 {-| -}
-onMouseUp : Signal c m -> Attribute c m
+onMouseUp : Signal m c -> Attribute m c
 onMouseUp signal =
     on "mouseup" (Json.succeed signal)
 
 
 {-| -}
-onMouseEnter : Signal c m -> Attribute c m
+onMouseEnter : Signal m c -> Attribute m c
 onMouseEnter signal =
     on "mouseenter" (Json.succeed signal)
 
 
 {-| -}
-onMouseLeave : Signal c m -> Attribute c m
+onMouseLeave : Signal m c -> Attribute m c
 onMouseLeave signal =
     on "mouseleave" (Json.succeed signal)
 
 
 {-| -}
-onMouseOver : Signal c m -> Attribute c m
+onMouseOver : Signal m c -> Attribute m c
 onMouseOver signal =
     on "mouseover" (Json.succeed signal)
 
 
 {-| -}
-onMouseOut : Signal c m -> Attribute c m
+onMouseOut : Signal m c -> Attribute m c
 onMouseOut signal =
     on "mouseout" (Json.succeed signal)
 
@@ -127,7 +127,7 @@ inputs on a range slider, make a custom handler with [`on`](#on).
 For more details on how `onInput` works, check out [targetValue](#targetValue).
 
 -}
-onInput : (String -> Signal c m) -> Attribute c m
+onInput : (String -> Signal m c) -> Attribute m c
 onInput tagger =
     on "input" (Json.map tagger targetValue)
 
@@ -139,7 +139,7 @@ on any input event.
 Check out [targetChecked](#targetChecked) for more details on how this works.
 
 -}
-onCheck : (Bool -> Signal c m) -> Attribute c m
+onCheck : (Bool -> Signal m c) -> Attribute m c
 onCheck tagger =
     on "change" (Json.map tagger targetChecked)
 
@@ -150,7 +150,7 @@ in order to prevent the form from changing the page’s location. If you need
 different behavior, use `onWithOptions` to create a customized version of
 `onSubmit`.
 -}
-onSubmit : Signal c m -> Attribute c m
+onSubmit : Signal m c -> Attribute m c
 onSubmit signal =
     onWithOptions "submit"
         { defaultOptions | preventDefault = True }
@@ -162,13 +162,13 @@ onSubmit signal =
 
 
 {-| -}
-onBlur : Signal c m -> Attribute c m
+onBlur : Signal m c -> Attribute m c
 onBlur signal =
     on "blur" (Json.succeed signal)
 
 
 {-| -}
-onFocus : Signal c m -> Attribute c m
+onFocus : Signal m c -> Attribute m c
 onFocus signal =
     on "focus" (Json.succeed signal)
 
@@ -182,7 +182,7 @@ you have the power! Here is how `onClick` is defined for example:
 
     import Json.Decode as Json
 
-    onClick : Signal c m -> Attribute c m
+    onClick : Signal m c -> Attribute m c
     onClick signal =
         on "click" (Json.succeed signal)
 
@@ -202,7 +202,7 @@ It really does help!
 [tutorial]: https://github.com/evancz/elm-architecture-tutorial/
 
 -}
-on : String -> Json.Decoder (Signal c m) -> Attribute c m
+on : String -> Json.Decoder (Signal m c) -> Attribute m c
 on event decoder =
     VirtualDom.on event decoder
         |> Core.PlainAttribute
@@ -210,7 +210,7 @@ on event decoder =
 
 {-| Same as `on` but you can set a few options.
 -}
-onWithOptions : String -> Options -> Json.Decoder (Signal c m) -> Attribute c m
+onWithOptions : String -> Options -> Json.Decoder (Signal m c) -> Attribute m c
 onWithOptions event decoder options =
     VirtualDom.onWithOptions event decoder options
         |> Core.PlainAttribute
@@ -248,7 +248,7 @@ defaultOptions =
 
     import Json.Decode as Json
 
-    onInput : (String -> Signal c m) -> Attribute c m
+    onInput : (String -> Signal m c) -> Attribute m c
     onInput tagger =
         on "input" (Json.map tagger targetValue)
 
@@ -266,7 +266,7 @@ targetValue =
 
     import Json.Decode as Json
 
-    onCheck : (Bool -> Signal c m) -> Attribute c m
+    onCheck : (Bool -> Signal m c) -> Attribute m c
     onCheck tagger =
         on "input" (Json.map tagger targetChecked)
 
@@ -281,7 +281,7 @@ keyboard listeners like this:
 
     import Json.Decode as Json
 
-    onKeyUp : (Int -> Signal c m) -> Attribute c m
+    onKeyUp : (Int -> Signal m c) -> Attribute m c
     onKeyUp tagger =
         on "keyup" (Json.map tagger keyCode)
 

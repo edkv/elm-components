@@ -34,34 +34,34 @@ import Html.Styled
 import VirtualDom
 
 
-type Node v w c m
-    = SimpleElement (Element v v w c m)
-    | Embedding (Element w w v c m)
-    | ReversedEmbedding (Element v w v c m)
-    | KeyedSimpleElement (KeyedElement v v w c m)
-    | KeyedEmbedding (KeyedElement w w v c m)
-    | KeyedReversedEmbedding (KeyedElement v w v c m)
+type Node v w m c
+    = SimpleElement (Element v v w m c)
+    | Embedding (Element w w v m c)
+    | ReversedEmbedding (Element v w v m c)
+    | KeyedSimpleElement (KeyedElement v v w m c)
+    | KeyedEmbedding (KeyedElement w w v m c)
+    | KeyedReversedEmbedding (KeyedElement v w v m c)
     | Text String
-    | PlainNode (VirtualDom.Node (Signal c m))
-    | ComponentNode (RenderedComponent c m)
+    | PlainNode (VirtualDom.Node (Signal m c))
+    | ComponentNode (RenderedComponent m c)
 
 
-type alias Element x y z c m =
+type alias Element x y z m c =
     { tag : String
-    , attributes : List (Attribute x c m)
-    , children : List (Node y z c m)
+    , attributes : List (Attribute x m c)
+    , children : List (Node y z m c)
     }
 
 
-type alias KeyedElement x y z c m =
+type alias KeyedElement x y z m c =
     { tag : String
-    , attributes : List (Attribute x c m)
-    , children : List ( String, Node y z c m )
+    , attributes : List (Attribute x m c)
+    , children : List ( String, Node y z m c )
     }
 
 
-type Attribute v c m
-    = PlainAttribute (VirtualDom.Property (Signal c m))
+type Attribute v m c
+    = PlainAttribute (VirtualDom.Property (Signal m c))
     | Styles StylingStrategy (List Css.Style)
 
 
@@ -70,59 +70,59 @@ type StylingStrategy
     | ClassAttribute
 
 
-type Component v w container c m
-    = Component (Slot container c -> Node v w c m)
+type Component v w container m c
+    = Component (Slot container c -> Node v w m c)
 
 
 type alias Slot container c =
     ( c -> container, container -> c -> c )
 
 
-type Container c m s
+type Container s m c
     = EmptyContainer
-    | StateContainer (ComponentState c m s)
-    | SignalContainer (Signal c m)
+    | StateContainer (ComponentState s m c)
+    | SignalContainer (Signal m c)
 
 
-type alias ComponentState c m s =
+type alias ComponentState s m c =
     { id : ComponentId
     , localState : s
     , childStates : c
-    , cache : Cache c m
+    , cache : Cache m c
     }
 
 
-type Signal c m
+type Signal m c
     = LocalMsg m
     | ChildMsg c
 
 
-type alias Cache c m =
-    Dict ComponentId (Dict ComponentId (RenderedComponent c m))
+type alias Cache m c =
+    Dict ComponentId (Dict ComponentId (RenderedComponent m c))
 
 
-type RenderedComponent c m
+type RenderedComponent m c
     = RenderedComponent
         { identify : { states : c } -> Maybe ComponentId
-        , touch : TouchArgs c m -> Change c m
-        , update : UpdateArgs c m -> Maybe (Change c m)
-        , subscriptions : () -> Sub (Signal c m)
-        , view : () -> Html.Styled.Html (Signal c m)
+        , touch : TouchArgs m c -> Change m c
+        , update : UpdateArgs m c -> Maybe (Change m c)
+        , subscriptions : () -> Sub (Signal m c)
+        , view : () -> Html.Styled.Html (Signal m c)
         }
 
 
-type alias TouchArgs c m =
+type alias TouchArgs m c =
     { states : c
-    , cache : Cache c m
+    , cache : Cache m c
     , freshContainers : c
     , lastComponentId : ComponentId
     , namespace : String
     }
 
 
-type alias UpdateArgs c m =
+type alias UpdateArgs m c =
     { states : c
-    , cache : Cache c m
+    , cache : Cache m c
     , signalContainers : c
     , freshContainers : c
     , lastComponentId : ComponentId
@@ -130,12 +130,12 @@ type alias UpdateArgs c m =
     }
 
 
-type alias Change c m =
-    { component : RenderedComponent c m
+type alias Change m c =
+    { component : RenderedComponent m c
     , states : c
-    , cache : Cache c m
-    , cmd : Cmd (Signal c m)
-    , signals : List (Signal c m)
+    , cache : Cache m c
+    , cmd : Cmd (Signal m c)
+    , signals : List (Signal m c)
     , lastComponentId : ComponentId
     }
 

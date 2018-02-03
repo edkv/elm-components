@@ -293,7 +293,7 @@ import VirtualDom
 
 {-| Create a custom attribute.
 -}
-attribute : String -> String -> Attribute c m
+attribute : String -> String -> Attribute m c
 attribute key value =
     VirtualDom.attribute key value
         |> Core.PlainAttribute
@@ -302,7 +302,7 @@ attribute key value =
 {-| Create a custom "namespaced" attribute. This corresponds to JavaScript's
 `setAttributeNS` function under the hood.
 -}
-attributeNS : String -> String -> String -> Attribute c m
+attributeNS : String -> String -> String -> Attribute m c
 attributeNS namespace key value =
     VirtualDom.attributeNS namespace key value
         |> Core.PlainAttribute
@@ -316,7 +316,7 @@ attributeNS namespace key value =
 [`Css` module documentation](http://package.elm-lang.org/packages/rtfeldman/elm-css/latest/Css)
 for an overview of how to use this function.
 -}
-styles : List Css.Style -> Attribute c m
+styles : List Css.Style -> Attribute m c
 styles =
     Core.Styles Core.ClassAttribute
 
@@ -324,7 +324,7 @@ styles =
 {-| Specify a list of inline styles. This will generate a `style` attribute in
 the DOM.
 -}
-inlineStyles : List ( String, String ) -> Attribute c m
+inlineStyles : List ( String, String ) -> Attribute m c
 inlineStyles =
     VirtualDom.style >> Core.PlainAttribute
 
@@ -334,1159 +334,1159 @@ inlineStyles =
 
 
 {-| -}
-accentHeight : String -> Attribute c m
+accentHeight : String -> Attribute m c
 accentHeight =
     attribute "accent-height"
 
 
 {-| -}
-accelerate : String -> Attribute c m
+accelerate : String -> Attribute m c
 accelerate =
     attribute "accelerate"
 
 
 {-| -}
-accumulate : String -> Attribute c m
+accumulate : String -> Attribute m c
 accumulate =
     attribute "accumulate"
 
 
 {-| -}
-additive : String -> Attribute c m
+additive : String -> Attribute m c
 additive =
     attribute "additive"
 
 
 {-| -}
-alphabetic : String -> Attribute c m
+alphabetic : String -> Attribute m c
 alphabetic =
     attribute "alphabetic"
 
 
 {-| -}
-allowReorder : String -> Attribute c m
+allowReorder : String -> Attribute m c
 allowReorder =
     attribute "allowReorder"
 
 
 {-| -}
-amplitude : String -> Attribute c m
+amplitude : String -> Attribute m c
 amplitude =
     attribute "amplitude"
 
 
 {-| -}
-arabicForm : String -> Attribute c m
+arabicForm : String -> Attribute m c
 arabicForm =
     attribute "arabic-form"
 
 
 {-| -}
-ascent : String -> Attribute c m
+ascent : String -> Attribute m c
 ascent =
     attribute "ascent"
 
 
 {-| -}
-attributeName : String -> Attribute c m
+attributeName : String -> Attribute m c
 attributeName =
     attribute "attributeName"
 
 
 {-| -}
-attributeType : String -> Attribute c m
+attributeType : String -> Attribute m c
 attributeType =
     attribute "attributeType"
 
 
 {-| -}
-autoReverse : String -> Attribute c m
+autoReverse : String -> Attribute m c
 autoReverse =
     attribute "autoReverse"
 
 
 {-| -}
-azimuth : String -> Attribute c m
+azimuth : String -> Attribute m c
 azimuth =
     attribute "azimuth"
 
 
 {-| -}
-baseFrequency : String -> Attribute c m
+baseFrequency : String -> Attribute m c
 baseFrequency =
     attribute "baseFrequency"
 
 
 {-| -}
-baseProfile : String -> Attribute c m
+baseProfile : String -> Attribute m c
 baseProfile =
     attribute "baseProfile"
 
 
 {-| -}
-bbox : String -> Attribute c m
+bbox : String -> Attribute m c
 bbox =
     attribute "bbox"
 
 
 {-| -}
-begin : String -> Attribute c m
+begin : String -> Attribute m c
 begin =
     attribute "begin"
 
 
 {-| -}
-bias : String -> Attribute c m
+bias : String -> Attribute m c
 bias =
     attribute "bias"
 
 
 {-| -}
-by : String -> Attribute c m
+by : String -> Attribute m c
 by =
     attribute "by"
 
 
 {-| -}
-calcMode : String -> Attribute c m
+calcMode : String -> Attribute m c
 calcMode =
     attribute "calcMode"
 
 
 {-| -}
-capHeight : String -> Attribute c m
+capHeight : String -> Attribute m c
 capHeight =
     attribute "cap-height"
 
 
 {-| -}
-class : String -> Attribute c m
+class : String -> Attribute m c
 class =
     attribute "class"
 
 
 {-| -}
-clipPathUnits : String -> Attribute c m
+clipPathUnits : String -> Attribute m c
 clipPathUnits =
     attribute "clipPathUnits"
 
 
 {-| -}
-contentScriptType : String -> Attribute c m
+contentScriptType : String -> Attribute m c
 contentScriptType =
     attribute "contentScriptType"
 
 
 {-| -}
-contentStyleType : String -> Attribute c m
+contentStyleType : String -> Attribute m c
 contentStyleType =
     attribute "contentStyleType"
 
 
 {-| -}
-cx : String -> Attribute c m
+cx : String -> Attribute m c
 cx =
     attribute "cx"
 
 
 {-| -}
-cy : String -> Attribute c m
+cy : String -> Attribute m c
 cy =
     attribute "cy"
 
 
 {-| -}
-d : String -> Attribute c m
+d : String -> Attribute m c
 d =
     attribute "d"
 
 
 {-| -}
-decelerate : String -> Attribute c m
+decelerate : String -> Attribute m c
 decelerate =
     attribute "decelerate"
 
 
 {-| -}
-descent : String -> Attribute c m
+descent : String -> Attribute m c
 descent =
     attribute "descent"
 
 
 {-| -}
-diffuseConstant : String -> Attribute c m
+diffuseConstant : String -> Attribute m c
 diffuseConstant =
     attribute "diffuseConstant"
 
 
 {-| -}
-divisor : String -> Attribute c m
+divisor : String -> Attribute m c
 divisor =
     attribute "divisor"
 
 
 {-| -}
-dur : String -> Attribute c m
+dur : String -> Attribute m c
 dur =
     attribute "dur"
 
 
 {-| -}
-dx : String -> Attribute c m
+dx : String -> Attribute m c
 dx =
     attribute "dx"
 
 
 {-| -}
-dy : String -> Attribute c m
+dy : String -> Attribute m c
 dy =
     attribute "dy"
 
 
 {-| -}
-edgeMode : String -> Attribute c m
+edgeMode : String -> Attribute m c
 edgeMode =
     attribute "edgeMode"
 
 
 {-| -}
-elevation : String -> Attribute c m
+elevation : String -> Attribute m c
 elevation =
     attribute "elevation"
 
 
 {-| -}
-end : String -> Attribute c m
+end : String -> Attribute m c
 end =
     attribute "end"
 
 
 {-| -}
-exponent : String -> Attribute c m
+exponent : String -> Attribute m c
 exponent =
     attribute "exponent"
 
 
 {-| -}
-externalResourcesRequired : String -> Attribute c m
+externalResourcesRequired : String -> Attribute m c
 externalResourcesRequired =
     attribute "externalResourcesRequired"
 
 
 {-| -}
-filterRes : String -> Attribute c m
+filterRes : String -> Attribute m c
 filterRes =
     attribute "filterRes"
 
 
 {-| -}
-filterUnits : String -> Attribute c m
+filterUnits : String -> Attribute m c
 filterUnits =
     attribute "filterUnits"
 
 
 {-| -}
-format : String -> Attribute c m
+format : String -> Attribute m c
 format =
     attribute "format"
 
 
 {-| -}
-from : String -> Attribute c m
+from : String -> Attribute m c
 from =
     attribute "from"
 
 
 {-| -}
-fx : String -> Attribute c m
+fx : String -> Attribute m c
 fx =
     attribute "fx"
 
 
 {-| -}
-fy : String -> Attribute c m
+fy : String -> Attribute m c
 fy =
     attribute "fy"
 
 
 {-| -}
-g1 : String -> Attribute c m
+g1 : String -> Attribute m c
 g1 =
     attribute "g1"
 
 
 {-| -}
-g2 : String -> Attribute c m
+g2 : String -> Attribute m c
 g2 =
     attribute "g2"
 
 
 {-| -}
-glyphName : String -> Attribute c m
+glyphName : String -> Attribute m c
 glyphName =
     attribute "glyph-name"
 
 
 {-| -}
-glyphRef : String -> Attribute c m
+glyphRef : String -> Attribute m c
 glyphRef =
     attribute "glyphRef"
 
 
 {-| -}
-gradientTransform : String -> Attribute c m
+gradientTransform : String -> Attribute m c
 gradientTransform =
     attribute "gradientTransform"
 
 
 {-| -}
-gradientUnits : String -> Attribute c m
+gradientUnits : String -> Attribute m c
 gradientUnits =
     attribute "gradientUnits"
 
 
 {-| -}
-hanging : String -> Attribute c m
+hanging : String -> Attribute m c
 hanging =
     attribute "hanging"
 
 
 {-| -}
-height : String -> Attribute c m
+height : String -> Attribute m c
 height =
     attribute "height"
 
 
 {-| -}
-horizAdvX : String -> Attribute c m
+horizAdvX : String -> Attribute m c
 horizAdvX =
     attribute "horiz-adv-x"
 
 
 {-| -}
-horizOriginX : String -> Attribute c m
+horizOriginX : String -> Attribute m c
 horizOriginX =
     attribute "horiz-origin-x"
 
 
 {-| -}
-horizOriginY : String -> Attribute c m
+horizOriginY : String -> Attribute m c
 horizOriginY =
     attribute "horiz-origin-y"
 
 
 {-| -}
-id : String -> Attribute c m
+id : String -> Attribute m c
 id =
     attribute "id"
 
 
 {-| -}
-ideographic : String -> Attribute c m
+ideographic : String -> Attribute m c
 ideographic =
     attribute "ideographic"
 
 
 {-| -}
-in_ : String -> Attribute c m
+in_ : String -> Attribute m c
 in_ =
     attribute "in"
 
 
 {-| -}
-in2 : String -> Attribute c m
+in2 : String -> Attribute m c
 in2 =
     attribute "in2"
 
 
 {-| -}
-intercept : String -> Attribute c m
+intercept : String -> Attribute m c
 intercept =
     attribute "intercept"
 
 
 {-| -}
-k : String -> Attribute c m
+k : String -> Attribute m c
 k =
     attribute "k"
 
 
 {-| -}
-k1 : String -> Attribute c m
+k1 : String -> Attribute m c
 k1 =
     attribute "k1"
 
 
 {-| -}
-k2 : String -> Attribute c m
+k2 : String -> Attribute m c
 k2 =
     attribute "k2"
 
 
 {-| -}
-k3 : String -> Attribute c m
+k3 : String -> Attribute m c
 k3 =
     attribute "k3"
 
 
 {-| -}
-k4 : String -> Attribute c m
+k4 : String -> Attribute m c
 k4 =
     attribute "k4"
 
 
 {-| -}
-kernelMatrix : String -> Attribute c m
+kernelMatrix : String -> Attribute m c
 kernelMatrix =
     attribute "kernelMatrix"
 
 
 {-| -}
-kernelUnitLength : String -> Attribute c m
+kernelUnitLength : String -> Attribute m c
 kernelUnitLength =
     attribute "kernelUnitLength"
 
 
 {-| -}
-keyPoints : String -> Attribute c m
+keyPoints : String -> Attribute m c
 keyPoints =
     attribute "keyPoints"
 
 
 {-| -}
-keySplines : String -> Attribute c m
+keySplines : String -> Attribute m c
 keySplines =
     attribute "keySplines"
 
 
 {-| -}
-keyTimes : String -> Attribute c m
+keyTimes : String -> Attribute m c
 keyTimes =
     attribute "keyTimes"
 
 
 {-| -}
-lang : String -> Attribute c m
+lang : String -> Attribute m c
 lang =
     attribute "lang"
 
 
 {-| -}
-lengthAdjust : String -> Attribute c m
+lengthAdjust : String -> Attribute m c
 lengthAdjust =
     attribute "lengthAdjust"
 
 
 {-| -}
-limitingConeAngle : String -> Attribute c m
+limitingConeAngle : String -> Attribute m c
 limitingConeAngle =
     attribute "limitingConeAngle"
 
 
 {-| -}
-local : String -> Attribute c m
+local : String -> Attribute m c
 local =
     attribute "local"
 
 
 {-| -}
-markerHeight : String -> Attribute c m
+markerHeight : String -> Attribute m c
 markerHeight =
     attribute "markerHeight"
 
 
 {-| -}
-markerUnits : String -> Attribute c m
+markerUnits : String -> Attribute m c
 markerUnits =
     attribute "markerUnits"
 
 
 {-| -}
-markerWidth : String -> Attribute c m
+markerWidth : String -> Attribute m c
 markerWidth =
     attribute "markerWidth"
 
 
 {-| -}
-maskContentUnits : String -> Attribute c m
+maskContentUnits : String -> Attribute m c
 maskContentUnits =
     attribute "maskContentUnits"
 
 
 {-| -}
-maskUnits : String -> Attribute c m
+maskUnits : String -> Attribute m c
 maskUnits =
     attribute "maskUnits"
 
 
 {-| -}
-mathematical : String -> Attribute c m
+mathematical : String -> Attribute m c
 mathematical =
     attribute "mathematical"
 
 
 {-| -}
-max : String -> Attribute c m
+max : String -> Attribute m c
 max =
     attribute "max"
 
 
 {-| -}
-media : String -> Attribute c m
+media : String -> Attribute m c
 media =
     attribute "media"
 
 
 {-| -}
-method : String -> Attribute c m
+method : String -> Attribute m c
 method =
     attribute "method"
 
 
 {-| -}
-min : String -> Attribute c m
+min : String -> Attribute m c
 min =
     attribute "min"
 
 
 {-| -}
-mode : String -> Attribute c m
+mode : String -> Attribute m c
 mode =
     attribute "mode"
 
 
 {-| -}
-name : String -> Attribute c m
+name : String -> Attribute m c
 name =
     attribute "name"
 
 
 {-| -}
-numOctaves : String -> Attribute c m
+numOctaves : String -> Attribute m c
 numOctaves =
     attribute "numOctaves"
 
 
 {-| -}
-offset : String -> Attribute c m
+offset : String -> Attribute m c
 offset =
     attribute "offset"
 
 
 {-| -}
-operator : String -> Attribute c m
+operator : String -> Attribute m c
 operator =
     attribute "operator"
 
 
 {-| -}
-order : String -> Attribute c m
+order : String -> Attribute m c
 order =
     attribute "order"
 
 
 {-| -}
-orient : String -> Attribute c m
+orient : String -> Attribute m c
 orient =
     attribute "orient"
 
 
 {-| -}
-orientation : String -> Attribute c m
+orientation : String -> Attribute m c
 orientation =
     attribute "orientation"
 
 
 {-| -}
-origin : String -> Attribute c m
+origin : String -> Attribute m c
 origin =
     attribute "origin"
 
 
 {-| -}
-overlinePosition : String -> Attribute c m
+overlinePosition : String -> Attribute m c
 overlinePosition =
     attribute "overline-position"
 
 
 {-| -}
-overlineThickness : String -> Attribute c m
+overlineThickness : String -> Attribute m c
 overlineThickness =
     attribute "overline-thickness"
 
 
 {-| -}
-panose1 : String -> Attribute c m
+panose1 : String -> Attribute m c
 panose1 =
     attribute "panose-1"
 
 
 {-| -}
-path : String -> Attribute c m
+path : String -> Attribute m c
 path =
     attribute "path"
 
 
 {-| -}
-pathLength : String -> Attribute c m
+pathLength : String -> Attribute m c
 pathLength =
     attribute "pathLength"
 
 
 {-| -}
-patternContentUnits : String -> Attribute c m
+patternContentUnits : String -> Attribute m c
 patternContentUnits =
     attribute "patternContentUnits"
 
 
 {-| -}
-patternTransform : String -> Attribute c m
+patternTransform : String -> Attribute m c
 patternTransform =
     attribute "patternTransform"
 
 
 {-| -}
-patternUnits : String -> Attribute c m
+patternUnits : String -> Attribute m c
 patternUnits =
     attribute "patternUnits"
 
 
 {-| -}
-pointOrder : String -> Attribute c m
+pointOrder : String -> Attribute m c
 pointOrder =
     attribute "point-order"
 
 
 {-| -}
-points : String -> Attribute c m
+points : String -> Attribute m c
 points =
     attribute "points"
 
 
 {-| -}
-pointsAtX : String -> Attribute c m
+pointsAtX : String -> Attribute m c
 pointsAtX =
     attribute "pointsAtX"
 
 
 {-| -}
-pointsAtY : String -> Attribute c m
+pointsAtY : String -> Attribute m c
 pointsAtY =
     attribute "pointsAtY"
 
 
 {-| -}
-pointsAtZ : String -> Attribute c m
+pointsAtZ : String -> Attribute m c
 pointsAtZ =
     attribute "pointsAtZ"
 
 
 {-| -}
-preserveAlpha : String -> Attribute c m
+preserveAlpha : String -> Attribute m c
 preserveAlpha =
     attribute "preserveAlpha"
 
 
 {-| -}
-preserveAspectRatio : String -> Attribute c m
+preserveAspectRatio : String -> Attribute m c
 preserveAspectRatio =
     attribute "preserveAspectRatio"
 
 
 {-| -}
-primitiveUnits : String -> Attribute c m
+primitiveUnits : String -> Attribute m c
 primitiveUnits =
     attribute "primitiveUnits"
 
 
 {-| -}
-r : String -> Attribute c m
+r : String -> Attribute m c
 r =
     attribute "r"
 
 
 {-| -}
-radius : String -> Attribute c m
+radius : String -> Attribute m c
 radius =
     attribute "radius"
 
 
 {-| -}
-refX : String -> Attribute c m
+refX : String -> Attribute m c
 refX =
     attribute "refX"
 
 
 {-| -}
-refY : String -> Attribute c m
+refY : String -> Attribute m c
 refY =
     attribute "refY"
 
 
 {-| -}
-renderingIntent : String -> Attribute c m
+renderingIntent : String -> Attribute m c
 renderingIntent =
     attribute "rendering-intent"
 
 
 {-| -}
-repeatCount : String -> Attribute c m
+repeatCount : String -> Attribute m c
 repeatCount =
     attribute "repeatCount"
 
 
 {-| -}
-repeatDur : String -> Attribute c m
+repeatDur : String -> Attribute m c
 repeatDur =
     attribute "repeatDur"
 
 
 {-| -}
-requiredExtensions : String -> Attribute c m
+requiredExtensions : String -> Attribute m c
 requiredExtensions =
     attribute "requiredExtensions"
 
 
 {-| -}
-requiredFeatures : String -> Attribute c m
+requiredFeatures : String -> Attribute m c
 requiredFeatures =
     attribute "requiredFeatures"
 
 
 {-| -}
-restart : String -> Attribute c m
+restart : String -> Attribute m c
 restart =
     attribute "restart"
 
 
 {-| -}
-result : String -> Attribute c m
+result : String -> Attribute m c
 result =
     attribute "result"
 
 
 {-| -}
-rotate : String -> Attribute c m
+rotate : String -> Attribute m c
 rotate =
     attribute "rotate"
 
 
 {-| -}
-rx : String -> Attribute c m
+rx : String -> Attribute m c
 rx =
     attribute "rx"
 
 
 {-| -}
-ry : String -> Attribute c m
+ry : String -> Attribute m c
 ry =
     attribute "ry"
 
 
 {-| -}
-scale : String -> Attribute c m
+scale : String -> Attribute m c
 scale =
     attribute "scale"
 
 
 {-| -}
-seed : String -> Attribute c m
+seed : String -> Attribute m c
 seed =
     attribute "seed"
 
 
 {-| -}
-slope : String -> Attribute c m
+slope : String -> Attribute m c
 slope =
     attribute "slope"
 
 
 {-| -}
-spacing : String -> Attribute c m
+spacing : String -> Attribute m c
 spacing =
     attribute "spacing"
 
 
 {-| -}
-specularConstant : String -> Attribute c m
+specularConstant : String -> Attribute m c
 specularConstant =
     attribute "specularConstant"
 
 
 {-| -}
-specularExponent : String -> Attribute c m
+specularExponent : String -> Attribute m c
 specularExponent =
     attribute "specularExponent"
 
 
 {-| -}
-speed : String -> Attribute c m
+speed : String -> Attribute m c
 speed =
     attribute "speed"
 
 
 {-| -}
-spreadMethod : String -> Attribute c m
+spreadMethod : String -> Attribute m c
 spreadMethod =
     attribute "spreadMethod"
 
 
 {-| -}
-startOffset : String -> Attribute c m
+startOffset : String -> Attribute m c
 startOffset =
     attribute "startOffset"
 
 
 {-| -}
-stdDeviation : String -> Attribute c m
+stdDeviation : String -> Attribute m c
 stdDeviation =
     attribute "stdDeviation"
 
 
 {-| -}
-stemh : String -> Attribute c m
+stemh : String -> Attribute m c
 stemh =
     attribute "stemh"
 
 
 {-| -}
-stemv : String -> Attribute c m
+stemv : String -> Attribute m c
 stemv =
     attribute "stemv"
 
 
 {-| -}
-stitchTiles : String -> Attribute c m
+stitchTiles : String -> Attribute m c
 stitchTiles =
     attribute "stitchTiles"
 
 
 {-| -}
-strikethroughPosition : String -> Attribute c m
+strikethroughPosition : String -> Attribute m c
 strikethroughPosition =
     attribute "strikethrough-position"
 
 
 {-| -}
-strikethroughThickness : String -> Attribute c m
+strikethroughThickness : String -> Attribute m c
 strikethroughThickness =
     attribute "strikethrough-thickness"
 
 
 {-| -}
-string : String -> Attribute c m
+string : String -> Attribute m c
 string =
     attribute "string"
 
 
 {-| -}
-surfaceScale : String -> Attribute c m
+surfaceScale : String -> Attribute m c
 surfaceScale =
     attribute "surfaceScale"
 
 
 {-| -}
-systemLanguage : String -> Attribute c m
+systemLanguage : String -> Attribute m c
 systemLanguage =
     attribute "systemLanguage"
 
 
 {-| -}
-tableValues : String -> Attribute c m
+tableValues : String -> Attribute m c
 tableValues =
     attribute "tableValues"
 
 
 {-| -}
-target : String -> Attribute c m
+target : String -> Attribute m c
 target =
     attribute "target"
 
 
 {-| -}
-targetX : String -> Attribute c m
+targetX : String -> Attribute m c
 targetX =
     attribute "targetX"
 
 
 {-| -}
-targetY : String -> Attribute c m
+targetY : String -> Attribute m c
 targetY =
     attribute "targetY"
 
 
 {-| -}
-textLength : String -> Attribute c m
+textLength : String -> Attribute m c
 textLength =
     attribute "textLength"
 
 
 {-| -}
-title : String -> Attribute c m
+title : String -> Attribute m c
 title =
     attribute "title"
 
 
 {-| -}
-to : String -> Attribute c m
+to : String -> Attribute m c
 to =
     attribute "to"
 
 
 {-| -}
-transform : String -> Attribute c m
+transform : String -> Attribute m c
 transform =
     attribute "transform"
 
 
 {-| -}
-type_ : String -> Attribute c m
+type_ : String -> Attribute m c
 type_ =
     attribute "type"
 
 
 {-| -}
-u1 : String -> Attribute c m
+u1 : String -> Attribute m c
 u1 =
     attribute "u1"
 
 
 {-| -}
-u2 : String -> Attribute c m
+u2 : String -> Attribute m c
 u2 =
     attribute "u2"
 
 
 {-| -}
-underlinePosition : String -> Attribute c m
+underlinePosition : String -> Attribute m c
 underlinePosition =
     attribute "underline-position"
 
 
 {-| -}
-underlineThickness : String -> Attribute c m
+underlineThickness : String -> Attribute m c
 underlineThickness =
     attribute "underline-thickness"
 
 
 {-| -}
-unicode : String -> Attribute c m
+unicode : String -> Attribute m c
 unicode =
     attribute "unicode"
 
 
 {-| -}
-unicodeRange : String -> Attribute c m
+unicodeRange : String -> Attribute m c
 unicodeRange =
     attribute "unicode-range"
 
 
 {-| -}
-unitsPerEm : String -> Attribute c m
+unitsPerEm : String -> Attribute m c
 unitsPerEm =
     attribute "units-per-em"
 
 
 {-| -}
-vAlphabetic : String -> Attribute c m
+vAlphabetic : String -> Attribute m c
 vAlphabetic =
     attribute "v-alphabetic"
 
 
 {-| -}
-vHanging : String -> Attribute c m
+vHanging : String -> Attribute m c
 vHanging =
     attribute "v-hanging"
 
 
 {-| -}
-vIdeographic : String -> Attribute c m
+vIdeographic : String -> Attribute m c
 vIdeographic =
     attribute "v-ideographic"
 
 
 {-| -}
-vMathematical : String -> Attribute c m
+vMathematical : String -> Attribute m c
 vMathematical =
     attribute "v-mathematical"
 
 
 {-| -}
-values : String -> Attribute c m
+values : String -> Attribute m c
 values =
     attribute "values"
 
 
 {-| -}
-version : String -> Attribute c m
+version : String -> Attribute m c
 version =
     attribute "version"
 
 
 {-| -}
-vertAdvY : String -> Attribute c m
+vertAdvY : String -> Attribute m c
 vertAdvY =
     attribute "vert-adv-y"
 
 
 {-| -}
-vertOriginX : String -> Attribute c m
+vertOriginX : String -> Attribute m c
 vertOriginX =
     attribute "vert-origin-x"
 
 
 {-| -}
-vertOriginY : String -> Attribute c m
+vertOriginY : String -> Attribute m c
 vertOriginY =
     attribute "vert-origin-y"
 
 
 {-| -}
-viewBox : String -> Attribute c m
+viewBox : String -> Attribute m c
 viewBox =
     attribute "viewBox"
 
 
 {-| -}
-viewTarget : String -> Attribute c m
+viewTarget : String -> Attribute m c
 viewTarget =
     attribute "viewTarget"
 
 
 {-| -}
-width : String -> Attribute c m
+width : String -> Attribute m c
 width =
     attribute "width"
 
 
 {-| -}
-widths : String -> Attribute c m
+widths : String -> Attribute m c
 widths =
     attribute "widths"
 
 
 {-| -}
-x : String -> Attribute c m
+x : String -> Attribute m c
 x =
     attribute "x"
 
 
 {-| -}
-xHeight : String -> Attribute c m
+xHeight : String -> Attribute m c
 xHeight =
     attribute "x-height"
 
 
 {-| -}
-x1 : String -> Attribute c m
+x1 : String -> Attribute m c
 x1 =
     attribute "x1"
 
 
 {-| -}
-x2 : String -> Attribute c m
+x2 : String -> Attribute m c
 x2 =
     attribute "x2"
 
 
 {-| -}
-xChannelSelector : String -> Attribute c m
+xChannelSelector : String -> Attribute m c
 xChannelSelector =
     attribute "xChannelSelector"
 
 
 {-| -}
-xlinkActuate : String -> Attribute c m
+xlinkActuate : String -> Attribute m c
 xlinkActuate =
     attributeNS "http://www.w3.org/1999/xlink" "xlink:actuate"
 
 
 {-| -}
-xlinkArcrole : String -> Attribute c m
+xlinkArcrole : String -> Attribute m c
 xlinkArcrole =
     attributeNS "http://www.w3.org/1999/xlink" "xlink:arcrole"
 
 
 {-| -}
-xlinkHref : String -> Attribute c m
+xlinkHref : String -> Attribute m c
 xlinkHref =
     attributeNS "http://www.w3.org/1999/xlink" "xlink:href"
 
 
 {-| -}
-xlinkRole : String -> Attribute c m
+xlinkRole : String -> Attribute m c
 xlinkRole =
     attributeNS "http://www.w3.org/1999/xlink" "xlink:role"
 
 
 {-| -}
-xlinkShow : String -> Attribute c m
+xlinkShow : String -> Attribute m c
 xlinkShow =
     attributeNS "http://www.w3.org/1999/xlink" "xlink:show"
 
 
 {-| -}
-xlinkTitle : String -> Attribute c m
+xlinkTitle : String -> Attribute m c
 xlinkTitle =
     attributeNS "http://www.w3.org/1999/xlink" "xlink:title"
 
 
 {-| -}
-xlinkType : String -> Attribute c m
+xlinkType : String -> Attribute m c
 xlinkType =
     attributeNS "http://www.w3.org/1999/xlink" "xlink:type"
 
 
 {-| -}
-xmlBase : String -> Attribute c m
+xmlBase : String -> Attribute m c
 xmlBase =
     attributeNS "http://www.w3.org/XML/1998/namespace" "xml:base"
 
 
 {-| -}
-xmlLang : String -> Attribute c m
+xmlLang : String -> Attribute m c
 xmlLang =
     attributeNS "http://www.w3.org/XML/1998/namespace" "xml:lang"
 
 
 {-| -}
-xmlSpace : String -> Attribute c m
+xmlSpace : String -> Attribute m c
 xmlSpace =
     attributeNS "http://www.w3.org/XML/1998/namespace" "xml:space"
 
 
 {-| -}
-y : String -> Attribute c m
+y : String -> Attribute m c
 y =
     attribute "y"
 
 
 {-| -}
-y1 : String -> Attribute c m
+y1 : String -> Attribute m c
 y1 =
     attribute "y1"
 
 
 {-| -}
-y2 : String -> Attribute c m
+y2 : String -> Attribute m c
 y2 =
     attribute "y2"
 
 
 {-| -}
-yChannelSelector : String -> Attribute c m
+yChannelSelector : String -> Attribute m c
 yChannelSelector =
     attribute "yChannelSelector"
 
 
 {-| -}
-z : String -> Attribute c m
+z : String -> Attribute m c
 z =
     attribute "z"
 
 
 {-| -}
-zoomAndPan : String -> Attribute c m
+zoomAndPan : String -> Attribute m c
 zoomAndPan =
     attribute "zoomAndPan"
 
@@ -1496,354 +1496,354 @@ zoomAndPan =
 
 
 {-| -}
-alignmentBaseline : String -> Attribute c m
+alignmentBaseline : String -> Attribute m c
 alignmentBaseline =
     attribute "alignment-baseline"
 
 
 {-| -}
-baselineShift : String -> Attribute c m
+baselineShift : String -> Attribute m c
 baselineShift =
     attribute "baseline-shift"
 
 
 {-| -}
-clipPath : String -> Attribute c m
+clipPath : String -> Attribute m c
 clipPath =
     attribute "clip-path"
 
 
 {-| -}
-clipRule : String -> Attribute c m
+clipRule : String -> Attribute m c
 clipRule =
     attribute "clip-rule"
 
 
 {-| -}
-clip : String -> Attribute c m
+clip : String -> Attribute m c
 clip =
     attribute "clip"
 
 
 {-| -}
-colorInterpolationFilters : String -> Attribute c m
+colorInterpolationFilters : String -> Attribute m c
 colorInterpolationFilters =
     attribute "color-interpolation-filters"
 
 
 {-| -}
-colorInterpolation : String -> Attribute c m
+colorInterpolation : String -> Attribute m c
 colorInterpolation =
     attribute "color-interpolation"
 
 
 {-| -}
-colorProfile : String -> Attribute c m
+colorProfile : String -> Attribute m c
 colorProfile =
     attribute "color-profile"
 
 
 {-| -}
-colorRendering : String -> Attribute c m
+colorRendering : String -> Attribute m c
 colorRendering =
     attribute "color-rendering"
 
 
 {-| -}
-color : String -> Attribute c m
+color : String -> Attribute m c
 color =
     attribute "color"
 
 
 {-| -}
-cursor : String -> Attribute c m
+cursor : String -> Attribute m c
 cursor =
     attribute "cursor"
 
 
 {-| -}
-direction : String -> Attribute c m
+direction : String -> Attribute m c
 direction =
     attribute "direction"
 
 
 {-| -}
-display : String -> Attribute c m
+display : String -> Attribute m c
 display =
     attribute "display"
 
 
 {-| -}
-dominantBaseline : String -> Attribute c m
+dominantBaseline : String -> Attribute m c
 dominantBaseline =
     attribute "dominant-baseline"
 
 
 {-| -}
-enableBackground : String -> Attribute c m
+enableBackground : String -> Attribute m c
 enableBackground =
     attribute "enable-background"
 
 
 {-| -}
-fillOpacity : String -> Attribute c m
+fillOpacity : String -> Attribute m c
 fillOpacity =
     attribute "fill-opacity"
 
 
 {-| -}
-fillRule : String -> Attribute c m
+fillRule : String -> Attribute m c
 fillRule =
     attribute "fill-rule"
 
 
 {-| -}
-fill : String -> Attribute c m
+fill : String -> Attribute m c
 fill =
     attribute "fill"
 
 
 {-| -}
-filter : String -> Attribute c m
+filter : String -> Attribute m c
 filter =
     attribute "filter"
 
 
 {-| -}
-floodColor : String -> Attribute c m
+floodColor : String -> Attribute m c
 floodColor =
     attribute "flood-color"
 
 
 {-| -}
-floodOpacity : String -> Attribute c m
+floodOpacity : String -> Attribute m c
 floodOpacity =
     attribute "flood-opacity"
 
 
 {-| -}
-fontFamily : String -> Attribute c m
+fontFamily : String -> Attribute m c
 fontFamily =
     attribute "font-family"
 
 
 {-| -}
-fontSizeAdjust : String -> Attribute c m
+fontSizeAdjust : String -> Attribute m c
 fontSizeAdjust =
     attribute "font-size-adjust"
 
 
 {-| -}
-fontSize : String -> Attribute c m
+fontSize : String -> Attribute m c
 fontSize =
     attribute "font-size"
 
 
 {-| -}
-fontStretch : String -> Attribute c m
+fontStretch : String -> Attribute m c
 fontStretch =
     attribute "font-stretch"
 
 
 {-| -}
-fontStyle : String -> Attribute c m
+fontStyle : String -> Attribute m c
 fontStyle =
     attribute "font-style"
 
 
 {-| -}
-fontVariant : String -> Attribute c m
+fontVariant : String -> Attribute m c
 fontVariant =
     attribute "font-variant"
 
 
 {-| -}
-fontWeight : String -> Attribute c m
+fontWeight : String -> Attribute m c
 fontWeight =
     attribute "font-weight"
 
 
 {-| -}
-glyphOrientationHorizontal : String -> Attribute c m
+glyphOrientationHorizontal : String -> Attribute m c
 glyphOrientationHorizontal =
     attribute "glyph-orientation-horizontal"
 
 
 {-| -}
-glyphOrientationVertical : String -> Attribute c m
+glyphOrientationVertical : String -> Attribute m c
 glyphOrientationVertical =
     attribute "glyph-orientation-vertical"
 
 
 {-| -}
-imageRendering : String -> Attribute c m
+imageRendering : String -> Attribute m c
 imageRendering =
     attribute "image-rendering"
 
 
 {-| -}
-kerning : String -> Attribute c m
+kerning : String -> Attribute m c
 kerning =
     attribute "kerning"
 
 
 {-| -}
-letterSpacing : String -> Attribute c m
+letterSpacing : String -> Attribute m c
 letterSpacing =
     attribute "letter-spacing"
 
 
 {-| -}
-lightingColor : String -> Attribute c m
+lightingColor : String -> Attribute m c
 lightingColor =
     attribute "lighting-color"
 
 
 {-| -}
-markerEnd : String -> Attribute c m
+markerEnd : String -> Attribute m c
 markerEnd =
     attribute "marker-end"
 
 
 {-| -}
-markerMid : String -> Attribute c m
+markerMid : String -> Attribute m c
 markerMid =
     attribute "marker-mid"
 
 
 {-| -}
-markerStart : String -> Attribute c m
+markerStart : String -> Attribute m c
 markerStart =
     attribute "marker-start"
 
 
 {-| -}
-mask : String -> Attribute c m
+mask : String -> Attribute m c
 mask =
     attribute "mask"
 
 
 {-| -}
-opacity : String -> Attribute c m
+opacity : String -> Attribute m c
 opacity =
     attribute "opacity"
 
 
 {-| -}
-overflow : String -> Attribute c m
+overflow : String -> Attribute m c
 overflow =
     attribute "overflow"
 
 
 {-| -}
-pointerEvents : String -> Attribute c m
+pointerEvents : String -> Attribute m c
 pointerEvents =
     attribute "pointer-events"
 
 
 {-| -}
-shapeRendering : String -> Attribute c m
+shapeRendering : String -> Attribute m c
 shapeRendering =
     attribute "shape-rendering"
 
 
 {-| -}
-stopColor : String -> Attribute c m
+stopColor : String -> Attribute m c
 stopColor =
     attribute "stop-color"
 
 
 {-| -}
-stopOpacity : String -> Attribute c m
+stopOpacity : String -> Attribute m c
 stopOpacity =
     attribute "stop-opacity"
 
 
 {-| -}
-strokeDasharray : String -> Attribute c m
+strokeDasharray : String -> Attribute m c
 strokeDasharray =
     attribute "stroke-dasharray"
 
 
 {-| -}
-strokeDashoffset : String -> Attribute c m
+strokeDashoffset : String -> Attribute m c
 strokeDashoffset =
     attribute "stroke-dashoffset"
 
 
 {-| -}
-strokeLinecap : String -> Attribute c m
+strokeLinecap : String -> Attribute m c
 strokeLinecap =
     attribute "stroke-linecap"
 
 
 {-| -}
-strokeLinejoin : String -> Attribute c m
+strokeLinejoin : String -> Attribute m c
 strokeLinejoin =
     attribute "stroke-linejoin"
 
 
 {-| -}
-strokeMiterlimit : String -> Attribute c m
+strokeMiterlimit : String -> Attribute m c
 strokeMiterlimit =
     attribute "stroke-miterlimit"
 
 
 {-| -}
-strokeOpacity : String -> Attribute c m
+strokeOpacity : String -> Attribute m c
 strokeOpacity =
     attribute "stroke-opacity"
 
 
 {-| -}
-strokeWidth : String -> Attribute c m
+strokeWidth : String -> Attribute m c
 strokeWidth =
     attribute "stroke-width"
 
 
 {-| -}
-stroke : String -> Attribute c m
+stroke : String -> Attribute m c
 stroke =
     attribute "stroke"
 
 
 {-| -}
-textAnchor : String -> Attribute c m
+textAnchor : String -> Attribute m c
 textAnchor =
     attribute "text-anchor"
 
 
 {-| -}
-textDecoration : String -> Attribute c m
+textDecoration : String -> Attribute m c
 textDecoration =
     attribute "text-decoration"
 
 
 {-| -}
-textRendering : String -> Attribute c m
+textRendering : String -> Attribute m c
 textRendering =
     attribute "text-rendering"
 
 
 {-| -}
-unicodeBidi : String -> Attribute c m
+unicodeBidi : String -> Attribute m c
 unicodeBidi =
     attribute "unicode-bidi"
 
 
 {-| -}
-visibility : String -> Attribute c m
+visibility : String -> Attribute m c
 visibility =
     attribute "visibility"
 
 
 {-| -}
-wordSpacing : String -> Attribute c m
+wordSpacing : String -> Attribute m c
 wordSpacing =
     attribute "word-spacing"
 
 
 {-| -}
-writingMode : String -> Attribute c m
+writingMode : String -> Attribute m c
 writingMode =
     attribute "writing-mode"

@@ -18,58 +18,58 @@ import Components exposing (Attribute, Component, Container, Node, Signal, Slot)
 import Components.Internal.BaseComponent as BaseComponent
 
 
-type alias Spec v w c m s pC pM =
-    BaseComponent.Spec v w c m s pC pM
+type alias Spec v w s m c pM pC =
+    BaseComponent.Spec v w s m c pM pC
 
 
-type alias SpecWithOptions v w c m s pC pM =
-    BaseComponent.SpecWithOptions v w c m s pC pM
+type alias SpecWithOptions v w s m c pM pC =
+    BaseComponent.SpecWithOptions v w s m c pM pC
 
 
-type alias Self c m s pC =
-    BaseComponent.Self c m s pC
+type alias Self s m c pC =
+    BaseComponent.Self s m c pC
 
 
 type alias Options m =
     BaseComponent.Options m
 
 
-mixedComponent : Spec v w c m s pC pM -> Component v w (Container c m s) pC pM
+mixedComponent : Spec v w s m c pM pC -> Component v w (Container s m c) pM pC
 mixedComponent =
     BaseComponent.baseComponent
 
 
 mixedComponentWithOptions :
-    SpecWithOptions v w c m s pC pM
-    -> Component v w (Container c m s) pC pM
+    SpecWithOptions v w s m c pM pC
+    -> Component v w (Container s m c) pM pC
 mixedComponentWithOptions =
     BaseComponent.baseComponentWithOptions
 
 
-wrapSignal : Self c m s pC -> Signal c m -> Signal pC pM
+wrapSignal : Self s m c pC -> Signal m c -> Signal pM pC
 wrapSignal =
     BaseComponent.wrapSignal
 
 
-wrapAttribute : Self c m s pC -> Attribute v c m -> Attribute v pC pM
+wrapAttribute : Self s m c pC -> Attribute v m c -> Attribute v pM pC
 wrapAttribute =
     BaseComponent.wrapAttribute
 
 
-wrapNode : Self c m s pC -> Node v w c m -> Node v w pC pM
+wrapNode : Self s m c pC -> Node v w m c -> Node v w pM pC
 wrapNode =
     BaseComponent.wrapNode
 
 
 wrapSlot :
-    Self c m s pC
-    -> Slot (Container cC cM cS) c
-    -> Slot (Container cC cM cS) pC
+    Self s m c pC
+    -> Slot (Container cS cM cC) c
+    -> Slot (Container cS cM cC) pC
 wrapSlot =
     BaseComponent.wrapSlot
 
 
-sendToChild : Self c m s pC -> Slot (Container cC cM cS) c -> cM -> Signal pC pM
+sendToChild : Self s m c pC -> Slot (Container cS cM cC) c -> cM -> Signal pM pC
 sendToChild =
     BaseComponent.sendToChild
 

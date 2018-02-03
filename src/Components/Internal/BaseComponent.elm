@@ -23,35 +23,35 @@ import Svg.Styled.Attributes
 import VirtualDom
 
 
-type alias Spec v w c m s pC pM =
-    { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self c m s pC -> s -> Sub m
-    , view : Self c m s pC -> s -> Node v w pC pM
+type alias Spec v w s m c pM pC =
+    { init : Self s m c pC -> ( s, Cmd m, List (Signal pM pC) )
+    , update : Self s m c pC -> m -> s -> ( s, Cmd m, List (Signal pM pC) )
+    , subscriptions : Self s m c pC -> s -> Sub m
+    , view : Self s m c pC -> s -> Node v w pM pC
     , children : c
     }
 
 
-type alias SpecWithOptions v w c m s pC pM =
-    { init : Self c m s pC -> ( s, Cmd m, List (Signal pC pM) )
-    , update : Self c m s pC -> m -> s -> ( s, Cmd m, List (Signal pC pM) )
-    , subscriptions : Self c m s pC -> s -> Sub m
-    , view : Self c m s pC -> s -> Node v w pC pM
+type alias SpecWithOptions v w s m c pM pC =
+    { init : Self s m c pC -> ( s, Cmd m, List (Signal pM pC) )
+    , update : Self s m c pC -> m -> s -> ( s, Cmd m, List (Signal pM pC) )
+    , subscriptions : Self s m c pC -> s -> Sub m
+    , view : Self s m c pC -> s -> Node v w pM pC
     , children : c
     , options : Options m
     }
 
 
-type alias Self c m s pC =
+type alias Self s m c pC =
     { id : String
-    , internal : InternalStuff c m s pC
+    , internal : InternalStuff s m c pC
     }
 
 
-type InternalStuff c m s pC
+type InternalStuff s m c pC
     = InternalStuff
-        { get : pC -> Container c m s
-        , set : Container c m s -> pC -> pC
+        { get : pC -> Container s m c
+        , set : Container s m c -> pC -> pC
         , freshContainers : c
         , freshParentContainers : pC
         }
@@ -62,28 +62,28 @@ type alias Options m =
     }
 
 
-type alias Hidden v w c m s pC pM =
-    { spec : SpecWithOptions v w c m s pC pM
-    , get : pC -> Container c m s
-    , set : Container c m s -> pC -> pC
-    , renderedComponents : Dict ComponentId (RenderedComponent pC pM)
+type alias Hidden v w s m c pM pC =
+    { spec : SpecWithOptions v w s m c pM pC
+    , get : pC -> Container s m c
+    , set : Container s m c -> pC -> pC
+    , renderedComponents : Dict ComponentId (RenderedComponent pM pC)
     , renderedComponentPositions : Dict Int ComponentId
-    , localSub : Sub (Signal pC pM)
-    , tree : Node v w pC pM
+    , localSub : Sub (Signal pM pC)
+    , tree : Node v w pM pC
     }
 
 
-type alias CommonArgs a c m =
+type alias CommonArgs a m c =
     { a
         | states : c
-        , cache : Cache c m
+        , cache : Cache m c
         , freshContainers : c
         , lastComponentId : ComponentId
         , namespace : String
     }
 
 
-baseComponent : Spec v w c m s pC pM -> Component v w (Container c m s) pC pM
+baseComponent : Spec v w s m c pM pC -> Component v w (Container s m c) pM pC
 baseComponent spec =
     baseComponentWithOptions
         { init = spec.init
@@ -96,8 +96,8 @@ baseComponent spec =
 
 
 baseComponentWithOptions :
-    SpecWithOptions v w c m s pC pM
-    -> Component v w (Container c m s) pC pM
+    SpecWithOptions v w s m c pM pC
+    -> Component v w (Container s m c) pM pC
 baseComponentWithOptions spec =
     Component <|
         \( get, set ) ->
@@ -113,7 +113,7 @@ baseComponentWithOptions spec =
                     }
 
 
-identify : Hidden v w c m s pC pM -> { states : pC } -> Maybe ComponentId
+identify : Hidden v w s m c pM pC -> { states : pC } -> Maybe ComponentId
 identify hidden args =
     case hidden.get args.states of
         StateContainer state ->
@@ -123,7 +123,7 @@ identify hidden args =
             Nothing
 
 
-touch : Hidden v w c m s pC pM -> TouchArgs pC pM -> Change pC pM
+touch : Hidden v w s m c pM pC -> TouchArgs pM pC -> Change pM pC
 touch hidden args =
     case hidden.get args.states of
         StateContainer state ->
@@ -138,7 +138,7 @@ touch hidden args =
             init hidden args
 
 
-init : Hidden v w c m s pC pM -> TouchArgs pC pM -> Change pC pM
+init : Hidden v w s m c pM pC -> TouchArgs pM pC -> Change pM pC
 init hidden args =
     let
         id =
@@ -173,10 +173,10 @@ init hidden args =
 
 
 rebuild :
-    Hidden v w c m s pC pM
-    -> TouchArgs pC pM
-    -> ComponentState c m s
-    -> Change pC pM
+    Hidden v w s m c pM pC
+    -> TouchArgs pM pC
+    -> ComponentState s m c
+    -> Change pM pC
 rebuild hidden args state =
     let
         self =
@@ -191,7 +191,7 @@ rebuild hidden args state =
     change hidden args state.id Cmd.none sub [] tree
 
 
-update : Hidden v w c m s pC pM -> UpdateArgs pC pM -> Maybe (Change pC pM)
+update : Hidden v w s m c pM pC -> UpdateArgs pM pC -> Maybe (Change pM pC)
 update hidden args =
     case hidden.get args.states of
         StateContainer state ->
@@ -213,11 +213,11 @@ update hidden args =
 
 
 doLocalUpdate :
-    Hidden v w c m s pC pM
-    -> CommonArgs a pC pM
-    -> ComponentState c m s
+    Hidden v w s m c pM pC
+    -> CommonArgs a pM pC
+    -> ComponentState s m c
     -> m
-    -> Change pC pM
+    -> Change pM pC
 doLocalUpdate hidden args state msg =
     let
         self =
@@ -245,10 +245,10 @@ doLocalUpdate hidden args state msg =
 
 
 maybeUpdateChild :
-    Hidden v w c m s pC pM
-    -> UpdateArgs pC pM
-    -> ComponentState c m s
-    -> Maybe (Change pC pM)
+    Hidden v w s m c pM pC
+    -> UpdateArgs pM pC
+    -> ComponentState s m c
+    -> Maybe (Change pM pC)
 maybeUpdateChild hidden args state =
     let
         findAndUpdate components =
@@ -293,14 +293,14 @@ maybeUpdateChild hidden args state =
 
 
 change :
-    Hidden v w c m s pC pM
-    -> CommonArgs a pC pM
+    Hidden v w s m c pM pC
+    -> CommonArgs a pM pC
     -> ComponentId
     -> Cmd m
     -> Sub m
-    -> List (Signal pC pM)
-    -> Node v w pC pM
-    -> Change pC pM
+    -> List (Signal pM pC)
+    -> Node v w pM pC
+    -> Change pM pC
 change hidden args thisId cmd sub signals tree =
     let
         mappedLocalCmd =
@@ -391,9 +391,9 @@ change hidden args thisId cmd sub signals tree =
 
 
 collectRenderedComponents :
-    Node v w c m
-    -> List (RenderedComponent c m)
-    -> List (RenderedComponent c m)
+    Node v w m c
+    -> List (RenderedComponent m c)
+    -> List (RenderedComponent m c)
 collectRenderedComponents node acc =
     case node of
         SimpleElement { children } ->
@@ -424,7 +424,7 @@ collectRenderedComponents node acc =
             component :: acc
 
 
-buildComponent : Hidden v w c m s pC pM -> RenderedComponent pC pM
+buildComponent : Hidden v w s m c pM pC -> RenderedComponent pM pC
 buildComponent hidden =
     RenderedComponent
         { identify = identify hidden
@@ -435,7 +435,7 @@ buildComponent hidden =
         }
 
 
-subscriptions : Hidden v w c m s pC pM -> () -> Sub (Signal pC pM)
+subscriptions : Hidden v w s m c pM pC -> () -> Sub (Signal pM pC)
 subscriptions hidden () =
     Dict.foldl
         (\_ (RenderedComponent component) acc ->
@@ -448,7 +448,7 @@ subscriptions hidden () =
         hidden.renderedComponents
 
 
-view : Hidden v w c m s pC pM -> () -> Html.Styled.Html (Signal pC pM)
+view : Hidden v w s m c pM pC -> () -> Html.Styled.Html (Signal pM pC)
 view hidden () =
     render
         hidden.renderedComponents
@@ -459,11 +459,11 @@ view hidden () =
 
 
 render :
-    Dict ComponentId (RenderedComponent c m)
+    Dict ComponentId (RenderedComponent m c)
     -> Dict Int ComponentId
     -> Int
-    -> Node v w c m
-    -> ( Html.Styled.Html (Signal c m), Int )
+    -> Node v w m c
+    -> ( Html.Styled.Html (Signal m c), Int )
 render components positionsMap position node =
     case node of
         SimpleElement element ->
@@ -515,11 +515,11 @@ render components positionsMap position node =
 
 
 renderElement :
-    Dict ComponentId (RenderedComponent c m)
+    Dict ComponentId (RenderedComponent m c)
     -> Dict Int ComponentId
     -> Int
-    -> Element x y z c m
-    -> ( Html.Styled.Html (Signal c m), Int )
+    -> Element x y z m c
+    -> ( Html.Styled.Html (Signal m c), Int )
 renderElement components positionsMap position element =
     let
         renderChild child ( renderedChildren, prevPosition ) =
@@ -544,11 +544,11 @@ renderElement components positionsMap position element =
 
 
 renderKeyedElement :
-    Dict ComponentId (RenderedComponent c m)
+    Dict ComponentId (RenderedComponent m c)
     -> Dict Int ComponentId
     -> Int
-    -> KeyedElement x y z c m
-    -> ( Html.Styled.Html (Signal c m), Int )
+    -> KeyedElement x y z m c
+    -> ( Html.Styled.Html (Signal m c), Int )
 renderKeyedElement components positionsMap position element =
     let
         renderChild ( key, child ) ( renderedChildren, prevPosition ) =
@@ -572,7 +572,7 @@ renderKeyedElement components positionsMap position element =
     ( renderedElement, nextPosition )
 
 
-toStyledAttribute : Attribute v c m -> Html.Styled.Attribute (Signal c m)
+toStyledAttribute : Attribute v m c -> Html.Styled.Attribute (Signal m c)
 toStyledAttribute attribute =
     case attribute of
         PlainAttribute property ->
@@ -586,10 +586,10 @@ toStyledAttribute attribute =
 
 
 getSelf :
-    Hidden v w c m s pC pM
+    Hidden v w s m c pM pC
     -> ComponentId
     -> { a | freshContainers : pC, namespace : String }
-    -> Self c m s pC
+    -> Self s m c pC
 getSelf hidden id { namespace, freshContainers } =
     { id = "_" ++ namespace ++ "_" ++ toString id
     , internal =
@@ -602,7 +602,7 @@ getSelf hidden id { namespace, freshContainers } =
     }
 
 
-wrapSignal : Self c m s pC -> Signal c m -> Signal pC pM
+wrapSignal : Self s m c pC -> Signal m c -> Signal pM pC
 wrapSignal self =
     let
         (InternalStuff { set, freshParentContainers }) =
@@ -611,7 +611,7 @@ wrapSignal self =
     toParentSignal set freshParentContainers
 
 
-wrapAttribute : Self c m s pC -> Attribute v c m -> Attribute v pC pM
+wrapAttribute : Self s m c pC -> Attribute v m c -> Attribute v pM pC
 wrapAttribute self attribute =
     case attribute of
         PlainAttribute property ->
@@ -623,7 +623,7 @@ wrapAttribute self attribute =
             Styles strategy styles
 
 
-wrapNode : Self c m s pC -> Node v w c m -> Node v w pC pM
+wrapNode : Self s m c pC -> Node v w m c -> Node v w pM pC
 wrapNode self node =
     case node of
         SimpleElement { tag, attributes, children } ->
@@ -680,9 +680,9 @@ wrapNode self node =
 
 
 wrapRenderedComponent :
-    Self c m s pC
-    -> RenderedComponent c m
-    -> RenderedComponent pC pM
+    Self s m c pC
+    -> RenderedComponent m c
+    -> RenderedComponent pM pC
 wrapRenderedComponent self component =
     RenderedComponent <|
         { identify = wrapIdentify self component
@@ -694,8 +694,8 @@ wrapRenderedComponent self component =
 
 
 wrapIdentify :
-    Self c m s pC
-    -> RenderedComponent c m
+    Self s m c pC
+    -> RenderedComponent m c
     -> { states : pC }
     -> Maybe ComponentId
 wrapIdentify self (RenderedComponent component) args =
@@ -712,10 +712,10 @@ wrapIdentify self (RenderedComponent component) args =
 
 
 wrapTouch :
-    Self c m s pC
-    -> RenderedComponent c m
-    -> TouchArgs pC pM
-    -> Change pC pM
+    Self s m c pC
+    -> RenderedComponent m c
+    -> TouchArgs pM pC
+    -> Change pM pC
 wrapTouch self (RenderedComponent component) args =
     let
         (InternalStuff { get, set, freshContainers, freshParentContainers }) =
@@ -778,10 +778,10 @@ wrapTouch self (RenderedComponent component) args =
 
 
 wrapUpdate :
-    Self c m s pC
-    -> RenderedComponent c m
-    -> UpdateArgs pC pM
-    -> Maybe (Change pC pM)
+    Self s m c pC
+    -> RenderedComponent m c
+    -> UpdateArgs pM pC
+    -> Maybe (Change pM pC)
 wrapUpdate self (RenderedComponent component) args =
     let
         (InternalStuff { get, set, freshContainers, freshParentContainers }) =
@@ -842,10 +842,10 @@ wrapUpdate self (RenderedComponent component) args =
 
 
 wrapSubscriptions :
-    Self c m s pC
-    -> RenderedComponent c m
+    Self s m c pC
+    -> RenderedComponent m c
     -> ()
-    -> Sub (Signal pC pM)
+    -> Sub (Signal pM pC)
 wrapSubscriptions self (RenderedComponent component) () =
     let
         (InternalStuff { set, freshParentContainers }) =
@@ -856,10 +856,10 @@ wrapSubscriptions self (RenderedComponent component) () =
 
 
 wrapView :
-    Self c m s pC
-    -> RenderedComponent c m
+    Self s m c pC
+    -> RenderedComponent m c
     -> ()
-    -> Html.Styled.Html (Signal pC pM)
+    -> Html.Styled.Html (Signal pM pC)
 wrapView self (RenderedComponent component) () =
     let
         (InternalStuff { set, freshParentContainers }) =
@@ -870,9 +870,9 @@ wrapView self (RenderedComponent component) () =
 
 
 wrapSlot :
-    Self c m s pC
-    -> Slot (Container cC cM cS) c
-    -> Slot (Container cC cM cS) pC
+    Self s m c pC
+    -> Slot (Container cS cM cC) c
+    -> Slot (Container cS cM cC) pC
 wrapSlot self ( getChild, setChild ) =
     let
         (InternalStuff { get, set, freshContainers }) =
@@ -930,7 +930,7 @@ wrapSlot self ( getChild, setChild ) =
     ( wrappedGet, wrappedSet )
 
 
-sendToChild : Self c m s pC -> Slot (Container cC cM cS) c -> cM -> Signal pC pM
+sendToChild : Self s m c pC -> Slot (Container cS cM cC) c -> cM -> Signal pM pC
 sendToChild self ( _, setChild ) childMsg =
     let
         (InternalStuff { set, freshContainers, freshParentContainers }) =
@@ -942,7 +942,7 @@ sendToChild self ( _, setChild ) childMsg =
         |> toParentSignal set freshParentContainers
 
 
-wrapLocalMsg : (Container c m s -> pC -> pC) -> pC -> m -> Signal pC pM
+wrapLocalMsg : (Container s m c -> pC -> pC) -> pC -> m -> Signal pM pC
 wrapLocalMsg set freshParentContainers msg =
     msg
         |> LocalMsg
@@ -950,10 +950,10 @@ wrapLocalMsg set freshParentContainers msg =
 
 
 toParentSignal :
-    (Container c m s -> pC -> pC)
+    (Container s m c -> pC -> pC)
     -> pC
-    -> Signal c m
-    -> Signal pC pM
+    -> Signal m c
+    -> Signal pM pC
 toParentSignal set freshParentContainers signal =
     freshParentContainers
         |> set (SignalContainer signal)
