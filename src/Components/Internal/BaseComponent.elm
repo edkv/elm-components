@@ -258,8 +258,7 @@ maybeUpdateChild hidden args state =
                         Just change ->
                             let
                                 updatedRenderedComponents =
-                                    Dict.get state.id change.cache
-                                        |> Maybe.withDefault Dict.empty
+                                    hidden.renderedComponents
                                         |> Dict.insert id change.component
 
                                 updatedCache =
