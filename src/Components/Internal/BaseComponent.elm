@@ -50,8 +50,7 @@ type alias Self s m c pC =
 
 type InternalStuff s m c pC
     = InternalStuff
-        { get : pC -> Container s m c
-        , set : Container s m c -> pC -> pC
+        { slot : Slot (Container s m c) pC
         , freshContainers : c
         , freshParentContainers : pC
         }
@@ -64,12 +63,11 @@ type alias Options m =
 
 type alias Hidden v w s m c pM pC =
     { spec : SpecWithOptions v w s m c pM pC
-    , get : pC -> Container s m c
-    , set : Container s m c -> pC -> pC
-    , renderedComponents : Dict ComponentId (RenderedComponent pM pC)
-    , renderedComponentPositions : Dict Int ComponentId
-    , localSub : Sub (Signal pM pC)
+    , slot : Slot (Container s m c) pC
+    , sub : Sub (Signal pM pC)
     , tree : Node v w pM pC
+    , components : Dict ComponentId (ComponentInterface pM pC)
+    , componentPositions : Dict Int ComponentId
     }
 
 
@@ -100,110 +98,104 @@ baseComponentWithOptions :
     -> Component v w (Container s m c) pM pC
 baseComponentWithOptions spec =
     Component <|
-        \( get, set ) ->
-            ComponentNode <|
-                buildComponent
-                    { spec = spec
-                    , get = get
-                    , set = set
-                    , renderedComponents = Dict.empty
-                    , renderedComponentPositions = Dict.empty
-                    , localSub = Sub.none
-                    , tree = Text ""
-                    }
+        \slot ->
+            ComponentNode (touch spec slot)
 
 
-identify : Hidden v w s m c pM pC -> { states : pC } -> Maybe ComponentId
-identify hidden args =
-    case hidden.get args.states of
+touch :
+    SpecWithOptions v w s m c pM pC
+    -> Slot (Container s m c) pC
+    -> Touch pM pC
+touch spec (( get, _ ) as slot) args =
+    case get args.states of
         StateContainer state ->
-            Just state.id
-
-        _ ->
-            Nothing
-
-
-touch : Hidden v w s m c pM pC -> TouchArgs pM pC -> Change pM pC
-touch hidden args =
-    case hidden.get args.states of
-        StateContainer state ->
-            case hidden.spec.options.onContextUpdate of
+            case spec.options.onContextUpdate of
                 Just msg ->
-                    doLocalUpdate hidden args state msg
+                    ( state.id
+                    , doLocalUpdate spec slot state msg args
+                    )
 
                 Nothing ->
-                    rebuild hidden args state
+                    rebuild spec slot state args
 
         _ ->
-            init hidden args
+            init spec slot args
 
 
-init : Hidden v w s m c pM pC -> TouchArgs pM pC -> Change pM pC
-init hidden args =
+init :
+    SpecWithOptions v w s m c pM pC
+    -> Slot (Container s m c) pC
+    -> Touch pM pC
+init spec slot args =
     let
         id =
             args.lastComponentId + 1
 
         self =
-            getSelf hidden id args
+            getSelf spec slot id args
 
         ( localState, cmd, signals ) =
-            hidden.spec.init self
+            spec.init self
 
         sub =
-            hidden.spec.subscriptions self localState
+            spec.subscriptions self localState
 
         tree =
-            hidden.spec.view self localState
+            spec.view self localState
 
         state =
             { id = id
             , localState = localState
-            , childStates = hidden.spec.children
+            , childStates = spec.children
             , cache = Dict.empty
             }
 
         updatedArgs =
-            { args
-                | states = hidden.set (StateContainer state) args.states
-                , lastComponentId = id
-            }
+            { args | lastComponentId = id }
     in
-    change hidden updatedArgs id cmd sub signals tree
+    ( id
+    , change spec slot state cmd sub signals tree updatedArgs
+    )
 
 
 rebuild :
-    Hidden v w s m c pM pC
-    -> TouchArgs pM pC
+    SpecWithOptions v w s m c pM pC
+    -> Slot (Container s m c) pC
     -> ComponentState s m c
-    -> Change pM pC
-rebuild hidden args state =
+    -> Touch pM pC
+rebuild spec slot state args =
     let
         self =
-            getSelf hidden state.id args
+            getSelf spec slot state.id args
 
         sub =
-            hidden.spec.subscriptions self state.localState
+            spec.subscriptions self state.localState
 
         tree =
-            hidden.spec.view self state.localState
+            spec.view self state.localState
     in
-    change hidden args state.id Cmd.none sub [] tree
+    ( state.id
+    , change spec slot state Cmd.none sub [] tree args
+    )
 
 
 update : Hidden v w s m c pM pC -> UpdateArgs pM pC -> Maybe (Change pM pC)
 update hidden args =
-    case hidden.get args.states of
+    let
+        ( get, _ ) =
+            hidden.slot
+    in
+    case get args.states of
         StateContainer state ->
-            case hidden.get args.signalContainers of
+            case get args.signalContainers of
                 EmptyContainer ->
-                    maybeUpdateChild hidden args state
+                    maybeUpdateChild hidden state args
 
                 SignalContainer (LocalMsg msg) ->
-                    Just (doLocalUpdate hidden args state msg)
+                    Just (doLocalUpdate hidden.spec hidden.slot state msg args)
 
                 SignalContainer (ChildMsg _) ->
-                    maybeUpdateChild hidden args state
+                    maybeUpdateChild hidden state args
 
                 _ ->
                     Nothing
@@ -213,65 +205,61 @@ update hidden args =
 
 
 doLocalUpdate :
-    Hidden v w s m c pM pC
-    -> CommonArgs a pM pC
+    SpecWithOptions v w s m c pM pC
+    -> Slot (Container s m c) pC
     -> ComponentState s m c
     -> m
+    -> CommonArgs a pM pC
     -> Change pM pC
-doLocalUpdate hidden args state msg =
+doLocalUpdate spec (( _, set ) as slot) state msg args =
     let
         self =
-            getSelf hidden state.id args
+            getSelf spec slot state.id args
 
-        ( localState, cmd, signals ) =
-            hidden.spec.update self msg state.localState
+        ( newLocalState, cmd, signals ) =
+            spec.update self msg state.localState
 
         sub =
-            hidden.spec.subscriptions self localState
+            spec.subscriptions self newLocalState
 
         tree =
-            hidden.spec.view self localState
+            spec.view self newLocalState
 
         updatedState =
-            { state | localState = localState }
-
-        updatedStates =
-            hidden.set (StateContainer updatedState) args.states
-
-        updatedArgs =
-            { args | states = updatedStates }
+            { state | localState = newLocalState }
     in
-    change hidden updatedArgs state.id cmd sub signals tree
+    change spec slot updatedState cmd sub signals tree args
 
 
 maybeUpdateChild :
     Hidden v w s m c pM pC
-    -> UpdateArgs pM pC
     -> ComponentState s m c
+    -> UpdateArgs pM pC
     -> Maybe (Change pM pC)
-maybeUpdateChild hidden args state =
+maybeUpdateChild hidden state args =
     let
         findAndUpdate components =
             case components of
-                ( id, RenderedComponent component ) :: otherComponents ->
+                ( id, ComponentInterface component ) :: otherComponents ->
                     case component.update args of
                         Just change ->
                             let
-                                updatedRenderedComponents =
-                                    hidden.renderedComponents
-                                        |> Dict.insert id change.component
+                                updatedComponents =
+                                    Dict.insert
+                                        id
+                                        change.component
+                                        hidden.components
 
                                 updatedCache =
                                     Dict.insert
                                         state.id
-                                        updatedRenderedComponents
+                                        updatedComponents
                                         change.cache
 
                                 component =
                                     buildComponent
                                         { hidden
-                                            | renderedComponents =
-                                                updatedRenderedComponents
+                                            | components = updatedComponents
                                         }
                             in
                             Just
@@ -289,44 +277,48 @@ maybeUpdateChild hidden args state =
                 [] ->
                     Nothing
     in
-    findAndUpdate (Dict.toList hidden.renderedComponents)
+    findAndUpdate (Dict.toList hidden.components)
 
 
 change :
-    Hidden v w s m c pM pC
-    -> CommonArgs a pM pC
-    -> ComponentId
+    SpecWithOptions v w s m c pM pC
+    -> Slot (Container s m c) pC
+    -> ComponentState s m c
     -> Cmd m
     -> Sub m
     -> List (Signal pM pC)
     -> Node v w pM pC
+    -> CommonArgs a pM pC
     -> Change pM pC
-change hidden args thisId cmd sub signals tree =
+change spec (( _, set ) as slot) state cmd sub signals tree args =
     let
+        updatedStates =
+            set (StateContainer state) args.states
+
         mappedLocalCmd =
-            Cmd.map (wrapLocalMsg hidden.set args.freshContainers) cmd
+            Cmd.map (wrapLocalMsg set args.freshContainers) cmd
 
         mappedLocalSub =
-            Sub.map (wrapLocalMsg hidden.set args.freshContainers) sub
+            Sub.map (wrapLocalMsg set args.freshContainers) sub
 
-        renderedComponents =
-            collectRenderedComponents tree []
+        touchFunctions =
+            collectTouchFunctions tree []
 
-        treeTouchInitialData =
+        touchInitialData =
             { position = 0
             , idComponentPairs = []
             , positionIdPairs = []
-            , states = args.states
+            , states = updatedStates
             , cache = args.cache
             , cmd = mappedLocalCmd
             , signals = signals
             , lastComponentId = args.lastComponentId
             }
 
-        touchComponent (RenderedComponent component) acc =
+        touchComponent touchFunction acc =
             let
-                change =
-                    component.touch
+                ( id, change ) =
+                    touchFunction
                         { states = acc.states
                         , cache = acc.cache
                         , lastComponentId = acc.lastComponentId
@@ -334,21 +326,11 @@ change hidden args thisId cmd sub signals tree =
                         , namespace = args.namespace
                         }
 
-                (RenderedComponent changedComponent) =
-                    change.component
+                idComponentPairs =
+                    ( id, change.component ) :: acc.idComponentPairs
 
-                ( idComponentPairs, positionIdPairs ) =
-                    case changedComponent.identify { states = change.states } of
-                        Just id ->
-                            ( ( id, change.component ) :: acc.idComponentPairs
-                            , ( acc.position, id ) :: acc.positionIdPairs
-                            )
-
-                        Nothing ->
-                            -- It should never be Nothing after a touch.
-                            ( acc.idComponentPairs
-                            , acc.positionIdPairs
-                            )
+                positionIdPairs =
+                    ( acc.position, id ) :: acc.positionIdPairs
             in
             { position = acc.position + 1
             , idComponentPairs = idComponentPairs
@@ -360,59 +342,57 @@ change hidden args thisId cmd sub signals tree =
             , lastComponentId = change.lastComponentId
             }
 
-        treeTouchResult =
-            List.foldl touchComponent treeTouchInitialData renderedComponents
+        touchResults =
+            List.foldl touchComponent touchInitialData touchFunctions
 
-        touchedRenderedComponents =
-            Dict.fromList treeTouchResult.idComponentPairs
+        renderedComponents =
+            Dict.fromList touchResults.idComponentPairs
 
         renderedComponentPositions =
-            Dict.fromList treeTouchResult.positionIdPairs
+            Dict.fromList touchResults.positionIdPairs
 
         component =
             buildComponent
-                { hidden
-                    | renderedComponents = touchedRenderedComponents
-                    , renderedComponentPositions = renderedComponentPositions
-                    , localSub = mappedLocalSub
-                    , tree = tree
+                { spec = spec
+                , slot = slot
+                , sub = mappedLocalSub
+                , tree = tree
+                , components = renderedComponents
+                , componentPositions = renderedComponentPositions
                 }
 
-        cache =
-            Dict.insert thisId touchedRenderedComponents treeTouchResult.cache
+        updatedCache =
+            Dict.insert state.id renderedComponents touchResults.cache
     in
     { component = component
-    , states = treeTouchResult.states
-    , cache = cache
-    , cmd = treeTouchResult.cmd
-    , signals = treeTouchResult.signals
-    , lastComponentId = treeTouchResult.lastComponentId
+    , states = touchResults.states
+    , cache = updatedCache
+    , cmd = touchResults.cmd
+    , signals = touchResults.signals
+    , lastComponentId = touchResults.lastComponentId
     }
 
 
-collectRenderedComponents :
-    Node v w m c
-    -> List (RenderedComponent m c)
-    -> List (RenderedComponent m c)
-collectRenderedComponents node acc =
+collectTouchFunctions : Node v w m c -> List (Touch m c) -> List (Touch m c)
+collectTouchFunctions node acc =
     case node of
         SimpleElement { children } ->
-            List.foldl collectRenderedComponents acc children
+            List.foldl collectTouchFunctions acc children
 
         Embedding { children } ->
-            List.foldl collectRenderedComponents acc children
+            List.foldl collectTouchFunctions acc children
 
         ReversedEmbedding { children } ->
-            List.foldl collectRenderedComponents acc children
+            List.foldl collectTouchFunctions acc children
 
         KeyedSimpleElement { children } ->
-            List.foldl (Tuple.second >> collectRenderedComponents) acc children
+            List.foldl (Tuple.second >> collectTouchFunctions) acc children
 
         KeyedEmbedding { children } ->
-            List.foldl (Tuple.second >> collectRenderedComponents) acc children
+            List.foldl (Tuple.second >> collectTouchFunctions) acc children
 
         KeyedReversedEmbedding { children } ->
-            List.foldl (Tuple.second >> collectRenderedComponents) acc children
+            List.foldl (Tuple.second >> collectTouchFunctions) acc children
 
         Text _ ->
             acc
@@ -420,16 +400,14 @@ collectRenderedComponents node acc =
         PlainNode _ ->
             acc
 
-        ComponentNode component ->
-            component :: acc
+        ComponentNode touchFunction ->
+            touchFunction :: acc
 
 
-buildComponent : Hidden v w s m c pM pC -> RenderedComponent pM pC
+buildComponent : Hidden v w s m c pM pC -> ComponentInterface pM pC
 buildComponent hidden =
-    RenderedComponent
-        { identify = identify hidden
-        , touch = touch hidden
-        , update = update hidden
+    ComponentInterface
+        { update = update hidden
         , subscriptions = subscriptions hidden
         , view = view hidden
         }
@@ -438,28 +416,24 @@ buildComponent hidden =
 subscriptions : Hidden v w s m c pM pC -> () -> Sub (Signal pM pC)
 subscriptions hidden () =
     Dict.foldl
-        (\_ (RenderedComponent component) acc ->
+        (\_ (ComponentInterface component) acc ->
             Sub.batch
                 [ acc
                 , component.subscriptions ()
                 ]
         )
-        hidden.localSub
-        hidden.renderedComponents
+        hidden.sub
+        hidden.components
 
 
 view : Hidden v w s m c pM pC -> () -> Html.Styled.Html (Signal pM pC)
 view hidden () =
-    render
-        hidden.renderedComponents
-        hidden.renderedComponentPositions
-        0
-        hidden.tree
+    render hidden.components hidden.componentPositions 0 hidden.tree
         |> Tuple.first
 
 
 render :
-    Dict ComponentId (RenderedComponent m c)
+    Dict ComponentId (ComponentInterface m c)
     -> Dict Int ComponentId
     -> Int
     -> Node v w m c
@@ -498,7 +472,7 @@ render components positionsMap position node =
             case Dict.get position positionsMap of
                 Just id ->
                     case Dict.get id components of
-                        Just (RenderedComponent component) ->
+                        Just (ComponentInterface component) ->
                             ( component.view ()
                             , position + 1
                             )
@@ -515,7 +489,7 @@ render components positionsMap position node =
 
 
 renderElement :
-    Dict ComponentId (RenderedComponent m c)
+    Dict ComponentId (ComponentInterface m c)
     -> Dict Int ComponentId
     -> Int
     -> Element x y z m c
@@ -544,7 +518,7 @@ renderElement components positionsMap position element =
 
 
 renderKeyedElement :
-    Dict ComponentId (RenderedComponent m c)
+    Dict ComponentId (ComponentInterface m c)
     -> Dict Int ComponentId
     -> Int
     -> KeyedElement x y z m c
@@ -586,18 +560,18 @@ toStyledAttribute attribute =
 
 
 getSelf :
-    Hidden v w s m c pM pC
+    SpecWithOptions v w s m c pM pC
+    -> Slot (Container s m c) pC
     -> ComponentId
     -> { a | freshContainers : pC, namespace : String }
     -> Self s m c pC
-getSelf hidden id { namespace, freshContainers } =
-    { id = "_" ++ namespace ++ "_" ++ toString id
+getSelf spec slot id args =
+    { id = "_" ++ args.namespace ++ "_" ++ toString id
     , internal =
         InternalStuff
-            { get = hidden.get
-            , set = hidden.set
-            , freshContainers = hidden.spec.children
-            , freshParentContainers = freshContainers
+            { slot = slot
+            , freshContainers = spec.children
+            , freshParentContainers = args.freshContainers
             }
     }
 
@@ -605,8 +579,11 @@ getSelf hidden id { namespace, freshContainers } =
 wrapSignal : Self s m c pC -> Signal m c -> Signal pM pC
 wrapSignal self =
     let
-        (InternalStuff { set, freshParentContainers }) =
+        (InternalStuff { slot, freshParentContainers }) =
             self.internal
+
+        ( _, set ) =
+            slot
     in
     toParentSignal set freshParentContainers
 
@@ -674,58 +651,24 @@ wrapNode self node =
         PlainNode node ->
             PlainNode (VirtualDom.map (wrapSignal self) node)
 
-        ComponentNode renderedComponent ->
-            wrapRenderedComponent self renderedComponent
-                |> ComponentNode
+        ComponentNode touchFunction ->
+            ComponentNode (wrapTouch self touchFunction)
 
 
-wrapRenderedComponent :
-    Self s m c pC
-    -> RenderedComponent m c
-    -> RenderedComponent pM pC
-wrapRenderedComponent self component =
-    RenderedComponent <|
-        { identify = wrapIdentify self component
-        , touch = wrapTouch self component
-        , update = wrapUpdate self component
-        , subscriptions = wrapSubscriptions self component
-        , view = wrapView self component
-        }
-
-
-wrapIdentify :
-    Self s m c pC
-    -> RenderedComponent m c
-    -> { states : pC }
-    -> Maybe ComponentId
-wrapIdentify self (RenderedComponent component) args =
+wrapTouch : Self s m c pC -> Touch m c -> Touch pM pC
+wrapTouch self touchFunction args =
     let
-        (InternalStuff { get }) =
+        (InternalStuff { slot, freshContainers, freshParentContainers }) =
             self.internal
-    in
-    case get args.states of
-        StateContainer state ->
-            component.identify { states = state.childStates }
 
-        _ ->
-            Nothing
-
-
-wrapTouch :
-    Self s m c pC
-    -> RenderedComponent m c
-    -> TouchArgs pM pC
-    -> Change pM pC
-wrapTouch self (RenderedComponent component) args =
-    let
-        (InternalStuff { get, set, freshContainers, freshParentContainers }) =
-            self.internal
+        ( get, set ) =
+            slot
     in
     case get args.states of
         StateContainer state ->
             let
-                change =
-                    component.touch
+                ( id, change ) =
+                    touchFunction
                         { states = state.childStates
                         , cache = state.cache
                         , freshContainers = freshContainers
@@ -733,59 +676,84 @@ wrapTouch self (RenderedComponent component) args =
                         , namespace = args.namespace
                         }
 
-                newComponent =
-                    wrapRenderedComponent self change.component
-
                 updatedState =
                     { state
                         | childStates = change.states
                         , cache = change.cache
                     }
 
-                updatedStates =
-                    set (StateContainer updatedState) args.states
-
                 cmd =
-                    Cmd.map
-                        (toParentSignal set freshParentContainers)
-                        change.cmd
+                    change.cmd
+                        |> Cmd.map (toParentSignal set freshParentContainers)
 
                 signals =
-                    List.map
-                        (toParentSignal set freshParentContainers)
-                        change.signals
+                    change.signals
+                        |> List.map (toParentSignal set freshParentContainers)
             in
-            { component = newComponent
-            , states = updatedStates
-            , cache = args.cache
-            , cmd = cmd
-            , signals = signals
-            , lastComponentId = change.lastComponentId
-            }
+            ( id
+            , { component = wrapComponent self change.component
+              , states = set (StateContainer updatedState) args.states
+              , cache = args.cache
+              , cmd = cmd
+              , signals = signals
+              , lastComponentId = change.lastComponentId
+              }
+            )
 
         _ ->
-            let
-                sameComponent =
-                    wrapRenderedComponent self (RenderedComponent component)
-            in
-            { component = sameComponent
-            , states = args.states
-            , cache = args.cache
-            , cmd = Cmd.none
-            , signals = []
-            , lastComponentId = args.lastComponentId
-            }
+            ( -1
+            , { component = dummyComponent
+              , states = args.states
+              , cache = args.cache
+              , cmd = Cmd.none
+              , signals = []
+              , lastComponentId = args.lastComponentId
+              }
+            )
+
+
+dummyComponent : ComponentInterface m a
+dummyComponent =
+    ComponentInterface
+        { update =
+            \args ->
+                Just
+                    { component = dummyComponent
+                    , states = args.states
+                    , cache = args.cache
+                    , cmd = Cmd.none
+                    , signals = []
+                    , lastComponentId = args.lastComponentId
+                    }
+        , subscriptions = \_ -> Sub.none
+        , view = \_ -> Html.Styled.text ""
+        }
+
+
+wrapComponent :
+    Self s m c pC
+    -> ComponentInterface m c
+    -> ComponentInterface pM pC
+wrapComponent self component =
+    ComponentInterface <|
+        { update = wrapUpdate self component
+        , subscriptions = wrapSubscriptions self component
+        , view = wrapView self component
+        }
 
 
 wrapUpdate :
     Self s m c pC
-    -> RenderedComponent m c
+    -> ComponentInterface m c
     -> UpdateArgs pM pC
     -> Maybe (Change pM pC)
-wrapUpdate self (RenderedComponent component) args =
+wrapUpdate self (ComponentInterface component) args =
     let
-        (InternalStuff { get, set, freshContainers, freshParentContainers }) =
+        (InternalStuff { slot, freshContainers, freshParentContainers }) =
             self.internal
+
+        ( get, set ) =
+            slot
     in
     case ( get args.states, get args.signalContainers ) of
         ( StateContainer state, SignalContainer (ChildMsg signalContainers) ) ->
@@ -803,17 +771,11 @@ wrapUpdate self (RenderedComponent component) args =
             case maybeChange of
                 Just change ->
                     let
-                        newComponent =
-                            wrapRenderedComponent self change.component
-
                         updatedState =
                             { state
                                 | childStates = change.states
                                 , cache = change.cache
                             }
-
-                        updatedStates =
-                            set (StateContainer updatedState) args.states
 
                         cmd =
                             Cmd.map
@@ -826,8 +788,8 @@ wrapUpdate self (RenderedComponent component) args =
                                 change.signals
                     in
                     Just
-                        { component = newComponent
-                        , states = updatedStates
+                        { component = wrapComponent self change.component
+                        , states = set (StateContainer updatedState) args.states
                         , cache = args.cache
                         , cmd = cmd
                         , signals = signals
@@ -843,13 +805,16 @@ wrapUpdate self (RenderedComponent component) args =
 
 wrapSubscriptions :
     Self s m c pC
-    -> RenderedComponent m c
+    -> ComponentInterface m c
     -> ()
     -> Sub (Signal pM pC)
-wrapSubscriptions self (RenderedComponent component) () =
+wrapSubscriptions self (ComponentInterface component) () =
     let
-        (InternalStuff { set, freshParentContainers }) =
+        (InternalStuff { slot, freshParentContainers }) =
             self.internal
+
+        ( _, set ) =
+            slot
     in
     component.subscriptions ()
         |> Sub.map (toParentSignal set freshParentContainers)
@@ -857,13 +822,16 @@ wrapSubscriptions self (RenderedComponent component) () =
 
 wrapView :
     Self s m c pC
-    -> RenderedComponent m c
+    -> ComponentInterface m c
     -> ()
     -> Html.Styled.Html (Signal pM pC)
-wrapView self (RenderedComponent component) () =
+wrapView self (ComponentInterface component) () =
     let
-        (InternalStuff { set, freshParentContainers }) =
+        (InternalStuff { slot, freshParentContainers }) =
             self.internal
+
+        ( _, set ) =
+            slot
     in
     component.view ()
         |> Html.Styled.map (toParentSignal set freshParentContainers)
@@ -875,8 +843,11 @@ wrapSlot :
     -> Slot (Container cS cM cC) pC
 wrapSlot self ( getChild, setChild ) =
     let
-        (InternalStuff { get, set, freshContainers }) =
+        (InternalStuff { slot, freshContainers }) =
             self.internal
+
+        ( get, set ) =
+            slot
 
         wrappedGet parentContainers =
             case get parentContainers of
@@ -933,8 +904,11 @@ wrapSlot self ( getChild, setChild ) =
 sendToChild : Self s m c pC -> Slot (Container cS cM cC) c -> cM -> Signal pM pC
 sendToChild self ( _, setChild ) childMsg =
     let
-        (InternalStuff { set, freshContainers, freshParentContainers }) =
+        (InternalStuff { slot, freshContainers, freshParentContainers }) =
             self.internal
+
+        ( _, set ) =
+            slot
     in
     childMsg
         |> LocalMsg

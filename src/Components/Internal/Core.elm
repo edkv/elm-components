@@ -5,6 +5,7 @@ module Components.Internal.Core
         , Change
         , Component(Component)
         , ComponentId
+        , ComponentInterface(ComponentInterface)
         , ComponentState
         , Container(EmptyContainer, SignalContainer, StateContainer)
         , Element
@@ -20,10 +21,10 @@ module Components.Internal.Core
             , SimpleElement
             , Text
             )
-        , RenderedComponent(RenderedComponent)
         , Signal(ChildMsg, LocalMsg)
         , Slot
         , StylingStrategy(ClassAttribute, ClassNameProperty)
+        , Touch
         , TouchArgs
         , UpdateArgs
         )
@@ -43,7 +44,7 @@ type Node v w m c
     | KeyedReversedEmbedding (KeyedElement v w v m c)
     | Text String
     | PlainNode (VirtualDom.Node (Signal m c))
-    | ComponentNode (RenderedComponent m c)
+    | ComponentNode (Touch m c)
 
 
 type alias Element x y z m c =
@@ -92,23 +93,25 @@ type alias ComponentState s m c =
     }
 
 
+type alias Cache m c =
+    Dict ComponentId (Dict ComponentId (ComponentInterface m c))
+
+
 type Signal m c
     = LocalMsg m
     | ChildMsg c
 
 
-type alias Cache m c =
-    Dict ComponentId (Dict ComponentId (RenderedComponent m c))
-
-
-type RenderedComponent m c
-    = RenderedComponent
-        { identify : { states : c } -> Maybe ComponentId
-        , touch : TouchArgs m c -> Change m c
-        , update : UpdateArgs m c -> Maybe (Change m c)
+type ComponentInterface m c
+    = ComponentInterface
+        { update : UpdateArgs m c -> Maybe (Change m c)
         , subscriptions : () -> Sub (Signal m c)
         , view : () -> Html.Styled.Html (Signal m c)
         }
+
+
+type alias Touch m c =
+    TouchArgs m c -> ( ComponentId, Change m c )
 
 
 type alias TouchArgs m c =
@@ -131,7 +134,7 @@ type alias UpdateArgs m c =
 
 
 type alias Change m c =
-    { component : RenderedComponent m c
+    { component : ComponentInterface m c
     , states : c
     , cache : Cache m c
     , cmd : Cmd (Signal m c)

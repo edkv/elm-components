@@ -101,12 +101,12 @@ type alias Attribute v m c =
 
 type State container
     = Empty
-    | WaitingForNamespace (Core.RenderedComponent Never container)
+    | WaitingForNamespace (Core.Touch Never container)
     | Ready (ReadyState container)
 
 
 type alias ReadyState container =
-    { component : Core.RenderedComponent Never container
+    { component : Core.ComponentInterface Never container
     , componentState : container
     , cache : Core.Cache Never container
     , lastComponentId : Int
@@ -137,8 +137,8 @@ init :
     -> ( State (Container s m c), Cmd (Msg (Container s m c)) )
 init (Core.Component component) =
     case component identitySlot of
-        Core.ComponentNode renderedComponent ->
-            ( WaitingForNamespace renderedComponent
+        Core.ComponentNode touchFunction ->
+            ( WaitingForNamespace touchFunction
             , Random.generate NamespaceGenerated Uuid.uuidStringGenerator
             )
 
@@ -154,14 +154,30 @@ update :
     -> ( State (Container s m c), Cmd (Msg (Container s m c)) )
 update msg state =
     case ( state, msg ) of
-        ( WaitingForNamespace component, NamespaceGenerated namespace ) ->
-            touch
-                { component = component
-                , componentState = Core.EmptyContainer
-                , cache = Dict.empty
-                , lastComponentId = 0
-                , namespace = namespace
-                }
+        ( WaitingForNamespace touch, NamespaceGenerated namespace ) ->
+            let
+                ( _, change ) =
+                    touch
+                        { states = Core.EmptyContainer
+                        , cache = Dict.empty
+                        , freshContainers = Core.EmptyContainer
+                        , lastComponentId = 0
+                        , namespace = namespace
+                        }
+
+                newState =
+                    { component = change.component
+                    , componentState = change.states
+                    , cache = change.cache
+                    , lastComponentId = change.lastComponentId
+                    , namespace = namespace
+                    }
+
+                cmd =
+                    Cmd.map ComponentMsg change.cmd
+            in
+            doUpdate change.signals newState cmd
+                |> Tuple.mapFirst Ready
 
         ( Ready readyState, ComponentMsg componentMsg ) ->
             doUpdate [ componentMsg ] readyState Cmd.none
@@ -169,38 +185,6 @@ update msg state =
 
         ( _, _ ) ->
             ( state, Cmd.none )
-
-
-touch :
-    ReadyState (Container s m c)
-    -> ( State (Container s m c), Cmd (Msg (Container s m c)) )
-touch state =
-    let
-        (Core.RenderedComponent component) =
-            state.component
-
-        change =
-            component.touch
-                { states = state.componentState
-                , cache = state.cache
-                , freshContainers = Core.EmptyContainer
-                , lastComponentId = state.lastComponentId
-                , namespace = state.namespace
-                }
-
-        newState =
-            { state
-                | componentState = change.states
-                , component = change.component
-                , cache = change.cache
-                , lastComponentId = change.lastComponentId
-            }
-
-        cmd =
-            Cmd.map ComponentMsg change.cmd
-    in
-    doUpdate change.signals newState Cmd.none
-        |> Tuple.mapFirst Ready
 
 
 doUpdate :
@@ -215,7 +199,7 @@ doUpdate signals state cmdAcc =
 
         signal :: otherSignals ->
             let
-                (Core.RenderedComponent component) =
+                (Core.ComponentInterface component) =
                     state.component
 
                 signalContainers =
@@ -263,7 +247,7 @@ subscriptions state =
     case state of
         Ready readyState ->
             let
-                (Core.RenderedComponent component) =
+                (Core.ComponentInterface component) =
                     readyState.component
             in
             component.subscriptions ()
@@ -278,7 +262,7 @@ view state =
     case state of
         Ready readyState ->
             let
-                (Core.RenderedComponent component) =
+                (Core.ComponentInterface component) =
                     readyState.component
             in
             component.view ()
