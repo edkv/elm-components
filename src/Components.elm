@@ -13,7 +13,6 @@ module Components
         , send
         , slot
         , subscriptions
-        , touch
         , update
         , view
         , x1
@@ -156,14 +155,13 @@ update :
 update msg state =
     case ( state, msg ) of
         ( WaitingForNamespace component, NamespaceGenerated namespace ) ->
-            Ready
+            touch
                 { component = component
                 , componentState = Core.EmptyContainer
                 , cache = Dict.empty
                 , lastComponentId = 0
                 , namespace = namespace
                 }
-                |> touch
 
         ( Ready readyState, ComponentMsg componentMsg ) ->
             doUpdate [ componentMsg ] readyState Cmd.none
@@ -174,40 +172,35 @@ update msg state =
 
 
 touch :
-    State (Container s m c)
+    ReadyState (Container s m c)
     -> ( State (Container s m c), Cmd (Msg (Container s m c)) )
 touch state =
-    case state of
-        Ready readyState ->
-            let
-                (Core.RenderedComponent component) =
-                    readyState.component
+    let
+        (Core.RenderedComponent component) =
+            state.component
 
-                change =
-                    component.touch
-                        { states = readyState.componentState
-                        , cache = readyState.cache
-                        , freshContainers = Core.EmptyContainer
-                        , lastComponentId = readyState.lastComponentId
-                        , namespace = readyState.namespace
-                        }
+        change =
+            component.touch
+                { states = state.componentState
+                , cache = state.cache
+                , freshContainers = Core.EmptyContainer
+                , lastComponentId = state.lastComponentId
+                , namespace = state.namespace
+                }
 
-                newState =
-                    { readyState
-                        | componentState = change.states
-                        , component = change.component
-                        , cache = change.cache
-                        , lastComponentId = change.lastComponentId
-                    }
+        newState =
+            { state
+                | componentState = change.states
+                , component = change.component
+                , cache = change.cache
+                , lastComponentId = change.lastComponentId
+            }
 
-                cmd =
-                    Cmd.map ComponentMsg change.cmd
-            in
-            doUpdate change.signals newState Cmd.none
-                |> Tuple.mapFirst Ready
-
-        _ ->
-            ( state, Cmd.none )
+        cmd =
+            Cmd.map ComponentMsg change.cmd
+    in
+    doUpdate change.signals newState Cmd.none
+        |> Tuple.mapFirst Ready
 
 
 doUpdate :
