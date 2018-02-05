@@ -63,7 +63,6 @@ module Components.Html
         , meter
         , nav
         , node
-        , none
         , object
         , ol
         , optgroup
@@ -154,11 +153,6 @@ exactly as you specify.
 text : String -> Html m c
 text =
     Core.Text
-
-
-none : Html m c
-none =
-    text ""
 
 
 plainNode : VirtualDom.Node m -> Html m c

@@ -56,7 +56,6 @@ module Components.Svg
         , metadata
         , mpath
         , node
-        , none
         , path
         , pattern
         , plainNode
@@ -127,11 +126,6 @@ Warning: not to be confused with `text_` which produces the SVG `<text>` tag!
 text : String -> Svg m c
 text =
     Core.Text
-
-
-none : Svg m c
-none =
-    text ""
 
 
 plainNode : VirtualDom.Node m -> Svg m c
