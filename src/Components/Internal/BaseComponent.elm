@@ -67,7 +67,7 @@ type alias Hidden v w s m c pM pC =
     , sub : Sub (Signal pM pC)
     , tree : Node v w pM pC
     , components : Dict ComponentId (ComponentInterface pM pC)
-    , componentPositions : Dict Int ComponentId
+    , orderedComponentIds : List ComponentId
     }
 
 
@@ -305,9 +305,8 @@ change spec (( _, set ) as slot) state cmd sub signals tree args =
             collectTouchFunctions tree []
 
         touchInitialData =
-            { position = 0
-            , idComponentPairs = []
-            , positionIdPairs = []
+            { components = []
+            , orderedComponentIds = []
             , states = updatedStates
             , cache = args.cache
             , cmd = mappedLocalCmd
@@ -325,16 +324,9 @@ change spec (( _, set ) as slot) state cmd sub signals tree args =
                         , freshContainers = args.freshContainers
                         , namespace = args.namespace
                         }
-
-                idComponentPairs =
-                    ( id, change.component ) :: acc.idComponentPairs
-
-                positionIdPairs =
-                    ( acc.position, id ) :: acc.positionIdPairs
             in
-            { position = acc.position + 1
-            , idComponentPairs = idComponentPairs
-            , positionIdPairs = positionIdPairs
+            { components = ( id, change.component ) :: acc.components
+            , orderedComponentIds = id :: acc.orderedComponentIds
             , states = change.states
             , cache = change.cache
             , cmd = Cmd.batch [ acc.cmd, change.cmd ]
@@ -343,13 +335,10 @@ change spec (( _, set ) as slot) state cmd sub signals tree args =
             }
 
         touchResults =
-            List.foldl touchComponent touchInitialData touchFunctions
+            List.foldr touchComponent touchInitialData touchFunctions
 
         renderedComponents =
-            Dict.fromList touchResults.idComponentPairs
-
-        renderedComponentPositions =
-            Dict.fromList touchResults.positionIdPairs
+            Dict.fromList touchResults.components
 
         component =
             buildComponent
@@ -358,7 +347,7 @@ change spec (( _, set ) as slot) state cmd sub signals tree args =
                 , sub = mappedLocalSub
                 , tree = tree
                 , components = renderedComponents
-                , componentPositions = renderedComponentPositions
+                , orderedComponentIds = touchResults.orderedComponentIds
                 }
 
         updatedCache =
@@ -428,85 +417,83 @@ subscriptions hidden () =
 
 view : Hidden v w s m c pM pC -> () -> Html.Styled.Html (Signal pM pC)
 view hidden () =
-    render hidden.components hidden.componentPositions 0 hidden.tree
+    render hidden.components hidden.orderedComponentIds hidden.tree
         |> Tuple.first
 
 
 render :
     Dict ComponentId (ComponentInterface m c)
-    -> Dict Int ComponentId
-    -> Int
+    -> List ComponentId
     -> Node v w m c
-    -> ( Html.Styled.Html (Signal m c), Int )
-render components positionsMap position node =
+    -> ( Html.Styled.Html (Signal m c), List ComponentId )
+render components orderedComponentIds node =
     case node of
         SimpleElement element ->
-            renderElement components positionsMap position element
+            renderElement components orderedComponentIds element
 
         Embedding element ->
-            renderElement components positionsMap position element
+            renderElement components orderedComponentIds element
 
         ReversedEmbedding element ->
-            renderElement components positionsMap position element
+            renderElement components orderedComponentIds element
 
         KeyedSimpleElement element ->
-            renderKeyedElement components positionsMap position element
+            renderKeyedElement components orderedComponentIds element
 
         KeyedEmbedding element ->
-            renderKeyedElement components positionsMap position element
+            renderKeyedElement components orderedComponentIds element
 
         KeyedReversedEmbedding element ->
-            renderKeyedElement components positionsMap position element
+            renderKeyedElement components orderedComponentIds element
 
         Text string ->
             ( Html.Styled.text string
-            , position
+            , orderedComponentIds
             )
 
         PlainNode node ->
             ( Html.Styled.fromUnstyled node
-            , position
+            , orderedComponentIds
             )
 
         ComponentNode _ ->
-            case Dict.get position positionsMap of
-                Just id ->
+            case orderedComponentIds of
+                id :: otherIds ->
                     case Dict.get id components of
                         Just (ComponentInterface component) ->
                             ( component.view ()
-                            , position + 1
+                            , otherIds
                             )
 
                         Nothing ->
                             ( Html.Styled.text ""
-                            , position
+                            , otherIds
                             )
 
-                Nothing ->
+                [] ->
                     ( Html.Styled.text ""
-                    , position
+                    , []
                     )
 
 
 renderElement :
     Dict ComponentId (ComponentInterface m c)
-    -> Dict Int ComponentId
-    -> Int
+    -> List ComponentId
     -> Element x y z m c
-    -> ( Html.Styled.Html (Signal m c), Int )
-renderElement components positionsMap position element =
+    -> ( Html.Styled.Html (Signal m c), List ComponentId )
+renderElement components orderedComponentIds element =
     let
-        renderChild child ( renderedChildren, prevPosition ) =
+        renderChild child ( renderedChildren, ids ) =
             let
-                ( renderedChild, nextPosition ) =
-                    render components positionsMap prevPosition child
+                ( renderedChild, newIds ) =
+                    render components ids child
             in
             ( renderedChild :: renderedChildren
-            , nextPosition
+            , newIds
             )
 
-        ( children, nextPosition ) =
-            List.foldr renderChild ( [], position ) element.children
+        ( children, remainingIds ) =
+            List.foldr renderChild ( [], orderedComponentIds ) element.children
 
         attributes =
             List.map toStyledAttribute element.attributes
@@ -514,28 +501,27 @@ renderElement components positionsMap position element =
         renderedElement =
             Html.Styled.node element.tag attributes children
     in
-    ( renderedElement, nextPosition )
+    ( renderedElement, remainingIds )
 
 
 renderKeyedElement :
     Dict ComponentId (ComponentInterface m c)
-    -> Dict Int ComponentId
-    -> Int
+    -> List ComponentId
     -> KeyedElement x y z m c
-    -> ( Html.Styled.Html (Signal m c), Int )
-renderKeyedElement components positionsMap position element =
+    -> ( Html.Styled.Html (Signal m c), List ComponentId )
+renderKeyedElement components orderedComponentIds element =
     let
-        renderChild ( key, child ) ( renderedChildren, prevPosition ) =
+        renderChild ( key, child ) ( renderedChildren, ids ) =
             let
-                ( renderedChild, nextPosition ) =
-                    render components positionsMap prevPosition child
+                ( renderedChild, newIds ) =
+                    render components ids child
             in
             ( ( key, renderedChild ) :: renderedChildren
-            , nextPosition
+            , newIds
             )
 
-        ( children, nextPosition ) =
-            List.foldr renderChild ( [], position ) element.children
+        ( children, remainingIds ) =
+            List.foldr renderChild ( [], orderedComponentIds ) element.children
 
         attributes =
             List.map toStyledAttribute element.attributes
@@ -543,7 +529,7 @@ renderKeyedElement components positionsMap position element =
         renderedElement =
             Html.Styled.Keyed.node element.tag attributes children
     in
-    ( renderedElement, nextPosition )
+    ( renderedElement, remainingIds )
 
 
 toStyledAttribute : Attribute v m c -> Html.Styled.Attribute (Signal m c)
