@@ -2,10 +2,12 @@ module Components.Internal.Shared
     exposing
         ( HtmlItem(HtmlItem)
         , SvgItem(SvgItem)
+        , identify
         , svgNamespace
+        , toParentSignal
         )
 
-import Components.Internal.Core exposing (Attribute(PlainAttribute))
+import Components.Internal.Core exposing (..)
 import Json.Encode as Json
 import VirtualDom
 
@@ -16,6 +18,27 @@ type HtmlItem
 
 type SvgItem
     = SvgItem
+
+
+toParentSignal :
+    Slot (Container s m c) pC
+    -> pC
+    -> Signal m c
+    -> Signal pM pC
+toParentSignal (( _, set ) as slot) freshParentContainers signal =
+    freshParentContainers
+        |> set (SignalContainer signal)
+        |> ChildMsg (identify slot)
+
+
+identify : Slot (Container s m c) pC -> Identify pC
+identify ( get, _ ) args =
+    case get args.states of
+        StateContainer state ->
+            Just state.id
+
+        _ ->
+            Nothing
 
 
 svgNamespace : Attribute SvgItem m c

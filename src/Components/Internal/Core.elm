@@ -6,9 +6,11 @@ module Components.Internal.Core
         , Component(Component)
         , ComponentId
         , ComponentInterface(ComponentInterface)
+        , ComponentLocations
         , ComponentState
         , Container(EmptyContainer, SignalContainer, StateContainer)
         , Element
+        , Identify
         , KeyedElement
         , Node
             ( ComponentNode
@@ -93,31 +95,36 @@ type alias ComponentState s m c =
     }
 
 
+type Signal m c
+    = LocalMsg m
+    | ChildMsg (Identify c) c
+
+
 type alias Cache m c =
     Dict ComponentId (Dict ComponentId (ComponentInterface m c))
 
 
-type Signal m c
-    = LocalMsg m
-    | ChildMsg c
-
-
-type ComponentInterface m c
-    = ComponentInterface
-        { update : UpdateArgs m c -> Maybe (Change m c)
-        , subscriptions : () -> Sub (Signal m c)
-        , view : () -> Html.Styled.Html (Signal m c)
-        }
+type alias ComponentLocations =
+    Dict ComponentId ComponentId
 
 
 type alias Touch m c =
     TouchArgs m c -> ( ComponentId, Change m c )
 
 
+type ComponentInterface m c
+    = ComponentInterface
+        { update : UpdateArgs m c -> Change m c
+        , subscriptions : () -> Sub (Signal m c)
+        , view : () -> Html.Styled.Html (Signal m c)
+        }
+
+
 type alias TouchArgs m c =
     { states : c
     , cache : Cache m c
     , freshContainers : c
+    , componentLocations : ComponentLocations
     , lastComponentId : ComponentId
     , namespace : String
     }
@@ -126,8 +133,10 @@ type alias TouchArgs m c =
 type alias UpdateArgs m c =
     { states : c
     , cache : Cache m c
+    , pathToTarget : List ComponentId
     , signalContainers : c
     , freshContainers : c
+    , componentLocations : ComponentLocations
     , lastComponentId : ComponentId
     , namespace : String
     }
@@ -139,8 +148,13 @@ type alias Change m c =
     , cache : Cache m c
     , cmd : Cmd (Signal m c)
     , signals : List (Signal m c)
+    , componentLocations : ComponentLocations
     , lastComponentId : ComponentId
     }
+
+
+type alias Identify c =
+    { states : c } -> Maybe ComponentId
 
 
 type alias ComponentId =

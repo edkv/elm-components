@@ -10,6 +10,7 @@ module Components.Application
 
 import Components exposing (Component, Container, Node, Signal, Slot)
 import Components.Internal.Core as Core
+import Components.Internal.Shared exposing (toParentSignal)
 import Components.RegularComponent as RegularComponent
 import VirtualDom
 
@@ -125,10 +126,7 @@ initComponent spec self =
         ( state, cmd, signals ) =
             spec.init self
     in
-    ( state
-    , cmd
-    , List.map (Core.SignalContainer >> Core.ChildMsg) signals
-    )
+    ( state, cmd, List.map transformSignal signals )
 
 
 updateComponent :
@@ -142,10 +140,12 @@ updateComponent spec self msg state =
         ( updatedState, cmd, signals ) =
             spec.update self msg state
     in
-    ( updatedState
-    , cmd
-    , List.map (Core.SignalContainer >> Core.ChildMsg) signals
-    )
+    ( updatedState, cmd, List.map transformSignal signals )
+
+
+transformSignal : Signal m c -> Signal Never (Container s m c)
+transformSignal =
+    Core.SignalContainer >> Core.ChildMsg (\_ -> Nothing)
 
 
 transformSelf : Spec v w s m c -> RegularComponent.Self s m c pC -> Self c
@@ -159,11 +159,11 @@ transformSelf spec self =
 
 
 sendToChild : Self c -> Slot (Container cS cM cC) c -> cM -> Signal m c
-sendToChild self ( _, set ) msg =
+sendToChild self slot msg =
     let
         (InternalStuff { freshContainers }) =
             self.internal
     in
-    freshContainers
-        |> set (Core.SignalContainer (Core.LocalMsg msg))
-        |> Core.ChildMsg
+    msg
+        |> Core.LocalMsg
+        |> toParentSignal slot freshContainers

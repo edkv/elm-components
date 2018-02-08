@@ -15,6 +15,7 @@ module Components.Internal.BaseComponent
         )
 
 import Components.Internal.Core exposing (..)
+import Components.Internal.Shared exposing (identify, toParentSignal)
 import Dict exposing (Dict)
 import Html.Styled
 import Html.Styled.Attributes
@@ -76,6 +77,7 @@ type alias CommonArgs a m c =
         | states : c
         , cache : Cache m c
         , freshContainers : c
+        , componentLocations : ComponentLocations
         , lastComponentId : ComponentId
         , namespace : String
     }
@@ -179,7 +181,7 @@ rebuild spec slot state args =
     )
 
 
-update : Hidden v w s m c pM pC -> UpdateArgs pM pC -> Maybe (Change pM pC)
+update : Hidden v w s m c pM pC -> UpdateArgs pM pC -> Change pM pC
 update hidden args =
     let
         ( get, _ ) =
@@ -189,19 +191,49 @@ update hidden args =
         StateContainer state ->
             case get args.signalContainers of
                 EmptyContainer ->
-                    maybeUpdateChild hidden state args
+                    updateChild hidden state args
 
                 SignalContainer (LocalMsg msg) ->
-                    Just (doLocalUpdate hidden.spec hidden.slot state msg args)
+                    doLocalUpdate hidden.spec hidden.slot state msg args
 
-                SignalContainer (ChildMsg _) ->
-                    maybeUpdateChild hidden state args
+                SignalContainer (ChildMsg identifyTarget _) ->
+                    let
+                        path =
+                            buildPathToTarget args state identifyTarget
+                    in
+                    updateChild hidden state { args | pathToTarget = path }
 
                 _ ->
-                    Nothing
+                    noUpdate hidden args
 
         _ ->
-            Nothing
+            noUpdate hidden args
+
+
+buildPathToTarget :
+    UpdateArgs pM pC
+    -> ComponentState s m c
+    -> Identify c
+    -> List ComponentId
+buildPathToTarget args state identifyTarget =
+    case identifyTarget { states = state.childStates } of
+        Just targetId ->
+            let
+                build id path =
+                    case Dict.get id args.componentLocations of
+                        Just nextId ->
+                            if nextId == state.id then
+                                path
+                            else
+                                build nextId (nextId :: path)
+
+                        Nothing ->
+                            []
+            in
+            build targetId [ targetId ]
+
+        Nothing ->
+            []
 
 
 doLocalUpdate :
@@ -231,53 +263,56 @@ doLocalUpdate spec (( _, set ) as slot) state msg args =
     change spec slot updatedState cmd sub signals tree args
 
 
-maybeUpdateChild :
+updateChild :
     Hidden v w s m c pM pC
     -> ComponentState s m c
     -> UpdateArgs pM pC
-    -> Maybe (Change pM pC)
-maybeUpdateChild hidden state args =
-    let
-        findAndUpdate components =
-            case components of
-                ( id, ComponentInterface component ) :: otherComponents ->
-                    case component.update args of
-                        Just change ->
-                            let
-                                updatedComponents =
-                                    Dict.insert
-                                        id
-                                        change.component
-                                        hidden.components
+    -> Change pM pC
+updateChild hidden state args =
+    case args.pathToTarget of
+        [] ->
+            noUpdate hidden args
 
-                                updatedCache =
-                                    Dict.insert
-                                        state.id
-                                        updatedComponents
-                                        change.cache
+        id :: pathToTarget ->
+            case Dict.get id hidden.components of
+                Just (ComponentInterface component) ->
+                    let
+                        change =
+                            component.update
+                                { args | pathToTarget = pathToTarget }
 
-                                component =
-                                    buildComponent
-                                        { hidden
-                                            | components = updatedComponents
-                                        }
-                            in
-                            Just
-                                { component = component
-                                , states = change.states
-                                , cache = updatedCache
-                                , cmd = change.cmd
-                                , signals = change.signals
-                                , lastComponentId = change.lastComponentId
-                                }
+                        updatedComponents =
+                            Dict.insert id change.component hidden.components
 
-                        Nothing ->
-                            findAndUpdate otherComponents
+                        updatedCache =
+                            Dict.insert state.id updatedComponents change.cache
 
-                [] ->
-                    Nothing
-    in
-    findAndUpdate (Dict.toList hidden.components)
+                        updatedHidden =
+                            { hidden | components = updatedComponents }
+                    in
+                    { component = buildComponent updatedHidden
+                    , states = change.states
+                    , cache = updatedCache
+                    , cmd = change.cmd
+                    , signals = change.signals
+                    , componentLocations = change.componentLocations
+                    , lastComponentId = change.lastComponentId
+                    }
+
+                Nothing ->
+                    noUpdate hidden args
+
+
+noUpdate : Hidden v w s m c pM pC -> UpdateArgs pM pC -> Change pM pC
+noUpdate hidden args =
+    { component = buildComponent hidden
+    , states = args.states
+    , cache = args.cache
+    , cmd = Cmd.none
+    , signals = []
+    , componentLocations = args.componentLocations
+    , lastComponentId = args.lastComponentId
+    }
 
 
 change :
@@ -296,10 +331,10 @@ change spec (( _, set ) as slot) state cmd sub signals tree args =
             set (StateContainer state) args.states
 
         mappedLocalCmd =
-            Cmd.map (wrapLocalMsg set args.freshContainers) cmd
+            Cmd.map (wrapLocalMsg slot args.freshContainers) cmd
 
         mappedLocalSub =
-            Sub.map (wrapLocalMsg set args.freshContainers) sub
+            Sub.map (wrapLocalMsg slot args.freshContainers) sub
 
         touchFunctions =
             collectTouchFunctions tree []
@@ -311,6 +346,7 @@ change spec (( _, set ) as slot) state cmd sub signals tree args =
             , cache = args.cache
             , cmd = mappedLocalCmd
             , signals = signals
+            , componentLocations = args.componentLocations
             , lastComponentId = args.lastComponentId
             }
 
@@ -320,10 +356,14 @@ change spec (( _, set ) as slot) state cmd sub signals tree args =
                     touchFunction
                         { states = acc.states
                         , cache = acc.cache
+                        , componentLocations = acc.componentLocations
                         , lastComponentId = acc.lastComponentId
                         , freshContainers = args.freshContainers
                         , namespace = args.namespace
                         }
+
+                newComponentLocations =
+                    Dict.insert id state.id change.componentLocations
             in
             { components = ( id, change.component ) :: acc.components
             , orderedComponentIds = id :: acc.orderedComponentIds
@@ -331,6 +371,7 @@ change spec (( _, set ) as slot) state cmd sub signals tree args =
             , cache = change.cache
             , cmd = Cmd.batch [ acc.cmd, change.cmd ]
             , signals = acc.signals ++ change.signals
+            , componentLocations = newComponentLocations
             , lastComponentId = change.lastComponentId
             }
 
@@ -358,6 +399,7 @@ change spec (( _, set ) as slot) state cmd sub signals tree args =
     , cache = updatedCache
     , cmd = touchResults.cmd
     , signals = touchResults.signals
+    , componentLocations = touchResults.componentLocations
     , lastComponentId = touchResults.lastComponentId
     }
 
@@ -567,11 +609,8 @@ wrapSignal self =
     let
         (InternalStuff { slot, freshParentContainers }) =
             self.internal
-
-        ( _, set ) =
-            slot
     in
-    toParentSignal set freshParentContainers
+    toParentSignal slot freshParentContainers
 
 
 wrapAttribute : Self s m c pC -> Attribute v m c -> Attribute v pM pC
@@ -659,6 +698,7 @@ wrapTouch self touchFunction args =
                         , cache = state.cache
                         , freshContainers = freshContainers
                         , lastComponentId = args.lastComponentId
+                        , componentLocations = args.componentLocations
                         , namespace = args.namespace
                         }
 
@@ -670,11 +710,11 @@ wrapTouch self touchFunction args =
 
                 cmd =
                     change.cmd
-                        |> Cmd.map (toParentSignal set freshParentContainers)
+                        |> Cmd.map (toParentSignal slot freshParentContainers)
 
                 signals =
                     change.signals
-                        |> List.map (toParentSignal set freshParentContainers)
+                        |> List.map (toParentSignal slot freshParentContainers)
             in
             ( id
             , { component = wrapComponent self change.component
@@ -682,38 +722,13 @@ wrapTouch self touchFunction args =
               , cache = args.cache
               , cmd = cmd
               , signals = signals
+              , componentLocations = change.componentLocations
               , lastComponentId = change.lastComponentId
               }
             )
 
         _ ->
-            ( -1
-            , { component = dummyComponent
-              , states = args.states
-              , cache = args.cache
-              , cmd = Cmd.none
-              , signals = []
-              , lastComponentId = args.lastComponentId
-              }
-            )
-
-
-dummyComponent : ComponentInterface m a
-dummyComponent =
-    ComponentInterface
-        { update =
-            \args ->
-                Just
-                    { component = dummyComponent
-                    , states = args.states
-                    , cache = args.cache
-                    , cmd = Cmd.none
-                    , signals = []
-                    , lastComponentId = args.lastComponentId
-                    }
-        , subscriptions = \_ -> Sub.none
-        , view = \_ -> Html.Styled.text ""
-        }
+            ( -1, dummyChange args )
 
 
 wrapComponent :
@@ -732,7 +747,7 @@ wrapUpdate :
     Self s m c pC
     -> ComponentInterface m c
     -> UpdateArgs pM pC
-    -> Maybe (Change pM pC)
+    -> Change pM pC
 wrapUpdate self (ComponentInterface component) args =
     let
         (InternalStuff { slot, freshContainers, freshParentContainers }) =
@@ -742,51 +757,52 @@ wrapUpdate self (ComponentInterface component) args =
             slot
     in
     case ( get args.states, get args.signalContainers ) of
-        ( StateContainer state, SignalContainer (ChildMsg signalContainers) ) ->
+        ( StateContainer state, SignalContainer (ChildMsg _ signalContainers) ) ->
             let
-                maybeChange =
+                change =
                     component.update
                         { states = state.childStates
                         , cache = state.cache
+                        , pathToTarget = args.pathToTarget
                         , signalContainers = signalContainers
                         , freshContainers = freshContainers
+                        , componentLocations = args.componentLocations
                         , lastComponentId = args.lastComponentId
                         , namespace = args.namespace
                         }
+
+                updatedState =
+                    { state
+                        | childStates = change.states
+                        , cache = change.cache
+                    }
+
+                cmd =
+                    change.cmd
+                        |> Cmd.map (toParentSignal slot freshParentContainers)
+
+                signals =
+                    change.signals
+                        |> List.map (toParentSignal slot freshParentContainers)
             in
-            case maybeChange of
-                Just change ->
-                    let
-                        updatedState =
-                            { state
-                                | childStates = change.states
-                                , cache = change.cache
-                            }
-
-                        cmd =
-                            Cmd.map
-                                (toParentSignal set freshParentContainers)
-                                change.cmd
-
-                        signals =
-                            List.map
-                                (toParentSignal set freshParentContainers)
-                                change.signals
-                    in
-                    Just
-                        { component = wrapComponent self change.component
-                        , states = set (StateContainer updatedState) args.states
-                        , cache = args.cache
-                        , cmd = cmd
-                        , signals = signals
-                        , lastComponentId = change.lastComponentId
-                        }
-
-                Nothing ->
-                    Nothing
+            { component = wrapComponent self change.component
+            , states = set (StateContainer updatedState) args.states
+            , cache = args.cache
+            , cmd = cmd
+            , signals = signals
+            , componentLocations = change.componentLocations
+            , lastComponentId = change.lastComponentId
+            }
 
         ( _, _ ) ->
-            Nothing
+            { component = wrapComponent self (ComponentInterface component)
+            , states = args.states
+            , cache = args.cache
+            , cmd = Cmd.none
+            , signals = []
+            , componentLocations = args.componentLocations
+            , lastComponentId = args.lastComponentId
+            }
 
 
 wrapSubscriptions :
@@ -798,12 +814,9 @@ wrapSubscriptions self (ComponentInterface component) () =
     let
         (InternalStuff { slot, freshParentContainers }) =
             self.internal
-
-        ( _, set ) =
-            slot
     in
     component.subscriptions ()
-        |> Sub.map (toParentSignal set freshParentContainers)
+        |> Sub.map (toParentSignal slot freshParentContainers)
 
 
 wrapView :
@@ -815,19 +828,16 @@ wrapView self (ComponentInterface component) () =
     let
         (InternalStuff { slot, freshParentContainers }) =
             self.internal
-
-        ( _, set ) =
-            slot
     in
     component.view ()
-        |> Html.Styled.map (toParentSignal set freshParentContainers)
+        |> Html.Styled.map (toParentSignal slot freshParentContainers)
 
 
 wrapSlot :
     Self s m c pC
     -> Slot (Container cS cM cC) c
     -> Slot (Container cS cM cC) pC
-wrapSlot self ( getChild, setChild ) =
+wrapSlot self (( getChild, setChild ) as childSlot) =
     let
         (InternalStuff { slot, freshContainers }) =
             self.internal
@@ -846,7 +856,7 @@ wrapSlot self ( getChild, setChild ) =
                 SignalContainer (LocalMsg _) ->
                     EmptyContainer
 
-                SignalContainer (ChildMsg containers) ->
+                SignalContainer (ChildMsg _ containers) ->
                     getChild containers
 
         wrappedSet childContainer parentContainers =
@@ -881,43 +891,50 @@ wrapSlot self ( getChild, setChild ) =
         wrapSignal childContainer =
             freshContainers
                 |> setChild childContainer
-                |> ChildMsg
+                |> ChildMsg (identify childSlot)
                 |> SignalContainer
     in
     ( wrappedGet, wrappedSet )
 
 
 sendToChild : Self s m c pC -> Slot (Container cS cM cC) c -> cM -> Signal pM pC
-sendToChild self ( _, setChild ) childMsg =
+sendToChild self childSlot childMsg =
     let
         (InternalStuff { slot, freshContainers, freshParentContainers }) =
             self.internal
-
-        ( _, set ) =
-            slot
     in
     childMsg
         |> LocalMsg
-        |> toParentSignal setChild freshContainers
-        |> toParentSignal set freshParentContainers
+        |> toParentSignal childSlot freshContainers
+        |> toParentSignal slot freshParentContainers
 
 
-wrapLocalMsg : (Container s m c -> pC -> pC) -> pC -> m -> Signal pM pC
-wrapLocalMsg set freshParentContainers msg =
+wrapLocalMsg : Slot (Container s m c) pC -> pC -> m -> Signal pM pC
+wrapLocalMsg slot freshParentContainers msg =
     msg
         |> LocalMsg
-        |> toParentSignal set freshParentContainers
+        |> toParentSignal slot freshParentContainers
 
 
-toParentSignal :
-    (Container s m c -> pC -> pC)
-    -> pC
-    -> Signal m c
-    -> Signal pM pC
-toParentSignal set freshParentContainers signal =
-    freshParentContainers
-        |> set (SignalContainer signal)
-        |> ChildMsg
+dummyChange : CommonArgs a m c -> Change m c
+dummyChange args =
+    { component = dummyComponent
+    , states = args.states
+    , cache = args.cache
+    , cmd = Cmd.none
+    , signals = []
+    , componentLocations = args.componentLocations
+    , lastComponentId = args.lastComponentId
+    }
+
+
+dummyComponent : ComponentInterface m a
+dummyComponent =
+    ComponentInterface
+        { update = dummyChange
+        , subscriptions = \_ -> Sub.none
+        , view = \_ -> Html.Styled.text ""
+        }
 
 
 defaultOptions : Options m

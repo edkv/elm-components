@@ -109,6 +109,7 @@ type alias ReadyState container =
     { component : Core.ComponentInterface Never container
     , componentState : container
     , cache : Core.Cache Never container
+    , componentLocations : Core.ComponentLocations
     , lastComponentId : Int
     , namespace : String
     }
@@ -161,6 +162,7 @@ update msg state =
                         { states = Core.EmptyContainer
                         , cache = Dict.empty
                         , freshContainers = Core.EmptyContainer
+                        , componentLocations = Dict.empty
                         , lastComponentId = 0
                         , namespace = namespace
                         }
@@ -169,6 +171,7 @@ update msg state =
                     { component = change.component
                     , componentState = change.states
                     , cache = change.cache
+                    , componentLocations = change.componentLocations
                     , lastComponentId = change.lastComponentId
                     , namespace = namespace
                     }
@@ -207,37 +210,35 @@ doUpdate signals state cmdAcc =
                         Core.LocalMsg nvr ->
                             never nvr
 
-                        Core.ChildMsg containers ->
+                        Core.ChildMsg _ containers ->
                             containers
 
-                maybeChange =
+                change =
                     component.update
                         { states = state.componentState
                         , cache = state.cache
+                        , pathToTarget = []
                         , signalContainers = signalContainers
                         , freshContainers = Core.EmptyContainer
+                        , componentLocations = state.componentLocations
                         , lastComponentId = state.lastComponentId
                         , namespace = state.namespace
                         }
 
-                ( newState, cmd, moreSignals ) =
-                    case maybeChange of
-                        Just change ->
-                            ( { state
-                                | componentState = change.states
-                                , component = change.component
-                                , cache = change.cache
-                                , lastComponentId = change.lastComponentId
-                              }
-                            , Cmd.map ComponentMsg change.cmd
-                            , change.signals
-                            )
+                newState =
+                    { state
+                        | componentState = change.states
+                        , component = change.component
+                        , cache = change.cache
+                        , componentLocations = change.componentLocations
+                        , lastComponentId = change.lastComponentId
+                    }
 
-                        Nothing ->
-                            ( state, Cmd.none, [] )
+                cmd =
+                    Cmd.map ComponentMsg change.cmd
             in
             doUpdate
-                (otherSignals ++ moreSignals)
+                (otherSignals ++ change.signals)
                 newState
                 (Cmd.batch [ cmdAcc, cmd ])
 
