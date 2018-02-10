@@ -6,12 +6,12 @@ module Components.Internal.BaseComponent
         , SpecWithOptions
         , baseComponent
         , baseComponentWithOptions
+        , convertAttribute
+        , convertNode
+        , convertSignal
+        , convertSlot
         , defaultOptions
         , sendToChild
-        , wrapAttribute
-        , wrapNode
-        , wrapSignal
-        , wrapSlot
         )
 
 import Components.Internal.Core exposing (..)
@@ -331,10 +331,10 @@ change spec (( _, set ) as slot) state cmd sub signals tree args =
             set (StateContainer state) args.states
 
         mappedLocalCmd =
-            Cmd.map (wrapLocalMsg slot args.freshContainers) cmd
+            Cmd.map (LocalMsg >> toParentSignal slot args.freshContainers) cmd
 
         mappedLocalSub =
-            Sub.map (wrapLocalMsg slot args.freshContainers) sub
+            Sub.map (LocalMsg >> toParentSignal slot args.freshContainers) sub
 
         touchFunctions =
             collectTouchFunctions tree []
@@ -604,8 +604,8 @@ getSelf spec slot id args =
     }
 
 
-wrapSignal : Self s m c pC -> Signal m c -> Signal pM pC
-wrapSignal self =
+convertSignal : Self s m c pC -> Signal m c -> Signal pM pC
+convertSignal self =
     let
         (InternalStuff { slot, freshParentContainers }) =
             self.internal
@@ -613,75 +613,70 @@ wrapSignal self =
     toParentSignal slot freshParentContainers
 
 
-wrapAttribute : Self s m c pC -> Attribute v m c -> Attribute v pM pC
-wrapAttribute self attribute =
+convertAttribute : Self s m c pC -> Attribute v m c -> Attribute v pM pC
+convertAttribute self attribute =
     case attribute of
         PlainAttribute property ->
             property
-                |> VirtualDom.mapProperty (wrapSignal self)
+                |> VirtualDom.mapProperty (convertSignal self)
                 |> PlainAttribute
 
         Styles strategy styles ->
             Styles strategy styles
 
 
-wrapNode : Self s m c pC -> Node v w m c -> Node v w pM pC
-wrapNode self node =
+convertNode : Self s m c pC -> Node v w m c -> Node v w pM pC
+convertNode self node =
     case node of
-        SimpleElement { tag, attributes, children } ->
-            SimpleElement
-                { tag = tag
-                , attributes = List.map (wrapAttribute self) attributes
-                , children = List.map (wrapNode self) children
-                }
+        SimpleElement element ->
+            SimpleElement (convertElement self element)
 
-        Embedding { tag, attributes, children } ->
-            Embedding
-                { tag = tag
-                , attributes = List.map (wrapAttribute self) attributes
-                , children = List.map (wrapNode self) children
-                }
+        Embedding element ->
+            Embedding (convertElement self element)
 
-        ReversedEmbedding { tag, attributes, children } ->
-            ReversedEmbedding
-                { tag = tag
-                , attributes = List.map (wrapAttribute self) attributes
-                , children = List.map (wrapNode self) children
-                }
+        ReversedEmbedding element ->
+            ReversedEmbedding (convertElement self element)
 
-        KeyedSimpleElement { tag, attributes, children } ->
-            KeyedSimpleElement
-                { tag = tag
-                , attributes = List.map (wrapAttribute self) attributes
-                , children = List.map (Tuple.mapSecond (wrapNode self)) children
-                }
+        KeyedSimpleElement element ->
+            KeyedSimpleElement (convertKeyedElement self element)
 
-        KeyedEmbedding { tag, attributes, children } ->
-            KeyedEmbedding
-                { tag = tag
-                , attributes = List.map (wrapAttribute self) attributes
-                , children = List.map (Tuple.mapSecond (wrapNode self)) children
-                }
+        KeyedEmbedding element ->
+            KeyedEmbedding (convertKeyedElement self element)
 
-        KeyedReversedEmbedding { tag, attributes, children } ->
-            KeyedReversedEmbedding
-                { tag = tag
-                , attributes = List.map (wrapAttribute self) attributes
-                , children = List.map (Tuple.mapSecond (wrapNode self)) children
-                }
+        KeyedReversedEmbedding element ->
+            KeyedReversedEmbedding (convertKeyedElement self element)
 
         Text string ->
             Text string
 
         PlainNode node ->
-            PlainNode (VirtualDom.map (wrapSignal self) node)
+            PlainNode (VirtualDom.map (convertSignal self) node)
 
         ComponentNode touchFunction ->
-            ComponentNode (wrapTouch self touchFunction)
+            ComponentNode (convertTouch self touchFunction)
 
 
-wrapTouch : Self s m c pC -> Touch m c -> Touch pM pC
-wrapTouch self touchFunction args =
+convertElement : Self s m c pC -> Element x y z m c -> Element x y z pM pC
+convertElement self element =
+    { tag = element.tag
+    , attributes = List.map (convertAttribute self) element.attributes
+    , children = List.map (convertNode self) element.children
+    }
+
+
+convertKeyedElement :
+    Self s m c pC
+    -> KeyedElement x y z m c
+    -> KeyedElement x y z pM pC
+convertKeyedElement self element =
+    { tag = element.tag
+    , attributes = List.map (convertAttribute self) element.attributes
+    , children = List.map (Tuple.mapSecond (convertNode self)) element.children
+    }
+
+
+convertTouch : Self s m c pC -> Touch m c -> Touch pM pC
+convertTouch self touchFunction args =
     let
         (InternalStuff { slot, freshContainers, freshParentContainers }) =
             self.internal
@@ -717,7 +712,7 @@ wrapTouch self touchFunction args =
                         |> List.map (toParentSignal slot freshParentContainers)
             in
             ( id
-            , { component = wrapComponent self change.component
+            , { component = convertComponent self change.component
               , states = set (StateContainer updatedState) args.states
               , cache = args.cache
               , cmd = cmd
@@ -731,24 +726,24 @@ wrapTouch self touchFunction args =
             ( -1, dummyChange args )
 
 
-wrapComponent :
+convertComponent :
     Self s m c pC
     -> ComponentInterface m c
     -> ComponentInterface pM pC
-wrapComponent self component =
+convertComponent self component =
     ComponentInterface <|
-        { update = wrapUpdate self component
-        , subscriptions = wrapSubscriptions self component
-        , view = wrapView self component
+        { update = convertUpdate self component
+        , subscriptions = convertSubscriptions self component
+        , view = convertView self component
         }
 
 
-wrapUpdate :
+convertUpdate :
     Self s m c pC
     -> ComponentInterface m c
     -> UpdateArgs pM pC
     -> Change pM pC
-wrapUpdate self (ComponentInterface component) args =
+convertUpdate self (ComponentInterface component) args =
     let
         (InternalStuff { slot, freshContainers, freshParentContainers }) =
             self.internal
@@ -785,7 +780,7 @@ wrapUpdate self (ComponentInterface component) args =
                     change.signals
                         |> List.map (toParentSignal slot freshParentContainers)
             in
-            { component = wrapComponent self change.component
+            { component = convertComponent self change.component
             , states = set (StateContainer updatedState) args.states
             , cache = args.cache
             , cmd = cmd
@@ -795,7 +790,7 @@ wrapUpdate self (ComponentInterface component) args =
             }
 
         ( _, _ ) ->
-            { component = wrapComponent self (ComponentInterface component)
+            { component = convertComponent self (ComponentInterface component)
             , states = args.states
             , cache = args.cache
             , cmd = Cmd.none
@@ -805,12 +800,12 @@ wrapUpdate self (ComponentInterface component) args =
             }
 
 
-wrapSubscriptions :
+convertSubscriptions :
     Self s m c pC
     -> ComponentInterface m c
     -> ()
     -> Sub (Signal pM pC)
-wrapSubscriptions self (ComponentInterface component) () =
+convertSubscriptions self (ComponentInterface component) () =
     let
         (InternalStuff { slot, freshParentContainers }) =
             self.internal
@@ -819,12 +814,12 @@ wrapSubscriptions self (ComponentInterface component) () =
         |> Sub.map (toParentSignal slot freshParentContainers)
 
 
-wrapView :
+convertView :
     Self s m c pC
     -> ComponentInterface m c
     -> ()
     -> Html.Styled.Html (Signal pM pC)
-wrapView self (ComponentInterface component) () =
+convertView self (ComponentInterface component) () =
     let
         (InternalStuff { slot, freshParentContainers }) =
             self.internal
@@ -833,11 +828,11 @@ wrapView self (ComponentInterface component) () =
         |> Html.Styled.map (toParentSignal slot freshParentContainers)
 
 
-wrapSlot :
+convertSlot :
     Self s m c pC
     -> Slot (Container cS cM cC) c
     -> Slot (Container cS cM cC) pC
-wrapSlot self (( getChild, setChild ) as childSlot) =
+convertSlot self (( getChild, setChild ) as childSlot) =
     let
         (InternalStuff { slot, freshContainers }) =
             self.internal
@@ -845,7 +840,7 @@ wrapSlot self (( getChild, setChild ) as childSlot) =
         ( get, set ) =
             slot
 
-        wrappedGet parentContainers =
+        convertedGet parentContainers =
             case get parentContainers of
                 EmptyContainer ->
                     EmptyContainer
@@ -859,7 +854,7 @@ wrapSlot self (( getChild, setChild ) as childSlot) =
                 SignalContainer (ChildMsg _ containers) ->
                     getChild containers
 
-        wrappedSet childContainer parentContainers =
+        convertedSet childContainer parentContainers =
             case get parentContainers of
                 EmptyContainer ->
                     case childContainer of
@@ -894,7 +889,7 @@ wrapSlot self (( getChild, setChild ) as childSlot) =
                 |> ChildMsg (identify childSlot)
                 |> SignalContainer
     in
-    ( wrappedGet, wrappedSet )
+    ( convertedGet, convertedSet )
 
 
 sendToChild : Self s m c pC -> Slot (Container cS cM cC) c -> cM -> Signal pM pC
@@ -906,13 +901,6 @@ sendToChild self childSlot childMsg =
     childMsg
         |> LocalMsg
         |> toParentSignal childSlot freshContainers
-        |> toParentSignal slot freshParentContainers
-
-
-wrapLocalMsg : Slot (Container s m c) pC -> pC -> m -> Signal pM pC
-wrapLocalMsg slot freshParentContainers msg =
-    msg
-        |> LocalMsg
         |> toParentSignal slot freshParentContainers
 
 

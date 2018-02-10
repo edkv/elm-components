@@ -58,7 +58,11 @@ regularComponentWithOptions :
     -> Component v w (Container s m c) pM pC
 regularComponentWithOptions spec =
     BaseComponent.baseComponentWithOptions
-        { spec | view = \self -> spec.view self >> BaseComponent.wrapNode self }
+        { spec
+            | view =
+                \self state ->
+                    BaseComponent.convertNode self (spec.view self state)
+        }
 
 
 sendToChild : Self s m c pC -> Slot (Container cS cM cC) c -> cM -> Signal pM pC

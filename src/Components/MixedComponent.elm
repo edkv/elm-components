@@ -4,14 +4,14 @@ module Components.MixedComponent
         , Self
         , Spec
         , SpecWithOptions
+        , convertAttribute
+        , convertNode
+        , convertSignal
+        , convertSlot
         , defaultOptions
         , mixedComponent
         , mixedComponentWithOptions
         , sendToChild
-        , wrapAttribute
-        , wrapNode
-        , wrapSignal
-        , wrapSlot
         )
 
 import Components exposing (Attribute, Component, Container, Node, Signal, Slot)
@@ -46,27 +46,27 @@ mixedComponentWithOptions =
     BaseComponent.baseComponentWithOptions
 
 
-wrapSignal : Self s m c pC -> Signal m c -> Signal pM pC
-wrapSignal =
-    BaseComponent.wrapSignal
+convertSignal : Self s m c pC -> Signal m c -> Signal pM pC
+convertSignal =
+    BaseComponent.convertSignal
 
 
-wrapAttribute : Self s m c pC -> Attribute v m c -> Attribute v pM pC
-wrapAttribute =
-    BaseComponent.wrapAttribute
+convertAttribute : Self s m c pC -> Attribute v m c -> Attribute v pM pC
+convertAttribute =
+    BaseComponent.convertAttribute
 
 
-wrapNode : Self s m c pC -> Node v w m c -> Node v w pM pC
-wrapNode =
-    BaseComponent.wrapNode
+convertNode : Self s m c pC -> Node v w m c -> Node v w pM pC
+convertNode =
+    BaseComponent.convertNode
 
 
-wrapSlot :
+convertSlot :
     Self s m c pC
     -> Slot (Container cS cM cC) c
     -> Slot (Container cS cM cC) pC
-wrapSlot =
-    BaseComponent.wrapSlot
+convertSlot =
+    BaseComponent.convertSlot
 
 
 sendToChild : Self s m c pC -> Slot (Container cS cM cC) c -> cM -> Signal pM pC
