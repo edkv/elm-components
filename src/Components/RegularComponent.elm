@@ -12,6 +12,7 @@ module Components.RegularComponent
 
 import Components exposing (Component, Container, Node, Signal, Slot)
 import Components.Internal.BaseComponent as BaseComponent
+import Components.MixedComponent as MixedComponent
 
 
 type alias Spec v w s m c pM pC =
@@ -34,11 +35,14 @@ type alias SpecWithOptions v w s m c pM pC =
 
 
 type alias Self s m c pC =
-    BaseComponent.Self s m c pC
+    { id : String
+    , internal : BaseComponent.InternalStuff s m c pC
+    }
 
 
 type alias Options m =
-    BaseComponent.Options m
+    { onContextUpdate : Maybe m
+    }
 
 
 regularComponent : Spec v w s m c pM pC -> Component v w (Container s m c) pM pC
@@ -57,19 +61,20 @@ regularComponentWithOptions :
     SpecWithOptions v w s m c pM pC
     -> Component v w (Container s m c) pM pC
 regularComponentWithOptions spec =
-    BaseComponent.baseComponentWithOptions
+    MixedComponent.mixedComponentWithOptions
         { spec
             | view =
                 \self state ->
-                    BaseComponent.convertNode self (spec.view self state)
+                    MixedComponent.convertNode self (spec.view self state)
         }
 
 
 sendToChild : Self s m c pC -> Slot (Container cS cM cC) c -> cM -> Signal pM pC
 sendToChild =
-    BaseComponent.sendToChild
+    MixedComponent.sendToChild
 
 
 defaultOptions : Options m
 defaultOptions =
-    BaseComponent.defaultOptions
+    { onContextUpdate = Nothing
+    }

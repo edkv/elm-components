@@ -8,6 +8,7 @@ module Components.Internal.Core
         , ComponentInterface(ComponentInterface)
         , ComponentLocations
         , ComponentState
+        , ComponentStatus(NewOrChanged, Unchanged)
         , Container(EmptyContainer, SignalContainer, StateContainer)
         , Element
         , Identify
@@ -23,10 +24,10 @@ module Components.Internal.Core
             , SimpleElement
             , Text
             )
+        , RenderedComponent
         , Signal(ChildMsg, LocalMsg)
         , Slot
         , StylingStrategy(ClassAttribute, ClassNameProperty)
-        , Touch
         , TouchArgs
         , UpdateArgs
         )
@@ -46,7 +47,7 @@ type Node v w m c
     | KeyedReversedEmbedding (KeyedElement v w v m c)
     | Text String
     | PlainNode (VirtualDom.Node (Signal m c))
-    | ComponentNode (Touch m c)
+    | ComponentNode (RenderedComponent m c)
 
 
 type alias Element x y z m c =
@@ -100,16 +101,19 @@ type Signal m c
     | ChildMsg (Identify c) c
 
 
-type alias Cache m c =
-    Dict ComponentId (Dict ComponentId (ComponentInterface m c))
+type alias Identify c =
+    { states : c } -> Maybe ComponentId
 
 
-type alias ComponentLocations =
-    Dict ComponentId ComponentId
+type alias RenderedComponent m c =
+    { status : { states : c } -> ComponentStatus
+    , touch : TouchArgs m c -> ( ComponentId, Change m c )
+    }
 
 
-type alias Touch m c =
-    TouchArgs m c -> ( ComponentId, Change m c )
+type ComponentStatus
+    = NewOrChanged
+    | Unchanged ComponentId
 
 
 type ComponentInterface m c
@@ -153,8 +157,12 @@ type alias Change m c =
     }
 
 
-type alias Identify c =
-    { states : c } -> Maybe ComponentId
+type alias Cache m c =
+    Dict ComponentId (Dict ComponentId (ComponentInterface m c))
+
+
+type alias ComponentLocations =
+    Dict ComponentId ComponentId
 
 
 type alias ComponentId =

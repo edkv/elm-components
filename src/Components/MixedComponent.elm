@@ -19,31 +19,59 @@ import Components.Internal.BaseComponent as BaseComponent
 
 
 type alias Spec v w s m c pM pC =
-    BaseComponent.Spec v w s m c pM pC
+    { init : Self s m c pC -> ( s, Cmd m, List (Signal pM pC) )
+    , update : Self s m c pC -> m -> s -> ( s, Cmd m, List (Signal pM pC) )
+    , subscriptions : Self s m c pC -> s -> Sub m
+    , view : Self s m c pC -> s -> Node v w pM pC
+    , children : c
+    }
 
 
 type alias SpecWithOptions v w s m c pM pC =
-    BaseComponent.SpecWithOptions v w s m c pM pC
+    { init : Self s m c pC -> ( s, Cmd m, List (Signal pM pC) )
+    , update : Self s m c pC -> m -> s -> ( s, Cmd m, List (Signal pM pC) )
+    , subscriptions : Self s m c pC -> s -> Sub m
+    , view : Self s m c pC -> s -> Node v w pM pC
+    , children : c
+    , options : Options m
+    }
 
 
 type alias Self s m c pC =
-    BaseComponent.Self s m c pC
+    { id : String
+    , internal : BaseComponent.InternalStuff s m c pC
+    }
 
 
 type alias Options m =
-    BaseComponent.Options m
+    { onContextUpdate : Maybe m
+    }
 
 
 mixedComponent : Spec v w s m c pM pC -> Component v w (Container s m c) pM pC
-mixedComponent =
-    BaseComponent.baseComponent
+mixedComponent spec =
+    mixedComponentWithOptions
+        { init = spec.init
+        , update = spec.update
+        , subscriptions = spec.subscriptions
+        , view = spec.view
+        , children = spec.children
+        , options = defaultOptions
+        }
 
 
 mixedComponentWithOptions :
     SpecWithOptions v w s m c pM pC
     -> Component v w (Container s m c) pM pC
-mixedComponentWithOptions =
-    BaseComponent.baseComponentWithOptions
+mixedComponentWithOptions spec =
+    BaseComponent.baseComponent
+        { spec
+            | options =
+                { onContextUpdate = spec.options.onContextUpdate
+                , shouldRecalculate = always True
+                , lazyRender = False
+                }
+        }
 
 
 convertSignal : Self s m c pC -> Signal m c -> Signal pM pC

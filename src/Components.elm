@@ -101,7 +101,7 @@ type alias Attribute v m c =
 
 type State container
     = Empty
-    | WaitingForNamespace (Core.Touch Never container)
+    | WaitingForNamespace (Core.RenderedComponent Never container)
     | Ready (ReadyState container)
 
 
@@ -138,8 +138,8 @@ init :
     -> ( State (Container s m c), Cmd (Msg (Container s m c)) )
 init (Core.Component component) =
     case component identitySlot of
-        Core.ComponentNode touchFunction ->
-            ( WaitingForNamespace touchFunction
+        Core.ComponentNode component ->
+            ( WaitingForNamespace component
             , Random.generate NamespaceGenerated Uuid.uuidStringGenerator
             )
 
@@ -155,10 +155,10 @@ update :
     -> ( State (Container s m c), Cmd (Msg (Container s m c)) )
 update msg state =
     case ( state, msg ) of
-        ( WaitingForNamespace touch, NamespaceGenerated namespace ) ->
+        ( WaitingForNamespace component, NamespaceGenerated namespace ) ->
             let
                 ( _, change ) =
-                    touch
+                    component.touch
                         { states = Core.EmptyContainer
                         , cache = Dict.empty
                         , freshContainers = Core.EmptyContainer
