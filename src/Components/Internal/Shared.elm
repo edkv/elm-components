@@ -21,17 +21,17 @@ type SvgItem
 
 
 toParentSignal :
-    Slot (Container s m c) pC
-    -> pC
-    -> Signal m c
-    -> Signal pM pC
+    Slot (Container s m p) pP
+    -> pP
+    -> Signal m p
+    -> Signal pM pP
 toParentSignal (( _, set ) as slot) freshParentContainers signal =
     freshParentContainers
         |> set (SignalContainer signal)
         |> ChildMsg (identify slot)
 
 
-identify : Slot (Container s m c) pC -> Identify pC
+identify : Slot (Container s m p) pP -> Identify pP
 identify ( get, _ ) args =
     case get args.states of
         StateContainer state ->
@@ -41,7 +41,7 @@ identify ( get, _ ) args =
             Nothing
 
 
-svgNamespace : Attribute SvgItem m c
+svgNamespace : Attribute SvgItem m p
 svgNamespace =
     VirtualDom.property "namespace" (Json.string "http://www.w3.org/2000/svg")
         |> PlainAttribute

@@ -31,7 +31,7 @@ each child node. You want this when you have a list of nodes that is changing:
 adding nodes, removing nodes, etc. In these cases, the unique identifiers help
 make the DOM modifications more efficient.
 -}
-node : String -> List (Attribute m c) -> List ( String, Html m c ) -> Html m c
+node : String -> List (Attribute m p) -> List ( String, Html m p ) -> Html m p
 node tag attributes children =
     Core.KeyedSimpleElement
         { tag = tag
@@ -41,18 +41,18 @@ node tag attributes children =
 
 
 {-| -}
-ol : List (Attribute m c) -> List ( String, Html m c ) -> Html m c
+ol : List (Attribute m p) -> List ( String, Html m p ) -> Html m p
 ol =
     node "ol"
 
 
 {-| -}
-ul : List (Attribute m c) -> List ( String, Html m c ) -> Html m c
+ul : List (Attribute m p) -> List ( String, Html m p ) -> Html m p
 ul =
     node "ul"
 
 
 {-| -}
-div : List (Attribute m c) -> List ( String, Html m c ) -> Html m c
+div : List (Attribute m p) -> List ( String, Html m p ) -> Html m p
 div =
     node "div"

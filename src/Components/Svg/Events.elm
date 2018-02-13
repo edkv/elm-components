@@ -60,7 +60,7 @@ import VirtualDom
 
     import Json.Decode as Json
 
-    onClick : Signal m c -> Attribute m c
+    onClick : Signal m p -> Attribute m p
     onClick signal signal =
         on "click" (Json.succeed signal)
 
@@ -70,7 +70,7 @@ information out of the event object. If the decoder succeeds, it will produce
 a message and route it to your `update` function.
 
 -}
-on : String -> Json.Decoder (Signal m c) -> Attribute m c
+on : String -> Json.Decoder (Signal m p) -> Attribute m p
 on event decoder =
     VirtualDom.on event decoder
         |> Core.PlainAttribute
@@ -78,7 +78,7 @@ on event decoder =
 
 {-| Same as `on` but you can set a few options.
 -}
-onWithOptions : String -> Options -> Json.Decoder (Signal m c) -> Attribute m c
+onWithOptions : String -> Options -> Json.Decoder (Signal m p) -> Attribute m p
 onWithOptions event decoder options =
     VirtualDom.onWithOptions event decoder options
         |> Core.PlainAttribute
@@ -112,19 +112,19 @@ defaultOptions =
 
 
 {-| -}
-onBegin : Signal m c -> Attribute m c
+onBegin : Signal m p -> Attribute m p
 onBegin signal =
     on "begin" (Json.succeed signal)
 
 
 {-| -}
-onEnd : Signal m c -> Attribute m c
+onEnd : Signal m p -> Attribute m p
 onEnd signal =
     on "end" (Json.succeed signal)
 
 
 {-| -}
-onRepeat : Signal m c -> Attribute m c
+onRepeat : Signal m p -> Attribute m p
 onRepeat signal =
     on "repeat" (Json.succeed signal)
 
@@ -134,43 +134,43 @@ onRepeat signal =
 
 
 {-| -}
-onAbort : Signal m c -> Attribute m c
+onAbort : Signal m p -> Attribute m p
 onAbort signal =
     on "abort" (Json.succeed signal)
 
 
 {-| -}
-onError : Signal m c -> Attribute m c
+onError : Signal m p -> Attribute m p
 onError signal =
     on "error" (Json.succeed signal)
 
 
 {-| -}
-onResize : Signal m c -> Attribute m c
+onResize : Signal m p -> Attribute m p
 onResize signal =
     on "resize" (Json.succeed signal)
 
 
 {-| -}
-onScroll : Signal m c -> Attribute m c
+onScroll : Signal m p -> Attribute m p
 onScroll signal =
     on "scroll" (Json.succeed signal)
 
 
 {-| -}
-onLoad : Signal m c -> Attribute m c
+onLoad : Signal m p -> Attribute m p
 onLoad signal =
     on "load" (Json.succeed signal)
 
 
 {-| -}
-onUnload : Signal m c -> Attribute m c
+onUnload : Signal m p -> Attribute m p
 onUnload signal =
     on "unload" (Json.succeed signal)
 
 
 {-| -}
-onZoom : Signal m c -> Attribute m c
+onZoom : Signal m p -> Attribute m p
 onZoom signal =
     on "zoom" (Json.succeed signal)
 
@@ -180,54 +180,54 @@ onZoom signal =
 
 
 {-| -}
-onActivate : Signal m c -> Attribute m c
+onActivate : Signal m p -> Attribute m p
 onActivate signal =
     on "activate" (Json.succeed signal)
 
 
 {-| -}
-onClick : Signal m c -> Attribute m c
+onClick : Signal m p -> Attribute m p
 onClick signal =
     on "click" (Json.succeed signal)
 
 
 {-| -}
-onFocusIn : Signal m c -> Attribute m c
+onFocusIn : Signal m p -> Attribute m p
 onFocusIn signal =
     on "focusin" (Json.succeed signal)
 
 
 {-| -}
-onFocusOut : Signal m c -> Attribute m c
+onFocusOut : Signal m p -> Attribute m p
 onFocusOut signal =
     on "focusout" (Json.succeed signal)
 
 
 {-| -}
-onMouseDown : Signal m c -> Attribute m c
+onMouseDown : Signal m p -> Attribute m p
 onMouseDown signal =
     on "mousedown" (Json.succeed signal)
 
 
 {-| -}
-onMouseMove : Signal m c -> Attribute m c
+onMouseMove : Signal m p -> Attribute m p
 onMouseMove signal =
     on "mousemove" (Json.succeed signal)
 
 
 {-| -}
-onMouseOut : Signal m c -> Attribute m c
+onMouseOut : Signal m p -> Attribute m p
 onMouseOut signal =
     on "mouseout" (Json.succeed signal)
 
 
 {-| -}
-onMouseOver : Signal m c -> Attribute m c
+onMouseOver : Signal m p -> Attribute m p
 onMouseOver signal =
     on "mouseover" (Json.succeed signal)
 
 
 {-| -}
-onMouseUp : Signal m c -> Attribute m c
+onMouseUp : Signal m p -> Attribute m p
 onMouseUp signal =
     on "mouseup" (Json.succeed signal)

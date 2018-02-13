@@ -8,8 +8,8 @@ module Components
         , Signal
         , Slot
         , State
-        , child
         , init
+        , part
         , send
         , slot
         , subscriptions
@@ -75,28 +75,28 @@ import Uuid.Barebones as Uuid
 import VirtualDom
 
 
-type alias Node v w m c =
-    Core.Node v w m c
+type alias Node v w m p =
+    Core.Node v w m p
 
 
-type alias Component v w container m c =
-    Core.Component v w container m c
+type alias Component v w container m p =
+    Core.Component v w container m p
 
 
-type alias Container s m c =
-    Core.Container s m c
+type alias Container s m p =
+    Core.Container s m p
 
 
-type alias Signal m c =
-    Core.Signal m c
+type alias Signal m p =
+    Core.Signal m p
 
 
-type alias Slot container c =
-    Core.Slot container c
+type alias Slot container p =
+    Core.Slot container p
 
 
-type alias Attribute v m c =
-    Core.Attribute v m c
+type alias Attribute v m p =
+    Core.Attribute v m p
 
 
 type State container
@@ -120,22 +120,22 @@ type Msg container
     | ComponentMsg (Signal Never container)
 
 
-send : m -> Signal m c
+send : m -> Signal m p
 send =
     Core.LocalMsg
 
 
 slot :
-    Slot (Container s m c) pC
-    -> Component v w (Container s m c) pM pC
-    -> Node v w pM pC
+    Slot (Container s m p) pP
+    -> Component v w (Container s m p) pM pP
+    -> Node v w pM pP
 slot slot_ (Core.Component component) =
     component slot_
 
 
 init :
-    Component v w (Container s m c) Never (Container s m c)
-    -> ( State (Container s m c), Cmd (Msg (Container s m c)) )
+    Component v w (Container s m p) Never (Container s m p)
+    -> ( State (Container s m p), Cmd (Msg (Container s m p)) )
 init (Core.Component component) =
     case component identitySlot of
         Core.ComponentNode component ->
@@ -150,9 +150,9 @@ init (Core.Component component) =
 
 
 update :
-    Msg (Container s m c)
-    -> State (Container s m c)
-    -> ( State (Container s m c), Cmd (Msg (Container s m c)) )
+    Msg (Container s m p)
+    -> State (Container s m p)
+    -> ( State (Container s m p), Cmd (Msg (Container s m p)) )
 update msg state =
     case ( state, msg ) of
         ( WaitingForNamespace component, NamespaceGenerated namespace ) ->
@@ -191,10 +191,10 @@ update msg state =
 
 
 doUpdate :
-    List (Signal Never (Container s m c))
-    -> ReadyState (Container s m c)
-    -> Cmd (Msg (Container s m c))
-    -> ( ReadyState (Container s m c), Cmd (Msg (Container s m c)) )
+    List (Signal Never (Container s m p))
+    -> ReadyState (Container s m p)
+    -> Cmd (Msg (Container s m p))
+    -> ( ReadyState (Container s m p), Cmd (Msg (Container s m p)) )
 doUpdate signals state cmdAcc =
     case signals of
         [] ->
@@ -243,7 +243,7 @@ doUpdate signals state cmdAcc =
                 (Cmd.batch [ cmdAcc, cmd ])
 
 
-subscriptions : State (Container s m c) -> Sub (Msg (Container s m c))
+subscriptions : State (Container s m p) -> Sub (Msg (Container s m p))
 subscriptions state =
     case state of
         Ready readyState ->
@@ -258,7 +258,7 @@ subscriptions state =
             Sub.none
 
 
-view : State (Container s m c) -> VirtualDom.Node (Msg (Container s m c))
+view : State (Container s m p) -> VirtualDom.Node (Msg (Container s m p))
 view state =
     case state of
         Ready readyState ->
@@ -279,2892 +279,2892 @@ identitySlot =
     ( \x -> x, \x _ -> x )
 
 
-child : Container s m c
-child =
+part : Container s m p
+part =
     Core.EmptyContainer
 
 
-x1 : (Container s m c -> children) -> children
-x1 constructor =
-    constructor child
+x1 : (Container s m p -> parts) -> parts
+x1 fn =
+    fn part
 
 
-x2 : (Container s1 m1 c1 -> Container s2 m2 c2 -> children) -> children
-x2 constructor =
-    constructor child child
+x2 : (Container s1 m1 p1 -> Container s2 m2 p2 -> parts) -> parts
+x2 fn =
+    fn part part
 
 
 x3 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> parts
     )
-    -> children
-x3 constructor =
-    constructor child child child
+    -> parts
+x3 fn =
+    fn part part part
 
 
 x4 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> parts
     )
-    -> children
-x4 constructor =
-    constructor child child child child
+    -> parts
+x4 fn =
+    fn part part part part
 
 
 x5 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> parts
     )
-    -> children
-x5 constructor =
-    constructor child child child child child
+    -> parts
+x5 fn =
+    fn part part part part part
 
 
 x6 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> parts
     )
-    -> children
-x6 constructor =
-    constructor child child child child child child
+    -> parts
+x6 fn =
+    fn part part part part part part
 
 
 x7 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> parts
     )
-    -> children
-x7 constructor =
-    constructor child child child child child child child
+    -> parts
+x7 fn =
+    fn part part part part part part part
 
 
 x8 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> parts
     )
-    -> children
-x8 constructor =
-    constructor child child child child child child child child
+    -> parts
+x8 fn =
+    fn part part part part part part part part
 
 
 x9 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> parts
     )
-    -> children
-x9 constructor =
-    constructor child child child child child child child child child
+    -> parts
+x9 fn =
+    fn part part part part part part part part part
 
 
 x10 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> parts
     )
-    -> children
-x10 constructor =
-    constructor child child child child child child child child child child
+    -> parts
+x10 fn =
+    fn part part part part part part part part part part
 
 
 x11 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> parts
     )
-    -> children
-x11 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x11 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x12 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> parts
     )
-    -> children
-x12 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x12 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x13 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> parts
     )
-    -> children
-x13 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x13 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x14 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> parts
     )
-    -> children
-x14 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x14 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x15 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> parts
     )
-    -> children
-x15 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x15 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x16 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> parts
     )
-    -> children
-x16 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x16 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x17 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> parts
     )
-    -> children
-x17 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x17 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x18 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> parts
     )
-    -> children
-x18 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x18 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x19 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> parts
     )
-    -> children
-x19 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x19 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x20 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> parts
     )
-    -> children
-x20 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x20 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x21 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> parts
     )
-    -> children
-x21 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x21 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x22 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> parts
     )
-    -> children
-x22 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x22 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x23 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> parts
     )
-    -> children
-x23 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x23 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x24 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> parts
     )
-    -> children
-x24 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x24 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x25 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> parts
     )
-    -> children
-x25 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x25 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x26 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> parts
     )
-    -> children
-x26 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x26 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x27 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> parts
     )
-    -> children
-x27 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x27 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x28 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> parts
     )
-    -> children
-x28 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x28 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x29 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> parts
     )
-    -> children
-x29 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x29 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x30 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> parts
     )
-    -> children
-x30 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x30 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x31 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> parts
     )
-    -> children
-x31 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x31 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x32 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> Container s32 m32 c32
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> Container s32 m32 p32
+     -> parts
     )
-    -> children
-x32 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x32 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x33 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> Container s32 m32 c32
-     -> Container s33 m33 c33
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> Container s32 m32 p32
+     -> Container s33 m33 p33
+     -> parts
     )
-    -> children
-x33 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x33 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x34 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> Container s32 m32 c32
-     -> Container s33 m33 c33
-     -> Container s34 m34 c34
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> Container s32 m32 p32
+     -> Container s33 m33 p33
+     -> Container s34 m34 p34
+     -> parts
     )
-    -> children
-x34 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x34 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x35 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> Container s32 m32 c32
-     -> Container s33 m33 c33
-     -> Container s34 m34 c34
-     -> Container s35 m35 c35
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> Container s32 m32 p32
+     -> Container s33 m33 p33
+     -> Container s34 m34 p34
+     -> Container s35 m35 p35
+     -> parts
     )
-    -> children
-x35 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x35 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x36 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> Container s32 m32 c32
-     -> Container s33 m33 c33
-     -> Container s34 m34 c34
-     -> Container s35 m35 c35
-     -> Container s36 m36 c36
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> Container s32 m32 p32
+     -> Container s33 m33 p33
+     -> Container s34 m34 p34
+     -> Container s35 m35 p35
+     -> Container s36 m36 p36
+     -> parts
     )
-    -> children
-x36 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x36 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x37 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> Container s32 m32 c32
-     -> Container s33 m33 c33
-     -> Container s34 m34 c34
-     -> Container s35 m35 c35
-     -> Container s36 m36 c36
-     -> Container s37 m37 c37
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> Container s32 m32 p32
+     -> Container s33 m33 p33
+     -> Container s34 m34 p34
+     -> Container s35 m35 p35
+     -> Container s36 m36 p36
+     -> Container s37 m37 p37
+     -> parts
     )
-    -> children
-x37 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x37 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x38 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> Container s32 m32 c32
-     -> Container s33 m33 c33
-     -> Container s34 m34 c34
-     -> Container s35 m35 c35
-     -> Container s36 m36 c36
-     -> Container s37 m37 c37
-     -> Container s38 m38 c38
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> Container s32 m32 p32
+     -> Container s33 m33 p33
+     -> Container s34 m34 p34
+     -> Container s35 m35 p35
+     -> Container s36 m36 p36
+     -> Container s37 m37 p37
+     -> Container s38 m38 p38
+     -> parts
     )
-    -> children
-x38 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x38 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x39 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> Container s32 m32 c32
-     -> Container s33 m33 c33
-     -> Container s34 m34 c34
-     -> Container s35 m35 c35
-     -> Container s36 m36 c36
-     -> Container s37 m37 c37
-     -> Container s38 m38 c38
-     -> Container s39 m39 c39
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> Container s32 m32 p32
+     -> Container s33 m33 p33
+     -> Container s34 m34 p34
+     -> Container s35 m35 p35
+     -> Container s36 m36 p36
+     -> Container s37 m37 p37
+     -> Container s38 m38 p38
+     -> Container s39 m39 p39
+     -> parts
     )
-    -> children
-x39 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x39 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x40 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> Container s32 m32 c32
-     -> Container s33 m33 c33
-     -> Container s34 m34 c34
-     -> Container s35 m35 c35
-     -> Container s36 m36 c36
-     -> Container s37 m37 c37
-     -> Container s38 m38 c38
-     -> Container s39 m39 c39
-     -> Container s40 m40 c40
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> Container s32 m32 p32
+     -> Container s33 m33 p33
+     -> Container s34 m34 p34
+     -> Container s35 m35 p35
+     -> Container s36 m36 p36
+     -> Container s37 m37 p37
+     -> Container s38 m38 p38
+     -> Container s39 m39 p39
+     -> Container s40 m40 p40
+     -> parts
     )
-    -> children
-x40 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x40 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x41 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> Container s32 m32 c32
-     -> Container s33 m33 c33
-     -> Container s34 m34 c34
-     -> Container s35 m35 c35
-     -> Container s36 m36 c36
-     -> Container s37 m37 c37
-     -> Container s38 m38 c38
-     -> Container s39 m39 c39
-     -> Container s40 m40 c40
-     -> Container s41 m41 c41
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> Container s32 m32 p32
+     -> Container s33 m33 p33
+     -> Container s34 m34 p34
+     -> Container s35 m35 p35
+     -> Container s36 m36 p36
+     -> Container s37 m37 p37
+     -> Container s38 m38 p38
+     -> Container s39 m39 p39
+     -> Container s40 m40 p40
+     -> Container s41 m41 p41
+     -> parts
     )
-    -> children
-x41 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x41 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x42 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> Container s32 m32 c32
-     -> Container s33 m33 c33
-     -> Container s34 m34 c34
-     -> Container s35 m35 c35
-     -> Container s36 m36 c36
-     -> Container s37 m37 c37
-     -> Container s38 m38 c38
-     -> Container s39 m39 c39
-     -> Container s40 m40 c40
-     -> Container s41 m41 c41
-     -> Container s42 m42 c42
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> Container s32 m32 p32
+     -> Container s33 m33 p33
+     -> Container s34 m34 p34
+     -> Container s35 m35 p35
+     -> Container s36 m36 p36
+     -> Container s37 m37 p37
+     -> Container s38 m38 p38
+     -> Container s39 m39 p39
+     -> Container s40 m40 p40
+     -> Container s41 m41 p41
+     -> Container s42 m42 p42
+     -> parts
     )
-    -> children
-x42 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x42 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x43 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> Container s32 m32 c32
-     -> Container s33 m33 c33
-     -> Container s34 m34 c34
-     -> Container s35 m35 c35
-     -> Container s36 m36 c36
-     -> Container s37 m37 c37
-     -> Container s38 m38 c38
-     -> Container s39 m39 c39
-     -> Container s40 m40 c40
-     -> Container s41 m41 c41
-     -> Container s42 m42 c42
-     -> Container s43 m43 c43
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> Container s32 m32 p32
+     -> Container s33 m33 p33
+     -> Container s34 m34 p34
+     -> Container s35 m35 p35
+     -> Container s36 m36 p36
+     -> Container s37 m37 p37
+     -> Container s38 m38 p38
+     -> Container s39 m39 p39
+     -> Container s40 m40 p40
+     -> Container s41 m41 p41
+     -> Container s42 m42 p42
+     -> Container s43 m43 p43
+     -> parts
     )
-    -> children
-x43 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x43 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x44 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> Container s32 m32 c32
-     -> Container s33 m33 c33
-     -> Container s34 m34 c34
-     -> Container s35 m35 c35
-     -> Container s36 m36 c36
-     -> Container s37 m37 c37
-     -> Container s38 m38 c38
-     -> Container s39 m39 c39
-     -> Container s40 m40 c40
-     -> Container s41 m41 c41
-     -> Container s42 m42 c42
-     -> Container s43 m43 c43
-     -> Container s44 m44 c44
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> Container s32 m32 p32
+     -> Container s33 m33 p33
+     -> Container s34 m34 p34
+     -> Container s35 m35 p35
+     -> Container s36 m36 p36
+     -> Container s37 m37 p37
+     -> Container s38 m38 p38
+     -> Container s39 m39 p39
+     -> Container s40 m40 p40
+     -> Container s41 m41 p41
+     -> Container s42 m42 p42
+     -> Container s43 m43 p43
+     -> Container s44 m44 p44
+     -> parts
     )
-    -> children
-x44 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x44 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x45 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> Container s32 m32 c32
-     -> Container s33 m33 c33
-     -> Container s34 m34 c34
-     -> Container s35 m35 c35
-     -> Container s36 m36 c36
-     -> Container s37 m37 c37
-     -> Container s38 m38 c38
-     -> Container s39 m39 c39
-     -> Container s40 m40 c40
-     -> Container s41 m41 c41
-     -> Container s42 m42 c42
-     -> Container s43 m43 c43
-     -> Container s44 m44 c44
-     -> Container s45 m45 c45
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> Container s32 m32 p32
+     -> Container s33 m33 p33
+     -> Container s34 m34 p34
+     -> Container s35 m35 p35
+     -> Container s36 m36 p36
+     -> Container s37 m37 p37
+     -> Container s38 m38 p38
+     -> Container s39 m39 p39
+     -> Container s40 m40 p40
+     -> Container s41 m41 p41
+     -> Container s42 m42 p42
+     -> Container s43 m43 p43
+     -> Container s44 m44 p44
+     -> Container s45 m45 p45
+     -> parts
     )
-    -> children
-x45 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x45 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x46 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> Container s32 m32 c32
-     -> Container s33 m33 c33
-     -> Container s34 m34 c34
-     -> Container s35 m35 c35
-     -> Container s36 m36 c36
-     -> Container s37 m37 c37
-     -> Container s38 m38 c38
-     -> Container s39 m39 c39
-     -> Container s40 m40 c40
-     -> Container s41 m41 c41
-     -> Container s42 m42 c42
-     -> Container s43 m43 c43
-     -> Container s44 m44 c44
-     -> Container s45 m45 c45
-     -> Container s46 m46 c46
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> Container s32 m32 p32
+     -> Container s33 m33 p33
+     -> Container s34 m34 p34
+     -> Container s35 m35 p35
+     -> Container s36 m36 p36
+     -> Container s37 m37 p37
+     -> Container s38 m38 p38
+     -> Container s39 m39 p39
+     -> Container s40 m40 p40
+     -> Container s41 m41 p41
+     -> Container s42 m42 p42
+     -> Container s43 m43 p43
+     -> Container s44 m44 p44
+     -> Container s45 m45 p45
+     -> Container s46 m46 p46
+     -> parts
     )
-    -> children
-x46 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x46 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x47 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> Container s32 m32 c32
-     -> Container s33 m33 c33
-     -> Container s34 m34 c34
-     -> Container s35 m35 c35
-     -> Container s36 m36 c36
-     -> Container s37 m37 c37
-     -> Container s38 m38 c38
-     -> Container s39 m39 c39
-     -> Container s40 m40 c40
-     -> Container s41 m41 c41
-     -> Container s42 m42 c42
-     -> Container s43 m43 c43
-     -> Container s44 m44 c44
-     -> Container s45 m45 c45
-     -> Container s46 m46 c46
-     -> Container s47 m47 c47
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> Container s32 m32 p32
+     -> Container s33 m33 p33
+     -> Container s34 m34 p34
+     -> Container s35 m35 p35
+     -> Container s36 m36 p36
+     -> Container s37 m37 p37
+     -> Container s38 m38 p38
+     -> Container s39 m39 p39
+     -> Container s40 m40 p40
+     -> Container s41 m41 p41
+     -> Container s42 m42 p42
+     -> Container s43 m43 p43
+     -> Container s44 m44 p44
+     -> Container s45 m45 p45
+     -> Container s46 m46 p46
+     -> Container s47 m47 p47
+     -> parts
     )
-    -> children
-x47 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x47 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x48 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> Container s32 m32 c32
-     -> Container s33 m33 c33
-     -> Container s34 m34 c34
-     -> Container s35 m35 c35
-     -> Container s36 m36 c36
-     -> Container s37 m37 c37
-     -> Container s38 m38 c38
-     -> Container s39 m39 c39
-     -> Container s40 m40 c40
-     -> Container s41 m41 c41
-     -> Container s42 m42 c42
-     -> Container s43 m43 c43
-     -> Container s44 m44 c44
-     -> Container s45 m45 c45
-     -> Container s46 m46 c46
-     -> Container s47 m47 c47
-     -> Container s48 m48 c48
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> Container s32 m32 p32
+     -> Container s33 m33 p33
+     -> Container s34 m34 p34
+     -> Container s35 m35 p35
+     -> Container s36 m36 p36
+     -> Container s37 m37 p37
+     -> Container s38 m38 p38
+     -> Container s39 m39 p39
+     -> Container s40 m40 p40
+     -> Container s41 m41 p41
+     -> Container s42 m42 p42
+     -> Container s43 m43 p43
+     -> Container s44 m44 p44
+     -> Container s45 m45 p45
+     -> Container s46 m46 p46
+     -> Container s47 m47 p47
+     -> Container s48 m48 p48
+     -> parts
     )
-    -> children
-x48 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x48 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x49 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> Container s32 m32 c32
-     -> Container s33 m33 c33
-     -> Container s34 m34 c34
-     -> Container s35 m35 c35
-     -> Container s36 m36 c36
-     -> Container s37 m37 c37
-     -> Container s38 m38 c38
-     -> Container s39 m39 c39
-     -> Container s40 m40 c40
-     -> Container s41 m41 c41
-     -> Container s42 m42 c42
-     -> Container s43 m43 c43
-     -> Container s44 m44 c44
-     -> Container s45 m45 c45
-     -> Container s46 m46 c46
-     -> Container s47 m47 c47
-     -> Container s48 m48 c48
-     -> Container s49 m49 c49
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> Container s32 m32 p32
+     -> Container s33 m33 p33
+     -> Container s34 m34 p34
+     -> Container s35 m35 p35
+     -> Container s36 m36 p36
+     -> Container s37 m37 p37
+     -> Container s38 m38 p38
+     -> Container s39 m39 p39
+     -> Container s40 m40 p40
+     -> Container s41 m41 p41
+     -> Container s42 m42 p42
+     -> Container s43 m43 p43
+     -> Container s44 m44 p44
+     -> Container s45 m45 p45
+     -> Container s46 m46 p46
+     -> Container s47 m47 p47
+     -> Container s48 m48 p48
+     -> Container s49 m49 p49
+     -> parts
     )
-    -> children
-x49 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x49 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
 
 
 x50 :
-    (Container s1 m1 c1
-     -> Container s2 m2 c2
-     -> Container s3 m3 c3
-     -> Container s4 m4 c4
-     -> Container s5 m5 c5
-     -> Container s6 m6 c6
-     -> Container s7 m7 c7
-     -> Container s8 m8 c8
-     -> Container s9 m9 c9
-     -> Container s10 m10 c10
-     -> Container s11 m11 c11
-     -> Container s12 m12 c12
-     -> Container s13 m13 c13
-     -> Container s14 m14 c14
-     -> Container s15 m15 c15
-     -> Container s16 m16 c16
-     -> Container s17 m17 c17
-     -> Container s18 m18 c18
-     -> Container s19 m19 c19
-     -> Container s20 m20 c20
-     -> Container s21 m21 c21
-     -> Container s22 m22 c22
-     -> Container s23 m23 c23
-     -> Container s24 m24 c24
-     -> Container s25 m25 c25
-     -> Container s26 m26 c26
-     -> Container s27 m27 c27
-     -> Container s28 m28 c28
-     -> Container s29 m29 c29
-     -> Container s30 m30 c30
-     -> Container s31 m31 c31
-     -> Container s32 m32 c32
-     -> Container s33 m33 c33
-     -> Container s34 m34 c34
-     -> Container s35 m35 c35
-     -> Container s36 m36 c36
-     -> Container s37 m37 c37
-     -> Container s38 m38 c38
-     -> Container s39 m39 c39
-     -> Container s40 m40 c40
-     -> Container s41 m41 c41
-     -> Container s42 m42 c42
-     -> Container s43 m43 c43
-     -> Container s44 m44 c44
-     -> Container s45 m45 c45
-     -> Container s46 m46 c46
-     -> Container s47 m47 c47
-     -> Container s48 m48 c48
-     -> Container s49 m49 c49
-     -> Container s50 m50 c50
-     -> children
+    (Container s1 m1 p1
+     -> Container s2 m2 p2
+     -> Container s3 m3 p3
+     -> Container s4 m4 p4
+     -> Container s5 m5 p5
+     -> Container s6 m6 p6
+     -> Container s7 m7 p7
+     -> Container s8 m8 p8
+     -> Container s9 m9 p9
+     -> Container s10 m10 p10
+     -> Container s11 m11 p11
+     -> Container s12 m12 p12
+     -> Container s13 m13 p13
+     -> Container s14 m14 p14
+     -> Container s15 m15 p15
+     -> Container s16 m16 p16
+     -> Container s17 m17 p17
+     -> Container s18 m18 p18
+     -> Container s19 m19 p19
+     -> Container s20 m20 p20
+     -> Container s21 m21 p21
+     -> Container s22 m22 p22
+     -> Container s23 m23 p23
+     -> Container s24 m24 p24
+     -> Container s25 m25 p25
+     -> Container s26 m26 p26
+     -> Container s27 m27 p27
+     -> Container s28 m28 p28
+     -> Container s29 m29 p29
+     -> Container s30 m30 p30
+     -> Container s31 m31 p31
+     -> Container s32 m32 p32
+     -> Container s33 m33 p33
+     -> Container s34 m34 p34
+     -> Container s35 m35 p35
+     -> Container s36 m36 p36
+     -> Container s37 m37 p37
+     -> Container s38 m38 p38
+     -> Container s39 m39 p39
+     -> Container s40 m40 p40
+     -> Container s41 m41 p41
+     -> Container s42 m42 p42
+     -> Container s43 m43 p43
+     -> Container s44 m44 p44
+     -> Container s45 m45 p45
+     -> Container s46 m46 p46
+     -> Container s47 m47 p47
+     -> Container s48 m48 p48
+     -> Container s49 m49 p49
+     -> Container s50 m50 p50
+     -> parts
     )
-    -> children
-x50 constructor =
-    constructor
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
-        child
+    -> parts
+x50 fn =
+    fn
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part
+        part

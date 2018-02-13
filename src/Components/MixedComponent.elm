@@ -18,28 +18,28 @@ import Components exposing (Attribute, Component, Container, Node, Signal, Slot)
 import Components.Internal.BaseComponent as BaseComponent
 
 
-type alias Spec v w s m c pM pC =
-    { init : Self s m c pC -> ( s, Cmd m, List (Signal pM pC) )
-    , update : Self s m c pC -> m -> s -> ( s, Cmd m, List (Signal pM pC) )
-    , subscriptions : Self s m c pC -> s -> Sub m
-    , view : Self s m c pC -> s -> Node v w pM pC
-    , children : c
+type alias Spec v w s m p pM pP =
+    { init : Self s m p pP -> ( s, Cmd m, List (Signal pM pP) )
+    , update : Self s m p pP -> m -> s -> ( s, Cmd m, List (Signal pM pP) )
+    , subscriptions : Self s m p pP -> s -> Sub m
+    , view : Self s m p pP -> s -> Node v w pM pP
+    , parts : p
     }
 
 
-type alias SpecWithOptions v w s m c pM pC =
-    { init : Self s m c pC -> ( s, Cmd m, List (Signal pM pC) )
-    , update : Self s m c pC -> m -> s -> ( s, Cmd m, List (Signal pM pC) )
-    , subscriptions : Self s m c pC -> s -> Sub m
-    , view : Self s m c pC -> s -> Node v w pM pC
-    , children : c
+type alias SpecWithOptions v w s m p pM pP =
+    { init : Self s m p pP -> ( s, Cmd m, List (Signal pM pP) )
+    , update : Self s m p pP -> m -> s -> ( s, Cmd m, List (Signal pM pP) )
+    , subscriptions : Self s m p pP -> s -> Sub m
+    , view : Self s m p pP -> s -> Node v w pM pP
+    , parts : p
     , options : Options m
     }
 
 
-type alias Self s m c pC =
+type alias Self s m p pP =
     { id : String
-    , internal : BaseComponent.InternalStuff s m c pC
+    , internal : BaseComponent.InternalStuff s m p pP
     }
 
 
@@ -48,21 +48,21 @@ type alias Options m =
     }
 
 
-mixedComponent : Spec v w s m c pM pC -> Component v w (Container s m c) pM pC
+mixedComponent : Spec v w s m p pM pP -> Component v w (Container s m p) pM pP
 mixedComponent spec =
     mixedComponentWithOptions
         { init = spec.init
         , update = spec.update
         , subscriptions = spec.subscriptions
         , view = spec.view
-        , children = spec.children
+        , parts = spec.parts
         , options = defaultOptions
         }
 
 
 mixedComponentWithOptions :
-    SpecWithOptions v w s m c pM pC
-    -> Component v w (Container s m c) pM pC
+    SpecWithOptions v w s m p pM pP
+    -> Component v w (Container s m p) pM pP
 mixedComponentWithOptions spec =
     BaseComponent.baseComponent
         { spec
@@ -74,30 +74,30 @@ mixedComponentWithOptions spec =
         }
 
 
-convertSignal : Self s m c pC -> Signal m c -> Signal pM pC
+convertSignal : Self s m p pP -> Signal m p -> Signal pM pP
 convertSignal =
     BaseComponent.convertSignal
 
 
-convertAttribute : Self s m c pC -> Attribute v m c -> Attribute v pM pC
+convertAttribute : Self s m p pP -> Attribute v m p -> Attribute v pM pP
 convertAttribute =
     BaseComponent.convertAttribute
 
 
-convertNode : Self s m c pC -> Node v w m c -> Node v w pM pC
+convertNode : Self s m p pP -> Node v w m p -> Node v w pM pP
 convertNode =
     BaseComponent.convertNode
 
 
 convertSlot :
-    Self s m c pC
-    -> Slot (Container cS cM cC) c
-    -> Slot (Container cS cM cC) pC
+    Self s m p pP
+    -> Slot (Container cS cM cP) p
+    -> Slot (Container cS cM cP) pP
 convertSlot =
     BaseComponent.convertSlot
 
 
-sendToChild : Self s m c pC -> Slot (Container cS cM cC) c -> cM -> Signal pM pC
+sendToChild : Self s m p pP -> Slot (Container cS cM cP) p -> cM -> Signal pM pP
 sendToChild =
     BaseComponent.sendToChild
 
