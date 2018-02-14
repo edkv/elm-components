@@ -8,6 +8,7 @@ module Components
         , Signal
         , Slot
         , State
+        , dictSlot
         , init
         , send
         , slot
@@ -67,7 +68,7 @@ module Components
         )
 
 import Components.Internal.Core as Core
-import Dict
+import Dict exposing (Dict)
 import Html.Styled
 import Random.Pcg as Random
 import Uuid.Barebones as Uuid
@@ -130,6 +131,25 @@ slot :
     -> Node v w pM pP
 slot slot_ (Core.Component component) =
     component slot_
+
+
+dictSlot :
+    Slot (Dict comparable (Container s m p)) pP
+    -> comparable
+    -> Slot (Container s m p) pP
+dictSlot ( getDict, setDict ) key =
+    let
+        get =
+            getDict
+                >> Dict.get key
+                >> Maybe.withDefault Core.EmptyContainer
+
+        set container parts =
+            setDict
+                (Dict.insert key container (getDict parts))
+                parts
+    in
+    ( get, set )
 
 
 init :
