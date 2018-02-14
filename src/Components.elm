@@ -156,7 +156,7 @@ init :
     Component v w (Container s m p) Never (Container s m p)
     -> ( State (Container s m p), Cmd (Msg (Container s m p)) )
 init (Core.Component component) =
-    case component identitySlot of
+    case component ( \x -> x, \x _ -> x ) of
         Core.ComponentNode component ->
             ( WaitingForNamespace component
             , Random.generate NamespaceGenerated Uuid.uuidStringGenerator
@@ -291,11 +291,6 @@ view state =
 
         _ ->
             VirtualDom.text ""
-
-
-identitySlot : Slot container container
-identitySlot =
-    ( \x -> x, \x _ -> x )
 
 
 x1 : (Container s m p -> parts) -> parts
