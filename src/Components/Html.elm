@@ -63,6 +63,7 @@ module Components.Html
         , meter
         , nav
         , node
+        , none
         , object
         , ol
         , optgroup
@@ -158,6 +159,11 @@ text =
 plainNode : VirtualDom.Node m -> Html m p
 plainNode =
     VirtualDom.map send >> Core.PlainNode
+
+
+none : Html m p
+none =
+    text ""
 
 
 

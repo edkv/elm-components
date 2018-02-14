@@ -56,6 +56,7 @@ module Components.Svg
         , metadata
         , mpath
         , node
+        , none
         , path
         , pattern
         , plainNode
@@ -131,6 +132,11 @@ text =
 plainNode : VirtualDom.Node m -> Svg m p
 plainNode =
     VirtualDom.map send >> Core.PlainNode
+
+
+none : Svg m p
+none =
+    text ""
 
 
 {-| The root `<svg>` node for any SVG scene. This example shows a scene
