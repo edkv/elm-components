@@ -9,7 +9,6 @@ module Components
         , Slot
         , State
         , init
-        , part
         , send
         , slot
         , subscriptions
@@ -279,19 +278,14 @@ identitySlot =
     ( \x -> x, \x _ -> x )
 
 
-part : Container s m p
-part =
-    Core.EmptyContainer
-
-
 x1 : (Container s m p -> parts) -> parts
 x1 fn =
-    fn part
+    fn Core.EmptyContainer
 
 
 x2 : (Container s1 m1 p1 -> Container s2 m2 p2 -> parts) -> parts
-x2 fn =
-    fn part part
+x2 =
+    x1 >> x1
 
 
 x3 :
@@ -301,8 +295,8 @@ x3 :
      -> parts
     )
     -> parts
-x3 fn =
-    fn part part part
+x3 =
+    x2 >> x1
 
 
 x4 :
@@ -313,8 +307,8 @@ x4 :
      -> parts
     )
     -> parts
-x4 fn =
-    fn part part part part
+x4 =
+    x3 >> x1
 
 
 x5 :
@@ -326,8 +320,8 @@ x5 :
      -> parts
     )
     -> parts
-x5 fn =
-    fn part part part part part
+x5 =
+    x4 >> x1
 
 
 x6 :
@@ -340,8 +334,8 @@ x6 :
      -> parts
     )
     -> parts
-x6 fn =
-    fn part part part part part part
+x6 =
+    x5 >> x1
 
 
 x7 :
@@ -355,8 +349,8 @@ x7 :
      -> parts
     )
     -> parts
-x7 fn =
-    fn part part part part part part part
+x7 =
+    x6 >> x1
 
 
 x8 :
@@ -371,8 +365,8 @@ x8 :
      -> parts
     )
     -> parts
-x8 fn =
-    fn part part part part part part part part
+x8 =
+    x7 >> x1
 
 
 x9 :
@@ -388,8 +382,8 @@ x9 :
      -> parts
     )
     -> parts
-x9 fn =
-    fn part part part part part part part part part
+x9 =
+    x8 >> x1
 
 
 x10 :
@@ -406,8 +400,8 @@ x10 :
      -> parts
     )
     -> parts
-x10 fn =
-    fn part part part part part part part part part part
+x10 =
+    x9 >> x1
 
 
 x11 :
@@ -425,19 +419,8 @@ x11 :
      -> parts
     )
     -> parts
-x11 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x11 =
+    x10 >> x1
 
 
 x12 :
@@ -456,20 +439,8 @@ x12 :
      -> parts
     )
     -> parts
-x12 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x12 =
+    x11 >> x1
 
 
 x13 :
@@ -489,21 +460,8 @@ x13 :
      -> parts
     )
     -> parts
-x13 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x13 =
+    x12 >> x1
 
 
 x14 :
@@ -524,22 +482,8 @@ x14 :
      -> parts
     )
     -> parts
-x14 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x14 =
+    x13 >> x1
 
 
 x15 :
@@ -561,23 +505,8 @@ x15 :
      -> parts
     )
     -> parts
-x15 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x15 =
+    x14 >> x1
 
 
 x16 :
@@ -600,24 +529,8 @@ x16 :
      -> parts
     )
     -> parts
-x16 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x16 =
+    x15 >> x1
 
 
 x17 :
@@ -641,25 +554,8 @@ x17 :
      -> parts
     )
     -> parts
-x17 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x17 =
+    x16 >> x1
 
 
 x18 :
@@ -684,26 +580,8 @@ x18 :
      -> parts
     )
     -> parts
-x18 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x18 =
+    x17 >> x1
 
 
 x19 :
@@ -729,27 +607,8 @@ x19 :
      -> parts
     )
     -> parts
-x19 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x19 =
+    x18 >> x1
 
 
 x20 :
@@ -776,28 +635,8 @@ x20 :
      -> parts
     )
     -> parts
-x20 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x20 =
+    x19 >> x1
 
 
 x21 :
@@ -825,29 +664,8 @@ x21 :
      -> parts
     )
     -> parts
-x21 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x21 =
+    x20 >> x1
 
 
 x22 :
@@ -876,30 +694,8 @@ x22 :
      -> parts
     )
     -> parts
-x22 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x22 =
+    x21 >> x1
 
 
 x23 :
@@ -929,31 +725,8 @@ x23 :
      -> parts
     )
     -> parts
-x23 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x23 =
+    x22 >> x1
 
 
 x24 :
@@ -984,32 +757,8 @@ x24 :
      -> parts
     )
     -> parts
-x24 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x24 =
+    x23 >> x1
 
 
 x25 :
@@ -1041,33 +790,8 @@ x25 :
      -> parts
     )
     -> parts
-x25 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x25 =
+    x24 >> x1
 
 
 x26 :
@@ -1100,34 +824,8 @@ x26 :
      -> parts
     )
     -> parts
-x26 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x26 =
+    x25 >> x1
 
 
 x27 :
@@ -1161,35 +859,8 @@ x27 :
      -> parts
     )
     -> parts
-x27 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x27 =
+    x26 >> x1
 
 
 x28 :
@@ -1224,36 +895,8 @@ x28 :
      -> parts
     )
     -> parts
-x28 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x28 =
+    x27 >> x1
 
 
 x29 :
@@ -1289,37 +932,8 @@ x29 :
      -> parts
     )
     -> parts
-x29 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x29 =
+    x28 >> x1
 
 
 x30 :
@@ -1356,38 +970,8 @@ x30 :
      -> parts
     )
     -> parts
-x30 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x30 =
+    x29 >> x1
 
 
 x31 :
@@ -1425,39 +1009,8 @@ x31 :
      -> parts
     )
     -> parts
-x31 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x31 =
+    x30 >> x1
 
 
 x32 :
@@ -1496,40 +1049,8 @@ x32 :
      -> parts
     )
     -> parts
-x32 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x32 =
+    x31 >> x1
 
 
 x33 :
@@ -1569,41 +1090,8 @@ x33 :
      -> parts
     )
     -> parts
-x33 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x33 =
+    x32 >> x1
 
 
 x34 :
@@ -1644,42 +1132,8 @@ x34 :
      -> parts
     )
     -> parts
-x34 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x34 =
+    x33 >> x1
 
 
 x35 :
@@ -1721,43 +1175,8 @@ x35 :
      -> parts
     )
     -> parts
-x35 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x35 =
+    x34 >> x1
 
 
 x36 :
@@ -1800,44 +1219,8 @@ x36 :
      -> parts
     )
     -> parts
-x36 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x36 =
+    x35 >> x1
 
 
 x37 :
@@ -1881,45 +1264,8 @@ x37 :
      -> parts
     )
     -> parts
-x37 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x37 =
+    x36 >> x1
 
 
 x38 :
@@ -1964,46 +1310,8 @@ x38 :
      -> parts
     )
     -> parts
-x38 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x38 =
+    x37 >> x1
 
 
 x39 :
@@ -2049,47 +1357,8 @@ x39 :
      -> parts
     )
     -> parts
-x39 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x39 =
+    x38 >> x1
 
 
 x40 :
@@ -2136,48 +1405,8 @@ x40 :
      -> parts
     )
     -> parts
-x40 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x40 =
+    x39 >> x1
 
 
 x41 :
@@ -2225,49 +1454,8 @@ x41 :
      -> parts
     )
     -> parts
-x41 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x41 =
+    x40 >> x1
 
 
 x42 :
@@ -2316,50 +1504,8 @@ x42 :
      -> parts
     )
     -> parts
-x42 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x42 =
+    x41 >> x1
 
 
 x43 :
@@ -2409,51 +1555,8 @@ x43 :
      -> parts
     )
     -> parts
-x43 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x43 =
+    x42 >> x1
 
 
 x44 :
@@ -2504,52 +1607,8 @@ x44 :
      -> parts
     )
     -> parts
-x44 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x44 =
+    x43 >> x1
 
 
 x45 :
@@ -2601,53 +1660,8 @@ x45 :
      -> parts
     )
     -> parts
-x45 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x45 =
+    x44 >> x1
 
 
 x46 :
@@ -2700,54 +1714,8 @@ x46 :
      -> parts
     )
     -> parts
-x46 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x46 =
+    x45 >> x1
 
 
 x47 :
@@ -2801,55 +1769,8 @@ x47 :
      -> parts
     )
     -> parts
-x47 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x47 =
+    x46 >> x1
 
 
 x48 :
@@ -2904,56 +1825,8 @@ x48 :
      -> parts
     )
     -> parts
-x48 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x48 =
+    x47 >> x1
 
 
 x49 :
@@ -3009,57 +1882,8 @@ x49 :
      -> parts
     )
     -> parts
-x49 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x49 =
+    x48 >> x1
 
 
 x50 :
@@ -3116,55 +1940,5 @@ x50 :
      -> parts
     )
     -> parts
-x50 fn =
-    fn
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
-        part
+x50 =
+    x49 >> x1
