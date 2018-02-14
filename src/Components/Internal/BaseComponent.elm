@@ -649,7 +649,7 @@ renderElement components orderedComponentIds element =
             List.foldr renderChild ( [], orderedComponentIds ) element.children
 
         attributes =
-            List.map toStyledAttribute element.attributes
+            List.filterMap toStyledAttribute element.attributes
 
         renderedElement =
             Html.Styled.node element.tag attributes children
@@ -677,7 +677,7 @@ renderKeyedElement components orderedComponentIds element =
             List.foldr renderChild ( [], orderedComponentIds ) element.children
 
         attributes =
-            List.map toStyledAttribute element.attributes
+            List.filterMap toStyledAttribute element.attributes
 
         renderedElement =
             Html.Styled.Keyed.node element.tag attributes children
@@ -685,17 +685,22 @@ renderKeyedElement components orderedComponentIds element =
     ( renderedElement, remainingIds )
 
 
-toStyledAttribute : Attribute v m p -> Html.Styled.Attribute (Signal m p)
+toStyledAttribute :
+    Attribute v m p
+    -> Maybe (Html.Styled.Attribute (Signal m p))
 toStyledAttribute attribute =
     case attribute of
         PlainAttribute property ->
-            Html.Styled.Attributes.fromUnstyled property
+            Just (Html.Styled.Attributes.fromUnstyled property)
 
         Styles ClassNameProperty styles ->
-            Html.Styled.Attributes.css styles
+            Just (Html.Styled.Attributes.css styles)
 
         Styles ClassAttribute styles ->
-            Svg.Styled.Attributes.css styles
+            Just (Svg.Styled.Attributes.css styles)
+
+        NullAttribute ->
+            Nothing
 
 
 getSelf :
@@ -734,6 +739,9 @@ convertAttribute self attribute =
 
         Styles strategy styles ->
             Styles strategy styles
+
+        NullAttribute ->
+            NullAttribute
 
 
 convertNode : Self s m p pP -> Node v w m p -> Node v w pM pP

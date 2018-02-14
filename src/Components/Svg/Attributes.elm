@@ -129,6 +129,7 @@ module Components.Svg.Attributes
         , min
         , mode
         , name
+        , none
         , numOctaves
         , offset
         , opacity
@@ -306,6 +307,11 @@ attributeNS : String -> String -> String -> Attribute m p
 attributeNS namespace key value =
     VirtualDom.attributeNS namespace key value
         |> Core.PlainAttribute
+
+
+none : Attribute m p
+none =
+    Core.NullAttribute
 
 
 

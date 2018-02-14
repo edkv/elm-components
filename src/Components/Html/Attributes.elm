@@ -63,6 +63,7 @@ module Components.Html.Attributes
         , minlength
         , multiple
         , name
+        , none
         , novalidate
         , pattern
         , ping
@@ -250,6 +251,11 @@ attribute : String -> String -> Attribute m p
 attribute name value =
     VirtualDom.attribute name value
         |> Core.PlainAttribute
+
+
+none : Attribute m p
+none =
+    Core.NullAttribute
 
 
 {-| Apply styles to an element. See the

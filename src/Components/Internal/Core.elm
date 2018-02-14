@@ -1,6 +1,6 @@
 module Components.Internal.Core
     exposing
-        ( Attribute(PlainAttribute, Styles)
+        ( Attribute(NullAttribute, PlainAttribute, Styles)
         , Cache
         , Change
         , Component(Component)
@@ -67,6 +67,7 @@ type alias KeyedElement x y z m p =
 type Attribute v m p
     = PlainAttribute (VirtualDom.Property (Signal m p))
     | Styles StylingStrategy (List Css.Style)
+    | NullAttribute
 
 
 type StylingStrategy
