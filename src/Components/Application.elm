@@ -35,13 +35,13 @@ type alias Self p =
 
 
 type alias State flags s m p =
-    { componentState : Components.State (Container s m p)
+    { componentState : Components.State (Container s m p) Never
     , flags : Maybe flags
     }
 
 
 type alias Msg s m p =
-    Components.Msg (Container s m p)
+    Components.Msg (Container s m p) Never
 
 
 type InternalStuff c
@@ -86,7 +86,7 @@ init spec flags =
 update : Msg s m p -> State flags s m p -> ( State flags s m p, Cmd (Msg s m p) )
 update msg state =
     let
-        ( componentState, cmd ) =
+        ( componentState, cmd, _ ) =
             Components.update msg state.componentState
     in
     ( { state | componentState = componentState }
@@ -145,7 +145,7 @@ updateComponent spec self msg state =
 
 transformSignal : Signal m p -> Signal Never (Container s m p)
 transformSignal =
-    Core.SignalContainer >> Core.ChildMsg (\_ -> Nothing)
+    Core.SignalContainer >> Core.ChildMsg (always Nothing)
 
 
 transformSelf : Spec v w s m p -> RegularComponent.Self s m p pP -> Self p
