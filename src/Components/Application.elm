@@ -34,14 +34,15 @@ type alias Self p =
     }
 
 
-type alias State flags s m p =
-    { componentState : Components.State (Container s m p) Never
-    , flags : Maybe flags
-    }
+type State flags s m p
+    = State
+        { componentState : Components.State (Container s m p) Never
+        , flags : Maybe flags
+        }
 
 
-type alias Msg s m p =
-    Components.Msg (Container s m p) Never
+type Msg s m p
+    = Msg (Components.Msg (Container s m p) Never)
 
 
 type InternalStuff c
@@ -76,32 +77,35 @@ init spec flags =
         ( componentState, cmd ) =
             Components.init (buildComponent spec)
     in
-    ( { componentState = componentState
-      , flags = flags
-      }
-    , cmd
+    ( State
+        { componentState = componentState
+        , flags = flags
+        }
+    , Cmd.map Msg cmd
     )
 
 
 update : Msg s m p -> State flags s m p -> ( State flags s m p, Cmd (Msg s m p) )
-update msg state =
+update (Msg msg) (State state) =
     let
         ( componentState, cmd, _ ) =
             Components.update msg state.componentState
     in
-    ( { state | componentState = componentState }
-    , cmd
+    ( State { state | componentState = componentState }
+    , Cmd.map Msg cmd
     )
 
 
 subscriptions : State flags s m p -> Sub (Msg s m p)
-subscriptions state =
+subscriptions (State state) =
     Components.subscriptions state.componentState
+        |> Sub.map Msg
 
 
 view : State flags s m p -> VirtualDom.Node (Msg s m p)
-view state =
+view (State state) =
     Components.view state.componentState
+        |> VirtualDom.map Msg
 
 
 buildComponent :
