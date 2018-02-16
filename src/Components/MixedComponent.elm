@@ -1,7 +1,6 @@
 module Components.MixedComponent
     exposing
         ( Options
-        , Self
         , Spec
         , SpecWithOptions
         , convertAttribute
@@ -11,10 +10,18 @@ module Components.MixedComponent
         , defaultOptions
         , mixedComponent
         , mixedComponentWithOptions
-        , sendToChild
         )
 
-import Components exposing (Attribute, Component, Container, Node, Signal, Slot)
+import Components
+    exposing
+        ( Attribute
+        , Component
+        , Container
+        , Node
+        , Self
+        , Signal
+        , Slot
+        )
 import Components.Internal.BaseComponent as BaseComponent
 
 
@@ -34,12 +41,6 @@ type alias SpecWithOptions v w s m p pM pP =
     , view : Self s m p pP -> s -> Node v w pM pP
     , parts : p
     , options : Options m
-    }
-
-
-type alias Self s m p pP =
-    { id : String
-    , internal : BaseComponent.InternalStuff s m p pP
     }
 
 
@@ -95,11 +96,6 @@ convertSlot :
     -> Slot (Container cS cM cP) pP
 convertSlot =
     BaseComponent.convertSlot
-
-
-sendToChild : Self s m p pP -> Slot (Container cS cM cP) p -> cM -> Signal pM pP
-sendToChild =
-    BaseComponent.sendToChild
 
 
 defaultOptions : Options m

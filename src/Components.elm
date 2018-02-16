@@ -5,12 +5,14 @@ module Components
         , Container
         , Msg
         , Node
+        , Self
         , Signal
         , Slot
         , State
         , dictSlot
         , init
         , send
+        , sendToChild
         , slot
         , subscriptions
         , update
@@ -69,6 +71,7 @@ module Components
         )
 
 import Components.Internal.Core as Core
+import Components.Internal.Shared as Shared
 import Dict exposing (Dict)
 import Html.Styled
 import Random.Pcg as Random
@@ -100,6 +103,12 @@ type alias Attribute v m p =
     Core.Attribute v m p
 
 
+type alias Self s m p pP =
+    { id : String
+    , internal : Shared.InternalStuff s m p pP
+    }
+
+
 type State container outMsg
     = Empty
     | WaitingForNamespace (Core.RenderedComponent outMsg container)
@@ -124,6 +133,22 @@ type Msg container outMsg
 send : m -> Signal m p
 send =
     Core.LocalMsg
+
+
+sendToChild :
+    Self s m p pP
+    -> Slot (Container cS cM cP) p
+    -> cM
+    -> Signal pM pP
+sendToChild self childSlot childMsg =
+    let
+        (Shared.InternalStuff internal) =
+            self.internal
+    in
+    childMsg
+        |> Core.LocalMsg
+        |> Shared.toParentSignal childSlot internal.freshContainers
+        |> Shared.toParentSignal internal.slot internal.freshParentContainers
 
 
 slot :

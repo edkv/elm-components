@@ -1,17 +1,14 @@
 module Components.RegularComponent
     exposing
         ( Options
-        , Self
         , Spec
         , SpecWithOptions
         , defaultOptions
         , regularComponent
         , regularComponentWithOptions
-        , sendToChild
         )
 
-import Components exposing (Component, Container, Node, Signal, Slot)
-import Components.Internal.BaseComponent as BaseComponent
+import Components exposing (Component, Container, Node, Self, Signal, Slot)
 import Components.MixedComponent as MixedComponent
 
 
@@ -31,12 +28,6 @@ type alias SpecWithOptions v w s m p pM pP =
     , view : Self s m p pP -> s -> Node v w m p
     , parts : p
     , options : Options m
-    }
-
-
-type alias Self s m p pP =
-    { id : String
-    , internal : BaseComponent.InternalStuff s m p pP
     }
 
 
@@ -67,11 +58,6 @@ regularComponentWithOptions spec =
                 \self state ->
                     MixedComponent.convertNode self (spec.view self state)
         }
-
-
-sendToChild : Self s m p pP -> Slot (Container cS cM cP) p -> cM -> Signal pM pP
-sendToChild =
-    MixedComponent.sendToChild
 
 
 defaultOptions : Options m

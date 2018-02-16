@@ -1,6 +1,8 @@
 module Components.Internal.Shared
     exposing
         ( HtmlItem(HtmlItem)
+        , InternalStuff(InternalStuff)
+        , Self
         , SvgItem(SvgItem)
         , identify
         , svgNamespace
@@ -18,6 +20,20 @@ type HtmlItem
 
 type SvgItem
     = SvgItem
+
+
+type alias Self s m p pP =
+    { id : String
+    , internal : InternalStuff s m p pP
+    }
+
+
+type InternalStuff s m p pP
+    = InternalStuff
+        { slot : Slot (Container s m p) pP
+        , freshContainers : p
+        , freshParentContainers : pP
+        }
 
 
 toParentSignal :

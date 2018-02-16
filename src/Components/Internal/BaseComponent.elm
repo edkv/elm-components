@@ -1,19 +1,21 @@
 module Components.Internal.BaseComponent
     exposing
-        ( InternalStuff
-        , Options
-        , Self
+        ( Options
         , Spec
         , baseComponent
         , convertAttribute
         , convertNode
         , convertSignal
         , convertSlot
-        , sendToChild
         )
 
 import Components.Internal.Core exposing (..)
-import Components.Internal.Shared exposing (identify, toParentSignal)
+import Components.Internal.Shared
+    exposing
+        ( InternalStuff(InternalStuff)
+        , identify
+        , toParentSignal
+        )
 import Dict exposing (Dict)
 import Html.Styled
 import Html.Styled.Attributes
@@ -31,20 +33,6 @@ type alias Spec v w s m p pM pP =
     , parts : p
     , options : Options s m
     }
-
-
-type alias Self s m p pP =
-    { id : String
-    , internal : InternalStuff s m p pP
-    }
-
-
-type InternalStuff s m p pP
-    = InternalStuff
-        { slot : Slot (Container s m p) pP
-        , freshContainers : p
-        , freshParentContainers : pP
-        }
 
 
 type alias Options s m =
@@ -1032,18 +1020,6 @@ convertSlot self (( getChild, setChild ) as childSlot) =
                 |> SignalContainer
     in
     ( convertedGet, convertedSet )
-
-
-sendToChild : Self s m p pP -> Slot (Container cS cM cP) p -> cM -> Signal pM pP
-sendToChild self childSlot childMsg =
-    let
-        (InternalStuff { slot, freshContainers, freshParentContainers }) =
-            self.internal
-    in
-    childMsg
-        |> LocalMsg
-        |> toParentSignal childSlot freshContainers
-        |> toParentSignal slot freshParentContainers
 
 
 dummyChange : CommonArgs a m p -> Change m p
