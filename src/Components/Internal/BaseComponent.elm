@@ -13,6 +13,7 @@ import Components.Internal.Core exposing (..)
 import Components.Internal.Shared
     exposing
         ( InternalStuff(InternalStuff)
+        , Self
         , identify
         , toParentSignal
         )
