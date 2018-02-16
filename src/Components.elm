@@ -15,6 +15,7 @@ module Components
         , subscriptions
         , update
         , view
+        , wrapMsg
         , x1
         , x10
         , x11
@@ -99,25 +100,25 @@ type alias Attribute v m p =
     Core.Attribute v m p
 
 
-type State container
+type State container outMsg
     = Empty
-    | WaitingForNamespace (Core.RenderedComponent Never container)
-    | Ready (ReadyState container)
+    | WaitingForNamespace (Core.RenderedComponent outMsg container)
+    | Ready (ReadyState container outMsg)
 
 
-type alias ReadyState container =
-    { component : Core.ComponentInterface Never container
+type alias ReadyState container outMsg =
+    { component : Core.ComponentInterface outMsg container
     , componentState : container
-    , cache : Core.Cache Never container
+    , cache : Core.Cache outMsg container
     , componentLocations : Core.ComponentLocations
     , lastComponentId : Int
     , namespace : String
     }
 
 
-type Msg container
+type Msg container outMsg
     = NamespaceGenerated String
-    | ComponentMsg (Signal Never container)
+    | ComponentMsg (Signal outMsg container)
 
 
 send : m -> Signal m p
@@ -153,8 +154,8 @@ dictSlot ( getDict, setDict ) key =
 
 
 init :
-    Component v w (Container s m p) Never (Container s m p)
-    -> ( State (Container s m p), Cmd (Msg (Container s m p)) )
+    Component v w (Container s m p) outMsg (Container s m p)
+    -> ( State (Container s m p) outMsg, Cmd (Msg (Container s m p) outMsg) )
 init (Core.Component component) =
     case component ( \x -> x, \x _ -> x ) of
         Core.ComponentNode component ->
@@ -169,9 +170,9 @@ init (Core.Component component) =
 
 
 update :
-    Msg (Container s m p)
-    -> State (Container s m p)
-    -> ( State (Container s m p), Cmd (Msg (Container s m p)) )
+    Msg (Container s m p) outMsg
+    -> State (Container s m p) outMsg
+    -> ( State (Container s m p) outMsg, Cmd (Msg (Container s m p) outMsg), List outMsg )
 update msg state =
     case ( state, msg ) of
         ( WaitingForNamespace component, NamespaceGenerated namespace ) ->
@@ -194,50 +195,43 @@ update msg state =
                     , lastComponentId = change.lastComponentId
                     , namespace = namespace
                     }
-
-                cmd =
-                    Cmd.map ComponentMsg change.cmd
             in
-            doUpdate change.signals newState cmd
-                |> Tuple.mapFirst Ready
+            doUpdate change.signals newState change.cmd []
+                |> transformUpdateResults
 
-        ( Ready readyState, ComponentMsg componentMsg ) ->
-            doUpdate [ componentMsg ] readyState Cmd.none
-                |> Tuple.mapFirst Ready
+        ( Ready readyState, ComponentMsg signal ) ->
+            doUpdate [ signal ] readyState Cmd.none []
+                |> transformUpdateResults
 
         ( _, _ ) ->
-            ( state, Cmd.none )
+            ( state, Cmd.none, [] )
 
 
 doUpdate :
-    List (Signal Never (Container s m p))
-    -> ReadyState (Container s m p)
-    -> Cmd (Msg (Container s m p))
-    -> ( ReadyState (Container s m p), Cmd (Msg (Container s m p)) )
-doUpdate signals state cmdAcc =
+    List (Signal outMsg (Container s m p))
+    -> ReadyState (Container s m p) outMsg
+    -> Cmd (Signal outMsg (Container s m p))
+    -> List outMsg
+    -> ( ReadyState (Container s m p) outMsg, Cmd (Signal outMsg (Container s m p)), List outMsg )
+doUpdate signals state cmds outMsgs =
     case signals of
         [] ->
-            ( state, cmdAcc )
+            ( state, cmds, outMsgs )
 
-        signal :: otherSignals ->
+        (Core.LocalMsg outMsg) :: otherSignals ->
+            doUpdate otherSignals state cmds (outMsg :: outMsgs)
+
+        (Core.ChildMsg _ signalContainer) :: otherSignals ->
             let
                 (Core.ComponentInterface component) =
                     state.component
-
-                signalContainers =
-                    case signal of
-                        Core.LocalMsg nvr ->
-                            never nvr
-
-                        Core.ChildMsg _ containers ->
-                            containers
 
                 change =
                     component.update
                         { states = state.componentState
                         , cache = state.cache
                         , pathToTarget = []
-                        , signalContainers = signalContainers
+                        , signalContainers = signalContainer
                         , freshContainers = Core.EmptyContainer
                         , componentLocations = state.componentLocations
                         , lastComponentId = state.lastComponentId
@@ -252,17 +246,27 @@ doUpdate signals state cmdAcc =
                         , componentLocations = change.componentLocations
                         , lastComponentId = change.lastComponentId
                     }
-
-                cmd =
-                    Cmd.map ComponentMsg change.cmd
             in
             doUpdate
                 (otherSignals ++ change.signals)
                 newState
-                (Cmd.batch [ cmdAcc, cmd ])
+                (Cmd.batch [ cmds, change.cmd ])
+                outMsgs
 
 
-subscriptions : State (Container s m p) -> Sub (Msg (Container s m p))
+transformUpdateResults :
+    ( ReadyState container outMsg, Cmd (Signal outMsg container), List outMsg )
+    -> ( State container outMsg, Cmd (Msg container outMsg), List outMsg )
+transformUpdateResults ( state, cmd, outMsgs ) =
+    ( Ready state
+    , Cmd.map ComponentMsg cmd
+    , List.reverse outMsgs
+    )
+
+
+subscriptions :
+    State (Container s m p) outMsg
+    -> Sub (Msg (Container s m p) outMsg)
 subscriptions state =
     case state of
         Ready readyState ->
@@ -277,7 +281,9 @@ subscriptions state =
             Sub.none
 
 
-view : State (Container s m p) -> VirtualDom.Node (Msg (Container s m p))
+view :
+    State (Container s m p) outMsg
+    -> VirtualDom.Node (Msg (Container s m p) outMsg)
 view state =
     case state of
         Ready readyState ->
@@ -291,6 +297,14 @@ view state =
 
         _ ->
             VirtualDom.text ""
+
+
+wrapMsg : m -> Msg (Container s m p) outMsg
+wrapMsg =
+    Core.LocalMsg
+        >> Core.SignalContainer
+        >> Core.ChildMsg (always Nothing)
+        >> ComponentMsg
 
 
 x1 : (Container s m p -> parts) -> parts
