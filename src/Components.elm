@@ -71,7 +71,7 @@ module Components
         )
 
 import Components.Internal.Core as Core
-import Components.Internal.Shared as Shared
+import Components.Internal.Shared exposing (toParentSignal)
 import Dict exposing (Dict)
 import Html.Styled
 import Random.Pcg as Random
@@ -105,7 +105,7 @@ type alias Attribute v m p =
 
 type alias Self s m p pP =
     { id : String
-    , internal : Shared.InternalStuff s m p pP
+    , internal : Core.InternalStuff s m p pP
     }
 
 
@@ -142,13 +142,13 @@ sendToChild :
     -> Signal pM pP
 sendToChild self childSlot childMsg =
     let
-        (Shared.InternalStuff internal) =
+        (Core.InternalStuff internal) =
             self.internal
     in
     childMsg
         |> Core.LocalMsg
-        |> Shared.toParentSignal childSlot internal.freshContainers
-        |> Shared.toParentSignal internal.slot internal.freshParentContainers
+        |> toParentSignal childSlot internal.freshContainers
+        |> toParentSignal internal.slot internal.freshParentContainers
 
 
 slot :

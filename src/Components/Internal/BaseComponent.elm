@@ -10,13 +10,7 @@ module Components.Internal.BaseComponent
         )
 
 import Components.Internal.Core exposing (..)
-import Components.Internal.Shared
-    exposing
-        ( InternalStuff(InternalStuff)
-        , Self
-        , identify
-        , toParentSignal
-        )
+import Components.Internal.Shared exposing (identify, toParentSignal)
 import Dict exposing (Dict)
 import Html.Styled
 import Html.Styled.Attributes
