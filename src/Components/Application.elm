@@ -8,6 +8,7 @@ module Components.Application
         )
 
 import Components exposing (Component, Container, Node, Signal, Slot)
+import Components.Internal.Shared exposing (ComponentInternalStuff)
 import Components.RegularComponent as RegularComponent
 import VirtualDom
 
@@ -26,7 +27,9 @@ type alias Spec v w s m p =
 
 
 type alias Self s m p =
-    Components.Self s m p (Container s m p)
+    { id : String
+    , internal : ComponentInternalStuff s m p (Container s m p)
+    }
 
 
 type State container flags

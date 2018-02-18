@@ -1,6 +1,7 @@
 module Components.MixedComponent
     exposing
         ( Options
+        , Self
         , Spec
         , SpecWithOptions
         , convertAttribute
@@ -12,17 +13,9 @@ module Components.MixedComponent
         , mixedComponentWithOptions
         )
 
-import Components
-    exposing
-        ( Attribute
-        , Component
-        , Container
-        , Node
-        , Self
-        , Signal
-        , Slot
-        )
+import Components exposing (Attribute, Component, Container, Node, Signal, Slot)
 import Components.Internal.BaseComponent as BaseComponent
+import Components.Internal.Shared exposing (ComponentInternalStuff)
 
 
 type alias Spec v w s m p pM pP =
@@ -46,6 +39,12 @@ type alias SpecWithOptions v w s m p pM pP =
 
 type alias Options m =
     { onContextUpdate : Maybe m
+    }
+
+
+type alias Self s m p pP =
+    { id : String
+    , internal : ComponentInternalStuff s m p pP
     }
 
 

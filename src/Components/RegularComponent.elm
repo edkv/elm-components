@@ -1,6 +1,7 @@
 module Components.RegularComponent
     exposing
         ( Options
+        , Self
         , Spec
         , SpecWithOptions
         , defaultOptions
@@ -9,6 +10,7 @@ module Components.RegularComponent
         )
 
 import Components exposing (Component, Container, Node, Self, Signal, Slot)
+import Components.Internal.Shared exposing (ComponentInternalStuff)
 import Components.MixedComponent as MixedComponent
 
 
@@ -33,6 +35,12 @@ type alias SpecWithOptions v w s m p pM pP =
 
 type alias Options m =
     { onContextUpdate : Maybe m
+    }
+
+
+type alias Self s m p pP =
+    { id : String
+    , internal : ComponentInternalStuff s m p pP
     }
 
 

@@ -1,6 +1,7 @@
 module Components.Internal.Shared
     exposing
-        ( HtmlItem(HtmlItem)
+        ( ComponentInternalStuff(ComponentInternalStuff)
+        , HtmlItem(HtmlItem)
         , SvgItem(SvgItem)
         , identify
         , svgNamespace
@@ -18,6 +19,14 @@ type HtmlItem
 
 type SvgItem
     = SvgItem
+
+
+type ComponentInternalStuff s m p pP
+    = ComponentInternalStuff
+        { slot : Slot (Container s m p) pP
+        , freshContainers : p
+        , freshParentContainers : pP
+        }
 
 
 toParentSignal :

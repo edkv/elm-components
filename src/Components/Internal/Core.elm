@@ -12,7 +12,6 @@ module Components.Internal.Core
         , Container(EmptyContainer, SignalContainer, StateContainer)
         , Element
         , Identify
-        , InternalStuff(InternalStuff)
         , KeyedElement
         , Node
             ( ComponentNode
@@ -26,7 +25,6 @@ module Components.Internal.Core
             , Text
             )
         , RenderedComponent
-        , Self
         , Signal(ChildMsg, LocalMsg)
         , Slot
         , StylingStrategy(ClassAttribute, ClassNameProperty)
@@ -170,17 +168,3 @@ type alias ComponentLocations =
 
 type alias ComponentId =
     Int
-
-
-type alias Self s m p pP =
-    { id : String
-    , internal : InternalStuff s m p pP
-    }
-
-
-type InternalStuff s m p pP
-    = InternalStuff
-        { slot : Slot (Container s m p) pP
-        , freshContainers : p
-        , freshParentContainers : pP
-        }

@@ -1,6 +1,7 @@
 module Components.Internal.BaseComponent
     exposing
         ( Options
+        , Self
         , Spec
         , baseComponent
         , convertAttribute
@@ -10,7 +11,12 @@ module Components.Internal.BaseComponent
         )
 
 import Components.Internal.Core exposing (..)
-import Components.Internal.Shared exposing (identify, toParentSignal)
+import Components.Internal.Shared
+    exposing
+        ( ComponentInternalStuff(ComponentInternalStuff)
+        , identify
+        , toParentSignal
+        )
 import Dict exposing (Dict)
 import Html.Styled
 import Html.Styled.Attributes
@@ -34,6 +40,12 @@ type alias Options s m =
     { onContextUpdate : Maybe m
     , shouldRecalculate : s -> Bool
     , lazyRender : Bool
+    }
+
+
+type alias Self s m p pP =
+    { id : String
+    , internal : ComponentInternalStuff s m p pP
     }
 
 
@@ -695,7 +707,7 @@ getSelf :
 getSelf spec slot id args =
     { id = "_" ++ args.namespace ++ "_" ++ toString id
     , internal =
-        InternalStuff
+        ComponentInternalStuff
             { slot = slot
             , freshContainers = spec.parts
             , freshParentContainers = args.freshContainers
@@ -706,7 +718,7 @@ getSelf spec slot id args =
 convertSignal : Self s m p pP -> Signal m p -> Signal pM pP
 convertSignal self =
     let
-        (InternalStuff { slot, freshParentContainers }) =
+        (ComponentInternalStuff { slot, freshParentContainers }) =
             self.internal
     in
     toParentSignal slot freshParentContainers
@@ -794,7 +806,7 @@ convertStatus :
     -> ComponentStatus
 convertStatus self component args =
     let
-        (InternalStuff { slot }) =
+        (ComponentInternalStuff { slot }) =
             self.internal
 
         ( get, _ ) =
@@ -815,7 +827,7 @@ convertTouch :
     -> ( ComponentId, Change pM pP )
 convertTouch self component args =
     let
-        (InternalStuff { slot, freshContainers }) =
+        (ComponentInternalStuff { slot, freshContainers }) =
             self.internal
 
         ( get, set ) =
@@ -856,7 +868,7 @@ convertUpdate :
     -> Change pM pP
 convertUpdate self (ComponentInterface component) args =
     let
-        (InternalStuff { slot, freshContainers }) =
+        (ComponentInternalStuff { slot, freshContainers }) =
             self.internal
 
         ( get, _ ) =
@@ -895,7 +907,7 @@ convertChange :
     -> Change pM pP
 convertChange self args state change =
     let
-        (InternalStuff { slot, freshParentContainers }) =
+        (ComponentInternalStuff { slot, freshParentContainers }) =
             self.internal
 
         ( _, set ) =
@@ -932,7 +944,7 @@ convertSubscriptions :
     -> Sub (Signal pM pP)
 convertSubscriptions self (ComponentInterface component) () =
     let
-        (InternalStuff { slot, freshParentContainers }) =
+        (ComponentInternalStuff { slot, freshParentContainers }) =
             self.internal
     in
     component.subscriptions ()
@@ -946,7 +958,7 @@ convertView :
     -> Html.Styled.Html (Signal pM pP)
 convertView self (ComponentInterface component) () =
     let
-        (InternalStuff { slot, freshParentContainers }) =
+        (ComponentInternalStuff { slot, freshParentContainers }) =
             self.internal
     in
     component.view ()
@@ -959,7 +971,7 @@ convertSlot :
     -> Slot (Container cS cM cP) pP
 convertSlot self (( getChild, setChild ) as childSlot) =
     let
-        (InternalStuff { slot, freshContainers }) =
+        (ComponentInternalStuff { slot, freshContainers }) =
             self.internal
 
         ( get, set ) =
