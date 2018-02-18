@@ -192,31 +192,34 @@ update hidden args =
     in
     case get args.states of
         StateContainer state ->
-            case get args.signalContainers of
-                EmptyContainer ->
-                    updateChild hidden state args
+            case args.pathToTarget of
+                childId :: path ->
+                    updateChild childId path hidden state args
 
-                StateContainer _ ->
-                    -- This is an "impossible" case and should be ignored, but
-                    -- it shouldn't be handled last so that an exception will be
-                    -- thrown if a user runs into this bug:
-                    -- https://github.com/elm-lang/virtual-dom/issues/73
-                    -- (otherwise it will be silently ignored).
-                    --
-                    -- The error occurs if a user applies laziness directly to
-                    -- component's root node because we use `VirtualDom.map`
-                    -- around components.
-                    noUpdate hidden args
+                [] ->
+                    case get args.signalContainers of
+                        EmptyContainer ->
+                            noUpdate hidden args
 
-                SignalContainer (LocalMsg msg) ->
-                    doLocalUpdate hidden.spec hidden.slot state msg args
+                        StateContainer _ ->
+                            -- This is an "impossible" case and should be
+                            -- ignored, but it shouldn't be handled last so that
+                            -- an exception will be thrown if a user runs into
+                            -- this bug:
+                            -- https://github.com/elm-lang/virtual-dom/issues/73
+                            -- (otherwise it will be silently ignored).
+                            noUpdate hidden args
 
-                SignalContainer (ChildMsg identifyTarget _) ->
-                    let
-                        path =
-                            buildPathToTarget args state identifyTarget
-                    in
-                    updateChild hidden state { args | pathToTarget = path }
+                        SignalContainer (LocalMsg msg) ->
+                            doLocalUpdate hidden.spec hidden.slot state msg args
+
+                        SignalContainer (ChildMsg identifyTarget _) ->
+                            case buildPathToTarget args state identifyTarget of
+                                childId :: path ->
+                                    updateChild childId path hidden state args
+
+                                [] ->
+                                    noUpdate hidden args
 
         _ ->
             noUpdate hidden args
@@ -250,44 +253,39 @@ doLocalUpdate spec (( _, set ) as slot) state msg args =
 
 
 updateChild :
-    Hidden v w s m p pM pP
+    ComponentId
+    -> List ComponentId
+    -> Hidden v w s m p pM pP
     -> ComponentState s m p
     -> UpdateArgs pM pP
     -> Change pM pP
-updateChild hidden state args =
-    case args.pathToTarget of
-        [] ->
+updateChild childId pathToTarget hidden state args =
+    case Dict.get childId hidden.children of
+        Just (ComponentInterface component) ->
+            let
+                change =
+                    component.update { args | pathToTarget = pathToTarget }
+
+                updatedChildren =
+                    Dict.insert childId change.component hidden.children
+
+                updatedCache =
+                    Dict.insert state.id updatedChildren change.cache
+
+                updatedComponent =
+                    buildComponent { hidden | children = updatedChildren }
+            in
+            { component = updatedComponent
+            , states = change.states
+            , cache = updatedCache
+            , cmd = change.cmd
+            , signals = change.signals
+            , componentLocations = change.componentLocations
+            , lastComponentId = change.lastComponentId
+            }
+
+        Nothing ->
             noUpdate hidden args
-
-        id :: pathToTarget ->
-            case Dict.get id hidden.children of
-                Just (ComponentInterface component) ->
-                    let
-                        change =
-                            component.update
-                                { args | pathToTarget = pathToTarget }
-
-                        updatedChildren =
-                            Dict.insert id change.component hidden.children
-
-                        updatedCache =
-                            Dict.insert state.id updatedChildren change.cache
-
-                        updatedComponent =
-                            buildComponent
-                                { hidden | children = updatedChildren }
-                    in
-                    { component = updatedComponent
-                    , states = change.states
-                    , cache = updatedCache
-                    , cmd = change.cmd
-                    , signals = change.signals
-                    , componentLocations = change.componentLocations
-                    , lastComponentId = change.lastComponentId
-                    }
-
-                Nothing ->
-                    noUpdate hidden args
 
 
 doChange :
