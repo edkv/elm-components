@@ -71,7 +71,18 @@ module Components
         )
 
 import Components.Internal.Core as Core
-import Components.Internal.Shared as Shared
+    exposing
+        ( Cache
+        , ComponentId
+        , ComponentInterface(ComponentInterface)
+        , ComponentLocations
+        , RenderedComponent
+        )
+import Components.Internal.Shared
+    exposing
+        ( ComponentInternalStuff(ComponentInternalStuff)
+        , toParentSignal
+        )
 import Dict exposing (Dict)
 import Html.Styled
 import Random.Pcg as Random
@@ -105,21 +116,21 @@ type alias Attribute v m p =
 
 type alias Self a s m p pP =
     { a
-        | internal : Shared.ComponentInternalStuff s m p pP
+        | internal : ComponentInternalStuff s m p pP
     }
 
 
 type State container outMsg
     = Empty
-    | WaitingForNamespace (Core.RenderedComponent outMsg container)
+    | WaitingForNamespace (RenderedComponent outMsg container)
     | Ready (ReadyState container outMsg)
 
 
 type alias ReadyState container outMsg =
-    { component : Core.ComponentInterface outMsg container
+    { component : ComponentInterface outMsg container
     , componentState : container
-    , cache : Core.Cache outMsg container
-    , componentLocations : Core.ComponentLocations
+    , cache : Cache outMsg container
+    , componentLocations : ComponentLocations
     , lastComponentId : Int
     , namespace : String
     }
@@ -142,13 +153,13 @@ sendToChild :
     -> Signal pM pP
 sendToChild self childSlot childMsg =
     let
-        (Shared.ComponentInternalStuff internal) =
+        (ComponentInternalStuff internal) =
             self.internal
     in
     childMsg
         |> Core.LocalMsg
-        |> Shared.toParentSignal childSlot internal.freshContainers
-        |> Shared.toParentSignal internal.slot internal.freshParentContainers
+        |> toParentSignal childSlot internal.freshContainers
+        |> toParentSignal internal.slot internal.freshParentContainers
 
 
 slot :
@@ -212,7 +223,7 @@ update msg state =
                         , namespace = namespace
                         }
 
-                newState =
+                state =
                     { component = change.component
                     , componentState = change.states
                     , cache = change.cache
@@ -221,7 +232,7 @@ update msg state =
                     , namespace = namespace
                     }
             in
-            doUpdate change.signals newState change.cmd []
+            doUpdate change.signals state change.cmd []
                 |> transformUpdateResults
 
         ( Ready readyState, ComponentMsg signal ) ->
@@ -248,7 +259,7 @@ doUpdate signals state cmds outMsgs =
 
         (Core.ChildMsg _ signalContainer) :: otherSignals ->
             let
-                (Core.ComponentInterface component) =
+                (ComponentInterface component) =
                     state.component
 
                 change =
@@ -263,18 +274,25 @@ doUpdate signals state cmds outMsgs =
                         , namespace = state.namespace
                         }
 
-                newState =
-                    { state
-                        | componentState = change.states
-                        , component = change.component
+                cleanupResult =
+                    change.cleanup
+                        { states = change.states
                         , cache = change.cache
                         , componentLocations = change.componentLocations
+                        }
+
+                updatedState =
+                    { state
+                        | componentState = cleanupResult.states
+                        , component = change.component
+                        , cache = cleanupResult.cache
+                        , componentLocations = cleanupResult.componentLocations
                         , lastComponentId = change.lastComponentId
                     }
             in
             doUpdate
                 (otherSignals ++ change.signals)
-                newState
+                updatedState
                 (Cmd.batch [ cmds, change.cmd ])
                 outMsgs
 
@@ -296,7 +314,7 @@ subscriptions state =
     case state of
         Ready readyState ->
             let
-                (Core.ComponentInterface component) =
+                (ComponentInterface component) =
                     readyState.component
             in
             component.subscriptions ()
@@ -313,7 +331,7 @@ view state =
     case state of
         Ready readyState ->
             let
-                (Core.ComponentInterface component) =
+                (ComponentInterface component) =
                     readyState.component
             in
             component.view ()

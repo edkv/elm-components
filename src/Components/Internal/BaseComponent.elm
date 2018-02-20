@@ -52,6 +52,7 @@ type alias Self s m p pP =
 type alias Hidden v w s m p pM pP =
     { spec : Spec v w s m p pM pP
     , slot : Slot (Container s m p) pP
+    , id : ComponentId
     , sub : Sub (Signal pM pP)
     , tree : Node v w pM pP
     , children : Dict ComponentId (ComponentInterface pM pP)
@@ -225,6 +226,32 @@ update hidden args =
             noUpdate hidden args
 
 
+buildPathToTarget :
+    UpdateArgs pM pP
+    -> ComponentState s m p
+    -> Identify p
+    -> List ComponentId
+buildPathToTarget args state identifyTarget =
+    case identifyTarget { states = state.childStates } of
+        Just targetId ->
+            let
+                build id path =
+                    case Dict.get id args.componentLocations of
+                        Just nextId ->
+                            if nextId == state.id then
+                                path
+                            else
+                                build nextId (nextId :: path)
+
+                        Nothing ->
+                            []
+            in
+            build targetId [ targetId ]
+
+        Nothing ->
+            []
+
+
 doLocalUpdate :
     Spec v w s m p pM pP
     -> Slot (Container s m p) pP
@@ -282,6 +309,7 @@ updateChild childId pathToTarget hidden state args =
             , signals = change.signals
             , componentLocations = change.componentLocations
             , lastComponentId = change.lastComponentId
+            , cleanup = change.cleanup
             }
 
         Nothing ->
@@ -300,14 +328,16 @@ doChange :
     -> Change pM pP
 doChange spec (( _, set ) as slot) state cmd sub signals tree args =
     let
-        updatedStates =
-            set (StateContainer state) args.states
-
         mappedLocalCmd =
             Cmd.map (LocalMsg >> toParentSignal slot args.freshContainers) cmd
 
         mappedLocalSub =
             Sub.map (LocalMsg >> toParentSignal slot args.freshContainers) sub
+
+        oldChildren =
+            args.cache
+                |> Dict.get state.id
+                |> Maybe.withDefault Dict.empty
 
         renderedComponents =
             collectRenderedComponents tree []
@@ -315,18 +345,19 @@ doChange spec (( _, set ) as slot) state cmd sub signals tree args =
         childrenFoldInitialData =
             { children = []
             , orderedChildIds = []
-            , states = updatedStates
+            , states = set (StateContainer state) args.states
             , cache = args.cache
             , cmd = mappedLocalCmd
             , signals = signals
             , componentLocations = args.componentLocations
             , lastComponentId = args.lastComponentId
+            , cleanups = []
             }
 
-        processChild renderedComponent acc =
+        processChild renderedComponent data =
             let
                 result =
-                    case renderedComponent.status { states = acc.states } of
+                    case renderedComponent.status { states = data.states } of
                         NewOrChanged ->
                             touchChild ()
 
@@ -337,10 +368,10 @@ doChange spec (( _, set ) as slot) state cmd sub signals tree args =
                     let
                         ( childId, change ) =
                             renderedComponent.touch
-                                { states = acc.states
-                                , cache = acc.cache
-                                , componentLocations = acc.componentLocations
-                                , lastComponentId = acc.lastComponentId
+                                { states = data.states
+                                , cache = data.cache
+                                , componentLocations = data.componentLocations
+                                , lastComponentId = data.lastComponentId
                                 , freshContainers = args.freshContainers
                                 , namespace = args.namespace
                                 }
@@ -353,56 +384,66 @@ doChange spec (( _, set ) as slot) state cmd sub signals tree args =
                     , signals = change.signals
                     , componentLocations = change.componentLocations
                     , lastComponentId = change.lastComponentId
+                    , cleanups = change.cleanup :: data.cleanups
                     }
 
                 reuseOrTouchChild childId =
-                    case findCachedComponent state.id childId acc.cache of
+                    case Dict.get childId oldChildren of
                         Just cachedComponent ->
                             { childId = childId
                             , child = cachedComponent
-                            , states = acc.states
-                            , cache = acc.cache
+                            , states = data.states
+                            , cache = data.cache
                             , cmd = Cmd.none
                             , signals = []
-                            , componentLocations = acc.componentLocations
-                            , lastComponentId = acc.lastComponentId
+                            , componentLocations = data.componentLocations
+                            , lastComponentId = data.lastComponentId
+                            , cleanups = data.cleanups
                             }
 
                         Nothing ->
                             touchChild ()
 
-                newComponentLocations =
+                componentLocations =
                     result.componentLocations
                         |> Dict.insert result.childId state.id
             in
-            { children = ( result.childId, result.child ) :: acc.children
-            , orderedChildIds = result.childId :: acc.orderedChildIds
+            { children = ( result.childId, result.child ) :: data.children
+            , orderedChildIds = result.childId :: data.orderedChildIds
             , states = result.states
             , cache = result.cache
-            , cmd = Cmd.batch [ acc.cmd, result.cmd ]
-            , signals = acc.signals ++ result.signals
-            , componentLocations = newComponentLocations
+            , cmd = Cmd.batch [ data.cmd, result.cmd ]
+            , signals = data.signals ++ result.signals
+            , componentLocations = componentLocations
             , lastComponentId = result.lastComponentId
+            , cleanups = result.cleanups
             }
 
         childrenFoldResults =
             List.foldr processChild childrenFoldInitialData renderedComponents
 
-        children =
+        newChildren =
             Dict.fromList childrenFoldResults.children
+
+        removedChildren =
+            Dict.diff oldChildren newChildren
 
         updatedComponent =
             buildComponent
                 { spec = spec
                 , slot = slot
+                , id = state.id
                 , sub = mappedLocalSub
                 , tree = tree
-                , children = children
+                , children = newChildren
                 , orderedChildIds = childrenFoldResults.orderedChildIds
                 }
 
         updatedCache =
-            Dict.insert state.id children childrenFoldResults.cache
+            Dict.insert state.id newChildren childrenFoldResults.cache
+
+        cleanup =
+            destroyChildComponents state.id removedChildren
     in
     { component = updatedComponent
     , states = childrenFoldResults.states
@@ -411,6 +452,7 @@ doChange spec (( _, set ) as slot) state cmd sub signals tree args =
     , signals = childrenFoldResults.signals
     , componentLocations = childrenFoldResults.componentLocations
     , lastComponentId = childrenFoldResults.lastComponentId
+    , cleanup = combineCleanups (cleanup :: childrenFoldResults.cleanups)
     }
 
 
@@ -448,64 +490,12 @@ collectRenderedComponents node acc =
             component :: acc
 
 
-findCachedComponent :
-    ComponentId
-    -> ComponentId
-    -> Cache m p
-    -> Maybe (ComponentInterface m p)
-findCachedComponent thisId componentToFindId cache =
-    case Dict.get thisId cache |> Maybe.andThen (Dict.get componentToFindId) of
-        Just component ->
-            Just component
-
-        Nothing ->
-            -- The component may have been moved here from another parent after
-            -- the last update. We don't have access to all cached components,
-            -- but at least we can try to find it among other owner's parts.
-            Dict.foldl
-                (\ownerPartId ownerPartChildren result ->
-                    if result == Nothing && ownerPartId /= thisId then
-                        Dict.get componentToFindId ownerPartChildren
-                    else
-                        result
-                )
-                Nothing
-                cache
-
-
-buildComponent : Hidden v w s m p pM pP -> ComponentInterface pM pP
-buildComponent hidden =
-    ComponentInterface
-        { update = update hidden
-        , subscriptions = subscriptions hidden
-        , view = view hidden
-        }
-
-
-buildPathToTarget :
-    UpdateArgs pM pP
-    -> ComponentState s m p
-    -> Identify p
-    -> List ComponentId
-buildPathToTarget args state identifyTarget =
-    case identifyTarget { states = state.childStates } of
-        Just targetId ->
-            let
-                build id path =
-                    case Dict.get id args.componentLocations of
-                        Just nextId ->
-                            if nextId == state.id then
-                                path
-                            else
-                                build nextId (nextId :: path)
-
-                        Nothing ->
-                            []
-            in
-            build targetId [ targetId ]
-
-        Nothing ->
-            []
+combineCleanups :
+    List (DestroyArgs m p -> DestroyArgs m p)
+    -> DestroyArgs m p
+    -> DestroyArgs m p
+combineCleanups cleanups args =
+    List.foldl (\fn result -> fn result) args cleanups
 
 
 noUpdate : Hidden v w s m p pM pP -> UpdateArgs pM pP -> Change pM pP
@@ -517,7 +507,54 @@ noUpdate hidden args =
     , signals = []
     , componentLocations = args.componentLocations
     , lastComponentId = args.lastComponentId
+    , cleanup = identity
     }
+
+
+buildComponent : Hidden v w s m p pM pP -> ComponentInterface pM pP
+buildComponent hidden =
+    ComponentInterface
+        { update = update hidden
+        , destroy = destroy hidden
+        , subscriptions = subscriptions hidden
+        , view = view hidden
+        }
+
+
+destroy : Hidden v w s m p pM pP -> DestroyArgs pM pP -> DestroyArgs pM pP
+destroy hidden args =
+    let
+        ( _, set ) =
+            hidden.slot
+
+        { states, cache, componentLocations } =
+            destroyChildComponents hidden.id hidden.children args
+    in
+    { states = set EmptyContainer states
+    , cache = Dict.remove hidden.id cache
+    , componentLocations = Dict.remove hidden.id componentLocations
+    }
+
+
+destroyChildComponents :
+    ComponentId
+    -> Dict ComponentId (ComponentInterface m p)
+    -> DestroyArgs m p
+    -> DestroyArgs m p
+destroyChildComponents parentId components args =
+    Dict.foldl
+        (\id (ComponentInterface component) result ->
+            let
+                currentParentId =
+                    Dict.get id result.componentLocations
+            in
+            if currentParentId == Just parentId then
+                component.destroy result
+            else
+                result
+        )
+        args
+        components
 
 
 subscriptions : Hidden v w s m p pM pP -> () -> Sub (Signal pM pP)
@@ -854,6 +891,7 @@ convertComponent :
 convertComponent self component =
     ComponentInterface <|
         { update = convertUpdate self component
+        , destroy = convertDestroy self component
         , subscriptions = convertSubscriptions self component
         , view = convertView self component
         }
@@ -894,6 +932,7 @@ convertUpdate self (ComponentInterface component) args =
             , signals = []
             , componentLocations = args.componentLocations
             , lastComponentId = args.lastComponentId
+            , cleanup = identity
             }
 
 
@@ -932,7 +971,54 @@ convertChange self args state change =
     , signals = signals
     , componentLocations = change.componentLocations
     , lastComponentId = change.lastComponentId
+    , cleanup = convertDestroyOrCleanup self change.cleanup
     }
+
+
+convertDestroy :
+    Self s m p pP
+    -> ComponentInterface m p
+    -> DestroyArgs pM pP
+    -> DestroyArgs pM pP
+convertDestroy self (ComponentInterface component) args =
+    convertDestroyOrCleanup self component.destroy args
+
+
+convertDestroyOrCleanup :
+    Self s m p pP
+    -> (DestroyArgs m p -> DestroyArgs m p)
+    -> (DestroyArgs pM pP -> DestroyArgs pM pP)
+convertDestroyOrCleanup self fn args =
+    let
+        (ComponentInternalStuff { slot }) =
+            self.internal
+
+        ( get, set ) =
+            slot
+    in
+    case get args.states of
+        StateContainer state ->
+            let
+                result =
+                    fn
+                        { states = state.childStates
+                        , cache = state.cache
+                        , componentLocations = args.componentLocations
+                        }
+
+                updatedState =
+                    { state
+                        | childStates = result.states
+                        , cache = result.cache
+                    }
+            in
+            { states = set (StateContainer updatedState) args.states
+            , cache = args.cache
+            , componentLocations = result.componentLocations
+            }
+
+        _ ->
+            args
 
 
 convertSubscriptions :
@@ -1036,6 +1122,7 @@ dummyChange args =
     , signals = []
     , componentLocations = args.componentLocations
     , lastComponentId = args.lastComponentId
+    , cleanup = identity
     }
 
 
@@ -1043,6 +1130,7 @@ dummyComponent : ComponentInterface m p
 dummyComponent =
     ComponentInterface
         { update = dummyChange
+        , destroy = identity
         , subscriptions = \_ -> Sub.none
         , view = \_ -> Html.Styled.text ""
         }

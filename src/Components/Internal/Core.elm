@@ -10,6 +10,7 @@ module Components.Internal.Core
         , ComponentState
         , ComponentStatus(NewOrChanged, Unchanged)
         , Container(EmptyContainer, SignalContainer, StateContainer)
+        , DestroyArgs
         , Element
         , Identify
         , KeyedElement
@@ -120,6 +121,7 @@ type ComponentStatus
 type ComponentInterface m p
     = ComponentInterface
         { update : UpdateArgs m p -> Change m p
+        , destroy : DestroyArgs m p -> DestroyArgs m p
         , subscriptions : () -> Sub (Signal m p)
         , view : () -> Html.Styled.Html (Signal m p)
         }
@@ -147,6 +149,13 @@ type alias UpdateArgs m p =
     }
 
 
+type alias DestroyArgs m p =
+    { states : p
+    , cache : Cache m p
+    , componentLocations : ComponentLocations
+    }
+
+
 type alias Change m p =
     { component : ComponentInterface m p
     , states : p
@@ -155,6 +164,7 @@ type alias Change m p =
     , signals : List (Signal m p)
     , componentLocations : ComponentLocations
     , lastComponentId : ComponentId
+    , cleanup : DestroyArgs m p -> DestroyArgs m p
     }
 
 
