@@ -186,16 +186,16 @@ rebuild spec slot state args =
 
 
 update : Hidden v w s m p pM pP -> UpdateArgs pM pP -> Change pM pP
-update hidden args =
+update ({ spec, slot } as hidden) args =
     let
         ( get, _ ) =
-            hidden.slot
+            slot
     in
     case get args.states of
         StateContainer state ->
-            case args.pathToTarget of
-                childId :: path ->
-                    updateChild childId path hidden state args
+            case args.path of
+                childId :: subpath ->
+                    updateChild childId subpath hidden state args
 
                 [] ->
                     case get args.signalContainers of
@@ -212,10 +212,13 @@ update hidden args =
                             noUpdate hidden args
 
                         SignalContainer (LocalMsg msg) ->
-                            doLocalUpdate hidden.spec hidden.slot state msg args
+                            if state.id <= args.maxPossibleTargetId then
+                                doLocalUpdate spec slot state msg args
+                            else
+                                noUpdate hidden args
 
-                        SignalContainer (ChildMsg identifyTarget _) ->
-                            case buildPathToTarget args state identifyTarget of
+                        SignalContainer (ChildMsg identifyPart _) ->
+                            case buildPathToPart args state identifyPart of
                                 childId :: path ->
                                     updateChild childId path hidden state args
 
@@ -226,19 +229,19 @@ update hidden args =
             noUpdate hidden args
 
 
-buildPathToTarget :
+buildPathToPart :
     UpdateArgs pM pP
     -> ComponentState s m p
     -> Identify p
     -> List ComponentId
-buildPathToTarget args state identifyTarget =
-    case identifyTarget { states = state.childStates } of
-        Just targetId ->
+buildPathToPart args ownerState identifyPart =
+    case identifyPart { states = ownerState.childStates } of
+        Just partId ->
             let
                 build id path =
                     case Dict.get id args.componentLocations of
                         Just nextId ->
-                            if nextId == state.id then
+                            if nextId == ownerState.id then
                                 path
                             else
                                 build nextId (nextId :: path)
@@ -246,7 +249,7 @@ buildPathToTarget args state identifyTarget =
                         Nothing ->
                             []
             in
-            build targetId [ targetId ]
+            build partId [ partId ]
 
         Nothing ->
             []
@@ -286,12 +289,12 @@ updateChild :
     -> ComponentState s m p
     -> UpdateArgs pM pP
     -> Change pM pP
-updateChild childId pathToTarget hidden state args =
+updateChild childId path hidden state args =
     case Dict.get childId hidden.children of
         Just (ComponentInterface component) ->
             let
                 change =
-                    component.update { args | pathToTarget = pathToTarget }
+                    component.update { args | path = path }
 
                 updatedChildren =
                     Dict.insert childId change.component hidden.children
@@ -915,8 +918,9 @@ convertUpdate self (ComponentInterface component) args =
             component.update
                 { states = state.childStates
                 , cache = state.cache
-                , pathToTarget = args.pathToTarget
                 , signalContainers = signalContainers
+                , path = args.path
+                , maxPossibleTargetId = args.maxPossibleTargetId
                 , freshContainers = freshContainers
                 , componentLocations = args.componentLocations
                 , lastComponentId = args.lastComponentId

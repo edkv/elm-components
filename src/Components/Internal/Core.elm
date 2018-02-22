@@ -140,8 +140,9 @@ type alias TouchArgs m p =
 type alias UpdateArgs m p =
     { states : p
     , cache : Cache m p
-    , pathToTarget : List ComponentId
     , signalContainers : p
+    , path : List ComponentId
+    , maxPossibleTargetId : ComponentId
     , freshContainers : p
     , componentLocations : ComponentLocations
     , lastComponentId : ComponentId

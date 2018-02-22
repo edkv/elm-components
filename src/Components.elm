@@ -138,7 +138,13 @@ type alias ReadyState container outMsg =
 
 type Msg container outMsg
     = NamespaceGenerated String
-    | ComponentMsg (Signal outMsg container)
+    | ComponentMsg (ComponentMsgPayload outMsg container)
+
+
+type alias ComponentMsgPayload outMsg container =
+    { signal : Signal outMsg container
+    , maxPossibleTargetId : Maybe ComponentId
+    }
 
 
 send : m -> Signal m p
@@ -231,12 +237,18 @@ update msg state =
                     , lastComponentId = change.lastComponentId
                     , namespace = namespace
                     }
+
+                cmd =
+                    Cmd.map (transformSignal state) change.cmd
+
+                signals =
+                    List.map (transformSignal state) change.signals
             in
-            doUpdate change.signals state change.cmd []
+            doUpdate signals state cmd []
                 |> transformUpdateResults
 
-        ( Ready readyState, ComponentMsg signal ) ->
-            doUpdate [ signal ] readyState Cmd.none []
+        ( Ready readyState, ComponentMsg componentSignal ) ->
+            doUpdate [ componentSignal ] readyState Cmd.none []
                 |> transformUpdateResults
 
         ( _, _ ) ->
@@ -244,67 +256,72 @@ update msg state =
 
 
 doUpdate :
-    List (Signal outMsg (Container s m p))
+    List (ComponentMsgPayload outMsg (Container s m p))
     -> ReadyState (Container s m p) outMsg
-    -> Cmd (Signal outMsg (Container s m p))
+    -> Cmd (ComponentMsgPayload outMsg (Container s m p))
     -> List outMsg
-    -> ( ReadyState (Container s m p) outMsg, Cmd (Signal outMsg (Container s m p)), List outMsg )
+    -> ( ReadyState (Container s m p) outMsg, Cmd (ComponentMsgPayload outMsg (Container s m p)), List outMsg )
 doUpdate signals state cmds outMsgs =
     case signals of
         [] ->
             ( state, cmds, outMsgs )
 
-        (Core.LocalMsg outMsg) :: otherSignals ->
-            doUpdate otherSignals state cmds (outMsg :: outMsgs)
+        payload :: otherSignals ->
+            case payload.signal of
+                Core.LocalMsg outMsg ->
+                    doUpdate otherSignals state cmds (outMsg :: outMsgs)
 
-        (Core.ChildMsg _ signalContainer) :: otherSignals ->
-            let
-                (ComponentInterface component) =
-                    state.component
+                Core.ChildMsg _ signalContainer ->
+                    let
+                        (ComponentInterface component) =
+                            state.component
 
-                change =
-                    component.update
-                        { states = state.componentState
-                        , cache = state.cache
-                        , pathToTarget = []
-                        , signalContainers = signalContainer
-                        , freshContainers = Core.EmptyContainer
-                        , componentLocations = state.componentLocations
-                        , lastComponentId = state.lastComponentId
-                        , namespace = state.namespace
-                        }
+                        maxPossibleTargetId =
+                            payload.maxPossibleTargetId
+                                |> Maybe.withDefault state.lastComponentId
 
-                cleanupResult =
-                    change.cleanup
-                        { states = change.states
-                        , cache = change.cache
-                        , componentLocations = change.componentLocations
-                        }
+                        change =
+                            component.update
+                                { states = state.componentState
+                                , cache = state.cache
+                                , signalContainers = signalContainer
+                                , path = []
+                                , maxPossibleTargetId = maxPossibleTargetId
+                                , freshContainers = Core.EmptyContainer
+                                , componentLocations = state.componentLocations
+                                , lastComponentId = state.lastComponentId
+                                , namespace = state.namespace
+                                }
 
-                updatedState =
-                    { state
-                        | componentState = cleanupResult.states
-                        , component = change.component
-                        , cache = cleanupResult.cache
-                        , componentLocations = cleanupResult.componentLocations
-                        , lastComponentId = change.lastComponentId
-                    }
-            in
-            doUpdate
-                (otherSignals ++ change.signals)
-                updatedState
-                (Cmd.batch [ cmds, change.cmd ])
-                outMsgs
+                        cleanupResult =
+                            change.cleanup
+                                { states = change.states
+                                , cache = change.cache
+                                , componentLocations = change.componentLocations
+                                }
 
+                        updatedState =
+                            { state
+                                | componentState = cleanupResult.states
+                                , component = change.component
+                                , cache = cleanupResult.cache
+                                , componentLocations = cleanupResult.componentLocations
+                                , lastComponentId = change.lastComponentId
+                            }
 
-transformUpdateResults :
-    ( ReadyState container outMsg, Cmd (Signal outMsg container), List outMsg )
-    -> ( State container outMsg, Cmd (Msg container outMsg), List outMsg )
-transformUpdateResults ( state, cmd, outMsgs ) =
-    ( Ready state
-    , Cmd.map ComponentMsg cmd
-    , List.reverse outMsgs
-    )
+                        cmd =
+                            change.cmd
+                                |> Cmd.map (transformSignal updatedState)
+
+                        moreSignals =
+                            change.signals
+                                |> List.map (transformSignal updatedState)
+                    in
+                    doUpdate
+                        (otherSignals ++ moreSignals)
+                        updatedState
+                        (Cmd.batch [ cmds, cmd ])
+                        outMsgs
 
 
 subscriptions :
@@ -318,7 +335,7 @@ subscriptions state =
                     readyState.component
             in
             component.subscriptions ()
-                |> Sub.map ComponentMsg
+                |> Sub.map (transformSignal readyState >> ComponentMsg)
 
         _ ->
             Sub.none
@@ -336,10 +353,30 @@ view state =
             in
             component.view ()
                 |> Html.Styled.toUnstyled
-                |> VirtualDom.map ComponentMsg
+                |> VirtualDom.map (transformSignal readyState >> ComponentMsg)
 
         _ ->
             VirtualDom.text ""
+
+
+transformSignal :
+    ReadyState container outMsg
+    -> Signal outMsg container
+    -> ComponentMsgPayload outMsg container
+transformSignal state signal =
+    { signal = signal
+    , maxPossibleTargetId = Just state.lastComponentId
+    }
+
+
+transformUpdateResults :
+    ( ReadyState container outMsg, Cmd (ComponentMsgPayload outMsg container), List outMsg )
+    -> ( State container outMsg, Cmd (Msg container outMsg), List outMsg )
+transformUpdateResults ( state, cmd, outMsgs ) =
+    ( Ready state
+    , Cmd.map ComponentMsg cmd
+    , List.reverse outMsgs
+    )
 
 
 wrapMsg : m -> Msg (Container s m p) outMsg
@@ -347,6 +384,7 @@ wrapMsg =
     Core.LocalMsg
         >> Core.SignalContainer
         >> Core.ChildMsg (always Nothing)
+        >> (\signal -> { signal = signal, maxPossibleTargetId = Nothing })
         >> ComponentMsg
 
 
