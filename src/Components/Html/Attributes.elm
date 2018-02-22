@@ -68,6 +68,7 @@ module Components.Html.Attributes
         , pattern
         , ping
         , placeholder
+        , plainAttribute
         , poster
         , preload
         , property
@@ -256,6 +257,12 @@ attribute name value =
 none : Attribute m p
 none =
     Core.NullAttribute
+
+
+plainAttribute : VirtualDom.Property m -> Attribute m p
+plainAttribute =
+    VirtualDom.mapProperty Core.LocalMsg
+        >> Core.PlainAttribute
 
 
 {-| Apply styles to an element. See the

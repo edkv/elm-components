@@ -147,6 +147,7 @@ module Components.Svg.Attributes
         , patternContentUnits
         , patternTransform
         , patternUnits
+        , plainAttribute
         , pointOrder
         , pointerEvents
         , points
@@ -312,6 +313,12 @@ attributeNS namespace key value =
 none : Attribute m p
 none =
     Core.NullAttribute
+
+
+plainAttribute : VirtualDom.Property m -> Attribute m p
+plainAttribute =
+    VirtualDom.mapProperty Core.LocalMsg
+        >> Core.PlainAttribute
 
 
 
