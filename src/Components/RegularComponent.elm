@@ -14,20 +14,20 @@ import Components.Internal.Shared exposing (ComponentInternalStuff)
 import Components.MixedComponent as MixedComponent
 
 
-type alias Spec v w s m p pM pP =
-    { init : Self s m p pP -> ( s, Cmd m, List (Signal pM pP) )
-    , update : Self s m p pP -> m -> s -> ( s, Cmd m, List (Signal pM pP) )
-    , subscriptions : Self s m p pP -> s -> Sub m
-    , view : Self s m p pP -> s -> Node v w m p
+type alias Spec v w s m p oM oP =
+    { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
+    , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
+    , subscriptions : Self s m p oP -> s -> Sub m
+    , view : Self s m p oP -> s -> Node v w m p
     , parts : p
     }
 
 
-type alias SpecWithOptions v w s m p pM pP =
-    { init : Self s m p pP -> ( s, Cmd m, List (Signal pM pP) )
-    , update : Self s m p pP -> m -> s -> ( s, Cmd m, List (Signal pM pP) )
-    , subscriptions : Self s m p pP -> s -> Sub m
-    , view : Self s m p pP -> s -> Node v w m p
+type alias SpecWithOptions v w s m p oM oP =
+    { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
+    , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
+    , subscriptions : Self s m p oP -> s -> Sub m
+    , view : Self s m p oP -> s -> Node v w m p
     , parts : p
     , options : Options m
     }
@@ -38,13 +38,13 @@ type alias Options m =
     }
 
 
-type alias Self s m p pP =
+type alias Self s m p oP =
     { id : String
-    , internal : ComponentInternalStuff s m p pP
+    , internal : ComponentInternalStuff s m p oP
     }
 
 
-regularComponent : Spec v w s m p pM pP -> Component v w (Container s m p) pM pP
+regularComponent : Spec v w s m p oM oP -> Component v w (Container s m p) oM oP
 regularComponent spec =
     regularComponentWithOptions
         { init = spec.init
@@ -57,8 +57,8 @@ regularComponent spec =
 
 
 regularComponentWithOptions :
-    SpecWithOptions v w s m p pM pP
-    -> Component v w (Container s m p) pM pP
+    SpecWithOptions v w s m p oM oP
+    -> Component v w (Container s m p) oM oP
 regularComponentWithOptions spec =
     MixedComponent.mixedComponentWithOptions
         { spec

@@ -12,7 +12,7 @@ module Components
         , dictSlot
         , init
         , send
-        , sendToChild
+        , sendToPart
         , slot
         , subscriptions
         , update
@@ -81,7 +81,7 @@ import Components.Internal.Core as Core
 import Components.Internal.Shared
     exposing
         ( ComponentInternalStuff(ComponentInternalStuff)
-        , toParentSignal
+        , toOwnerSignal
         )
 import Dict exposing (Dict)
 import Html.Styled
@@ -114,9 +114,9 @@ type alias Attribute v m p =
     Core.Attribute v m p
 
 
-type alias Self a s m p pP =
+type alias Self a s m p oP =
     { a
-        | internal : ComponentInternalStuff s m p pP
+        | internal : ComponentInternalStuff s m p oP
     }
 
 
@@ -152,34 +152,34 @@ send =
     Core.LocalMsg
 
 
-sendToChild :
-    Self a s m p pP
-    -> Slot (Container cS cM cP) p
-    -> cM
-    -> Signal pM pP
-sendToChild self childSlot childMsg =
+sendToPart :
+    Self a s m p oP
+    -> Slot (Container pS pM pP) p
+    -> pM
+    -> Signal oM oP
+sendToPart self partSlot partMsg =
     let
         (ComponentInternalStuff internal) =
             self.internal
     in
-    childMsg
+    partMsg
         |> Core.LocalMsg
-        |> toParentSignal childSlot internal.freshContainers
-        |> toParentSignal internal.slot internal.freshParentContainers
+        |> toOwnerSignal partSlot internal.freshContainers
+        |> toOwnerSignal internal.slot internal.freshOwnerContainers
 
 
 slot :
-    Slot (Container s m p) pP
-    -> Component v w (Container s m p) pM pP
-    -> Node v w pM pP
+    Slot (Container s m p) oP
+    -> Component v w (Container s m p) oM oP
+    -> Node v w oM oP
 slot slot_ (Core.Component component) =
     component slot_
 
 
 dictSlot :
-    Slot (Dict comparable (Container s m p)) pP
+    Slot (Dict comparable (Container s m p)) oP
     -> comparable
-    -> Slot (Container s m p) pP
+    -> Slot (Container s m p) oP
 dictSlot ( getDict, setDict ) key =
     let
         get =
@@ -271,7 +271,7 @@ doUpdate signals state cmds outMsgs =
                 Core.LocalMsg outMsg ->
                     doUpdate otherSignals state cmds (outMsg :: outMsgs)
 
-                Core.ChildMsg _ signalContainer ->
+                Core.PartMsg _ signalContainer ->
                     let
                         (ComponentInterface component) =
                             state.component
@@ -383,7 +383,7 @@ wrapMsg : m -> Msg (Container s m p) outMsg
 wrapMsg =
     Core.LocalMsg
         >> Core.SignalContainer
-        >> Core.ChildMsg (always Nothing)
+        >> Core.PartMsg (always Nothing)
         >> (\signal -> { signal = signal, maxPossibleTargetId = Nothing })
         >> ComponentMsg
 

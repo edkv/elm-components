@@ -5,7 +5,7 @@ module Components.Internal.Shared
         , SvgItem(SvgItem)
         , identify
         , svgNamespace
-        , toParentSignal
+        , toOwnerSignal
         )
 
 import Components.Internal.Core exposing (..)
@@ -21,26 +21,26 @@ type SvgItem
     = SvgItem
 
 
-type ComponentInternalStuff s m p pP
+type ComponentInternalStuff s m p oP
     = ComponentInternalStuff
-        { slot : Slot (Container s m p) pP
+        { slot : Slot (Container s m p) oP
         , freshContainers : p
-        , freshParentContainers : pP
+        , freshOwnerContainers : oP
         }
 
 
-toParentSignal :
-    Slot (Container s m p) pP
-    -> pP
+toOwnerSignal :
+    Slot (Container s m p) oP
+    -> oP
     -> Signal m p
-    -> Signal pM pP
-toParentSignal (( _, set ) as slot) freshParentContainers signal =
-    freshParentContainers
+    -> Signal oM oP
+toOwnerSignal (( _, set ) as slot) freshOwnerContainers signal =
+    freshOwnerContainers
         |> set (SignalContainer signal)
-        |> ChildMsg (identify slot)
+        |> PartMsg (identify slot)
 
 
-identify : Slot (Container s m p) pP -> Identify pP
+identify : Slot (Container s m p) oP -> Identify oP
 identify ( get, _ ) args =
     case get args.states of
         StateContainer state ->

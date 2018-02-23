@@ -26,7 +26,7 @@ module Components.Internal.Core
             , Text
             )
         , RenderedComponent
-        , Signal(ChildMsg, LocalMsg)
+        , Signal(LocalMsg, PartMsg)
         , Slot
         , StylingStrategy(ClassAttribute, ClassNameProperty)
         , TouchArgs
@@ -93,14 +93,14 @@ type Container s m p
 type alias ComponentState s m p =
     { id : ComponentId
     , localState : s
-    , childStates : p
+    , partStates : p
     , cache : Cache m p
     }
 
 
 type Signal m p
     = LocalMsg m
-    | ChildMsg (Identify p) p
+    | PartMsg (Identify p) p
 
 
 type alias Identify p =
