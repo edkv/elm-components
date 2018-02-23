@@ -13,9 +13,17 @@ module Components.MixedComponent
         , mixedComponentWithOptions
         )
 
-import Components exposing (Attribute, Component, Container, Node, Signal, Slot)
+import Components
+    exposing
+        ( Attribute
+        , Component
+        , ComponentInternalStuff
+        , Container
+        , Node
+        , Signal
+        , Slot
+        )
 import Components.Internal.BaseComponent as BaseComponent
-import Components.Internal.Shared exposing (ComponentInternalStuff)
 
 
 type alias Spec v w s m p oM oP =

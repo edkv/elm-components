@@ -7,8 +7,15 @@ module Components.Application
         , applicationWithFlags
         )
 
-import Components exposing (Component, Container, Node, Signal, Slot)
-import Components.Internal.Shared exposing (ComponentInternalStuff)
+import Components
+    exposing
+        ( Component
+        , ComponentInternalStuff
+        , Container
+        , Node
+        , Signal
+        , Slot
+        )
 import Components.RegularComponent as RegularComponent
 import VirtualDom
 

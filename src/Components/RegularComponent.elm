@@ -9,8 +9,16 @@ module Components.RegularComponent
         , regularComponentWithOptions
         )
 
-import Components exposing (Component, Container, Node, Self, Signal, Slot)
-import Components.Internal.Shared exposing (ComponentInternalStuff)
+import Components
+    exposing
+        ( Component
+        , ComponentInternalStuff
+        , Container
+        , Node
+        , Self
+        , Signal
+        , Slot
+        )
 import Components.MixedComponent as MixedComponent
 
 

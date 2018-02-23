@@ -6,6 +6,7 @@ module Components.Internal.Core
         , Component(Component)
         , ComponentId
         , ComponentInterface(ComponentInterface)
+        , ComponentInternalStuff(ComponentInternalStuff)
         , ComponentLocations
         , ComponentState
         , ComponentStatus(NewOrChanged, Unchanged)
@@ -179,3 +180,11 @@ type alias ComponentLocations =
 
 type alias ComponentId =
     Int
+
+
+type ComponentInternalStuff s m p oP
+    = ComponentInternalStuff
+        { slot : Slot (Container s m p) oP
+        , freshContainers : p
+        , freshOwnerContainers : oP
+        }

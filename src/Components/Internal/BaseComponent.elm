@@ -11,12 +11,7 @@ module Components.Internal.BaseComponent
         )
 
 import Components.Internal.Core exposing (..)
-import Components.Internal.Shared
-    exposing
-        ( ComponentInternalStuff(ComponentInternalStuff)
-        , identify
-        , toOwnerSignal
-        )
+import Components.Internal.Shared exposing (identify, toOwnerSignal)
 import Dict exposing (Dict)
 import Html.Styled
 import Html.Styled.Attributes

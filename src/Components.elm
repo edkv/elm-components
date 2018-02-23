@@ -2,6 +2,7 @@ module Components
     exposing
         ( Attribute
         , Component
+        , ComponentInternalStuff
         , Container
         , Msg
         , Node
@@ -78,11 +79,7 @@ import Components.Internal.Core as Core
         , ComponentLocations
         , RenderedComponent
         )
-import Components.Internal.Shared
-    exposing
-        ( ComponentInternalStuff(ComponentInternalStuff)
-        , toOwnerSignal
-        )
+import Components.Internal.Shared exposing (toOwnerSignal)
 import Dict exposing (Dict)
 import Html.Styled
 import Random.Pcg as Random
@@ -118,6 +115,10 @@ type alias Self a s m p oP =
     { a
         | internal : ComponentInternalStuff s m p oP
     }
+
+
+type alias ComponentInternalStuff s m p oP =
+    Core.ComponentInternalStuff s m p oP
 
 
 type State container outMsg
@@ -159,7 +160,7 @@ sendToPart :
     -> Signal oM oP
 sendToPart self partSlot partMsg =
     let
-        (ComponentInternalStuff internal) =
+        (Core.ComponentInternalStuff internal) =
             self.internal
     in
     partMsg
