@@ -1,4 +1,4 @@
-module Components.Svg.Keyed exposing (node, svg)
+module Components.Svg.Keyed exposing (foreignObject, node, svg)
 
 {-| A keyed node helps optimize cases where children are getting added, moved,
 removed, etc. Common examples include:
@@ -14,9 +14,9 @@ removed, etc. Common examples include:
 
 -}
 
-import Components.Core.Internal as Core
-import Components.Core.Shared exposing (svgNamespace)
 import Components.Html exposing (Html)
+import Components.Internal.Core as Core
+import Components.Internal.Shared exposing (svgNamespace)
 import Components.Svg exposing (Attribute, Svg)
 
 
