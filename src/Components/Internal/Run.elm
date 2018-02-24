@@ -1,6 +1,6 @@
 module Components.Internal.Run
     exposing
-        ( Msg
+        ( Msg(NamespaceGenerated)
         , State
         , init
         , subscriptions
