@@ -73,12 +73,14 @@ mixedComponentWithOptions :
     -> Component v w (Container s m p) oM oP
 mixedComponentWithOptions spec =
     BaseComponent.baseComponent
-        { spec
-            | options =
-                { onContextUpdate = spec.options.onContextUpdate
-                , shouldRecalculate = always True
-                , lazyRender = False
-                }
+        { init = spec.init
+        , update = spec.update
+        , subscriptions = spec.subscriptions
+        , view = spec.view
+        , onContextUpdate = spec.options.onContextUpdate
+        , shouldRecalculate = always True
+        , lazyRender = False
+        , parts = spec.parts
         }
 
 

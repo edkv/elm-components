@@ -23,12 +23,10 @@ lazy func input =
         , update = \_ UpdateInput _ -> ( State input, Cmd.none, [] )
         , subscriptions = \_ _ -> Sub.none
         , view = \_ _ -> func input
+        , onContextUpdate = Just UpdateInput
+        , shouldRecalculate = \(State prevInput) -> input /= prevInput
+        , lazyRender = True
         , parts = ()
-        , options =
-            { onContextUpdate = Just UpdateInput
-            , shouldRecalculate = \(State prevInput) -> input /= prevInput
-            , lazyRender = True
-            }
         }
 
 

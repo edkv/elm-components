@@ -1,7 +1,6 @@
 module Components.Internal.BaseComponent
     exposing
-        ( Options
-        , Self
+        ( Self
         , Spec
         , baseComponent
         , convertAttribute
@@ -26,15 +25,10 @@ type alias Spec v w s m p oM oP =
     , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
     , subscriptions : Self s m p oP -> s -> Sub m
     , view : Self s m p oP -> s -> Node v w oM oP
-    , parts : p
-    , options : Options s m
-    }
-
-
-type alias Options s m =
-    { onContextUpdate : Maybe m
+    , onContextUpdate : Maybe m
     , shouldRecalculate : s -> Bool
     , lazyRender : Bool
+    , parts : p
     }
 
 
@@ -91,7 +85,7 @@ status :
 status spec ( get, _ ) args =
     case get args.states of
         StateContainer state ->
-            if spec.options.shouldRecalculate state.localState then
+            if spec.shouldRecalculate state.localState then
                 NewOrChanged
             else
                 Unchanged state.id
@@ -108,7 +102,7 @@ touch :
 touch spec (( get, _ ) as slot) args =
     case get args.states of
         StateContainer state ->
-            case spec.options.onContextUpdate of
+            case spec.onContextUpdate of
                 Just msg ->
                     ( state.id
                     , doLocalUpdate spec slot state msg args
@@ -570,7 +564,7 @@ subscriptions hidden () =
 
 view : Hidden v w s m p oM oP -> () -> Html.Styled.Html (Signal oM oP)
 view hidden () =
-    if hidden.spec.options.lazyRender then
+    if hidden.spec.lazyRender then
         Html.Styled.Lazy.lazy3 viewHelpLazy
             hidden.children
             hidden.orderedChildIds
