@@ -32,7 +32,7 @@ type alias Config =
 
 counter : Config -> Html.Component Container m p
 counter config =
-    Components.regularComponent
+    Components.regular
         { init = \_ -> ( init config, Cmd.none, [] )
         , update = \_ msg state -> ( update config msg state, Cmd.none, [] )
         , subscriptions = \_ _ -> Sub.none

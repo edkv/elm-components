@@ -18,10 +18,10 @@ module Components
         , defaultOptions
         , dictSlot
         , init
-        , mixedComponent
-        , mixedComponentWithOptions
-        , regularComponent
-        , regularComponentWithOptions
+        , mixed
+        , mixedWithOptions
+        , regular
+        , regularWithOptions
         , send
         , sendToPart
         , slot
@@ -136,7 +136,7 @@ type alias Msg container outMsg =
     Run.Msg container outMsg
 
 
-regularComponent :
+regular :
     { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
     , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
     , subscriptions : Self s m p oP -> s -> Sub m
@@ -144,8 +144,8 @@ regularComponent :
     , parts : p
     }
     -> Component v w (Container s m p) oM oP
-regularComponent spec =
-    regularComponentWithOptions
+regular spec =
+    regularWithOptions
         { init = spec.init
         , update = spec.update
         , subscriptions = spec.subscriptions
@@ -155,7 +155,7 @@ regularComponent spec =
         }
 
 
-regularComponentWithOptions :
+regularWithOptions :
     { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
     , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
     , subscriptions : Self s m p oP -> s -> Sub m
@@ -164,12 +164,12 @@ regularComponentWithOptions :
     , options : Options m
     }
     -> Component v w (Container s m p) oM oP
-regularComponentWithOptions spec =
-    mixedComponentWithOptions
+regularWithOptions spec =
+    mixedWithOptions
         { spec | view = \self state -> convertNode self (spec.view self state) }
 
 
-mixedComponent :
+mixed :
     { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
     , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
     , subscriptions : Self s m p oP -> s -> Sub m
@@ -177,8 +177,8 @@ mixedComponent :
     , parts : p
     }
     -> Component v w (Container s m p) oM oP
-mixedComponent spec =
-    mixedComponentWithOptions
+mixed spec =
+    mixedWithOptions
         { init = spec.init
         , update = spec.update
         , subscriptions = spec.subscriptions
@@ -188,7 +188,7 @@ mixedComponent spec =
         }
 
 
-mixedComponentWithOptions :
+mixedWithOptions :
     { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
     , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
     , subscriptions : Self s m p oP -> s -> Sub m
@@ -197,7 +197,7 @@ mixedComponentWithOptions :
     , options : Options m
     }
     -> Component v w (Container s m p) oM oP
-mixedComponentWithOptions spec =
+mixedWithOptions spec =
     BaseComponent.baseComponent
         { init = spec.init
         , update = spec.update
