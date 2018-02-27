@@ -6,12 +6,22 @@ module Components
         , Container
         , Msg
         , Node
+        , Options
         , Self
         , Signal
         , Slot
         , State
+        , convertAttribute
+        , convertNode
+        , convertSignal
+        , convertSlot
+        , defaultOptions
         , dictSlot
         , init
+        , mixedComponent
+        , mixedComponentWithOptions
+        , regularComponent
+        , regularComponentWithOptions
         , send
         , sendToPart
         , slot
@@ -71,6 +81,7 @@ module Components
         , x9
         )
 
+import Components.Internal.BaseComponent as BaseComponent
 import Components.Internal.Core as Core
 import Components.Internal.Run as Run
 import Components.Internal.Shared exposing (toOwnerSignal)
@@ -102,9 +113,14 @@ type alias Attribute v m p =
     Core.Attribute v m p
 
 
-type alias Self a s m p oP =
-    { a
-        | internal : ComponentInternalStuff s m p oP
+type alias Self s m p oP =
+    { id : String
+    , internal : ComponentInternalStuff s m p oP
+    }
+
+
+type alias Options m =
+    { onContextUpdate : Maybe m
     }
 
 
@@ -120,13 +136,93 @@ type alias Msg container outMsg =
     Run.Msg container outMsg
 
 
+regularComponent :
+    { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
+    , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
+    , subscriptions : Self s m p oP -> s -> Sub m
+    , view : Self s m p oP -> s -> Node v w m p
+    , parts : p
+    }
+    -> Component v w (Container s m p) oM oP
+regularComponent spec =
+    regularComponentWithOptions
+        { init = spec.init
+        , update = spec.update
+        , subscriptions = spec.subscriptions
+        , view = spec.view
+        , parts = spec.parts
+        , options = defaultOptions
+        }
+
+
+regularComponentWithOptions :
+    { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
+    , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
+    , subscriptions : Self s m p oP -> s -> Sub m
+    , view : Self s m p oP -> s -> Node v w m p
+    , parts : p
+    , options : Options m
+    }
+    -> Component v w (Container s m p) oM oP
+regularComponentWithOptions spec =
+    mixedComponentWithOptions
+        { spec | view = \self state -> convertNode self (spec.view self state) }
+
+
+mixedComponent :
+    { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
+    , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
+    , subscriptions : Self s m p oP -> s -> Sub m
+    , view : Self s m p oP -> s -> Node v w oM oP
+    , parts : p
+    }
+    -> Component v w (Container s m p) oM oP
+mixedComponent spec =
+    mixedComponentWithOptions
+        { init = spec.init
+        , update = spec.update
+        , subscriptions = spec.subscriptions
+        , view = spec.view
+        , parts = spec.parts
+        , options = defaultOptions
+        }
+
+
+mixedComponentWithOptions :
+    { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
+    , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
+    , subscriptions : Self s m p oP -> s -> Sub m
+    , view : Self s m p oP -> s -> Node v w oM oP
+    , parts : p
+    , options : Options m
+    }
+    -> Component v w (Container s m p) oM oP
+mixedComponentWithOptions spec =
+    BaseComponent.baseComponent
+        { init = spec.init
+        , update = spec.update
+        , subscriptions = spec.subscriptions
+        , view = spec.view
+        , onContextUpdate = spec.options.onContextUpdate
+        , shouldRecalculate = always True
+        , lazyRender = False
+        , parts = spec.parts
+        }
+
+
+defaultOptions : Options m
+defaultOptions =
+    { onContextUpdate = Nothing
+    }
+
+
 send : m -> Signal m p
 send =
     Core.LocalMsg
 
 
 sendToPart :
-    Self a s m p oP
+    Self s m p oP
     -> Slot (Container pS pM pP) p
     -> pM
     -> Signal oM oP
@@ -166,6 +262,29 @@ dictSlot ( getDict, setDict ) key =
                 parts
     in
     ( get, set )
+
+
+convertSignal : Self s m p oP -> Signal m p -> Signal oM oP
+convertSignal =
+    BaseComponent.convertSignal
+
+
+convertAttribute : Self s m p oP -> Attribute v m p -> Attribute v oM oP
+convertAttribute =
+    BaseComponent.convertAttribute
+
+
+convertNode : Self s m p oP -> Node v w m p -> Node v w oM oP
+convertNode =
+    BaseComponent.convertNode
+
+
+convertSlot :
+    Self s m p oP
+    -> Slot (Container pS pM pP) p
+    -> Slot (Container pS pM pP) oP
+convertSlot =
+    BaseComponent.convertSlot
 
 
 init :
