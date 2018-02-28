@@ -18,7 +18,7 @@ type Msg
 
 lazy : (a -> Node v w m p) -> a -> Component v (Container a) m p
 lazy func input =
-    BaseComponent.baseComponent
+    BaseComponent.make
         { init = \_ -> ( State input, Cmd.none, [] )
         , update = \_ UpdateInput _ -> ( State input, Cmd.none, [] )
         , subscriptions = \_ _ -> Sub.none

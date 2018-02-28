@@ -2,11 +2,11 @@ module Components.Internal.BaseComponent
     exposing
         ( Self
         , Spec
-        , baseComponent
         , convertAttribute
         , convertNode
         , convertSignal
         , convertSlot
+        , make
         )
 
 import Components.Internal.Core exposing (..)
@@ -60,19 +60,13 @@ type alias CommonArgs a m p =
     }
 
 
-baseComponent : Spec v w s m p oM oP -> Component v (Container s m p) oM oP
-baseComponent spec =
-    Component (\slot -> renderedComponent spec slot)
-
-
-renderedComponent :
-    Spec v w s m p oM oP
-    -> Slot (Container s m p) oP
-    -> RenderedComponent oM oP
-renderedComponent spec slot =
-    { status = status spec slot
-    , touch = touch spec slot
-    }
+make : Spec v w s m p oM oP -> Component v (Container s m p) oM oP
+make spec =
+    Component <|
+        \slot ->
+            { status = status spec slot
+            , touch = touch spec slot
+            }
 
 
 status :

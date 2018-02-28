@@ -198,7 +198,7 @@ mixedWithOptions :
     }
     -> Component v (Container s m p) oM oP
 mixedWithOptions spec =
-    BaseComponent.baseComponent
+    BaseComponent.make
         { init = spec.init
         , update = spec.update
         , subscriptions = spec.subscriptions
