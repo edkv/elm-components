@@ -77,8 +77,8 @@ type StylingStrategy
     | ClassAttribute
 
 
-type Component v w container m p
-    = Component (Slot container p -> Node v w m p)
+type Component v container m p
+    = Component (Slot container p -> RenderedComponent m p)
 
 
 type alias Slot container p =

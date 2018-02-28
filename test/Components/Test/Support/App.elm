@@ -15,7 +15,7 @@ import Test.Html.Query as Query
 
 
 init :
-    Component v w (Container s m p) outMsg (Container s m p)
+    Component v (Container s m p) outMsg (Container s m p)
     -> State (Container s m p) outMsg
 init =
     initWithNamespace ""
@@ -23,7 +23,7 @@ init =
 
 initWithNamespace :
     String
-    -> Component v w (Container s m p) outMsg (Container s m p)
+    -> Component v (Container s m p) outMsg (Container s m p)
     -> State (Container s m p) outMsg
 initWithNamespace namespace =
     Components.init

@@ -122,7 +122,7 @@ type alias Attribute m p =
 
 
 type alias Component container m p =
-    Core.Component HtmlItem SvgItem container m p
+    Core.Component HtmlItem container m p
 
 
 {-| General way to create HTML nodes. It is used to define all of the helper

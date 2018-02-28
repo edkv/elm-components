@@ -60,11 +60,9 @@ type alias CommonArgs a m p =
     }
 
 
-baseComponent : Spec v w s m p oM oP -> Component v w (Container s m p) oM oP
+baseComponent : Spec v w s m p oM oP -> Component v (Container s m p) oM oP
 baseComponent spec =
-    Component <|
-        \slot ->
-            ComponentNode (renderedComponent spec slot)
+    Component (\slot -> renderedComponent spec slot)
 
 
 renderedComponent :

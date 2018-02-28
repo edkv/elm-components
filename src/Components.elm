@@ -93,8 +93,8 @@ type alias Node v w m p =
     Core.Node v w m p
 
 
-type alias Component v w container m p =
-    Core.Component v w container m p
+type alias Component v container m p =
+    Core.Component v container m p
 
 
 type alias Container s m p =
@@ -143,7 +143,7 @@ regular :
     , view : Self s m p oP -> s -> Node v w m p
     , parts : p
     }
-    -> Component v w (Container s m p) oM oP
+    -> Component v (Container s m p) oM oP
 regular spec =
     regularWithOptions
         { init = spec.init
@@ -163,7 +163,7 @@ regularWithOptions :
     , parts : p
     , options : Options m
     }
-    -> Component v w (Container s m p) oM oP
+    -> Component v (Container s m p) oM oP
 regularWithOptions spec =
     mixedWithOptions
         { spec | view = \self state -> convertNode self (spec.view self state) }
@@ -176,7 +176,7 @@ mixed :
     , view : Self s m p oP -> s -> Node v w oM oP
     , parts : p
     }
-    -> Component v w (Container s m p) oM oP
+    -> Component v (Container s m p) oM oP
 mixed spec =
     mixedWithOptions
         { init = spec.init
@@ -196,7 +196,7 @@ mixedWithOptions :
     , parts : p
     , options : Options m
     }
-    -> Component v w (Container s m p) oM oP
+    -> Component v (Container s m p) oM oP
 mixedWithOptions spec =
     BaseComponent.baseComponent
         { init = spec.init
@@ -239,10 +239,10 @@ sendToPart self partSlot partMsg =
 
 slot :
     Slot (Container s m p) oP
-    -> Component v w (Container s m p) oM oP
+    -> Component v (Container s m p) oM oP
     -> Node v w oM oP
 slot slot_ (Core.Component component) =
-    component slot_
+    Core.ComponentNode (component slot_)
 
 
 dictSlot :
@@ -288,7 +288,7 @@ convertSlot =
 
 
 init :
-    Component v w (Container s m p) outMsg (Container s m p)
+    Component v (Container s m p) outMsg (Container s m p)
     -> ( State (Container s m p) outMsg, Cmd (Msg (Container s m p) outMsg) )
 init =
     Run.init

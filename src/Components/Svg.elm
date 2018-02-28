@@ -97,7 +97,7 @@ type alias Attribute m p =
 
 
 type alias Component container m p =
-    Core.Component SvgItem HtmlItem container m p
+    Core.Component SvgItem container m p
 
 
 {-| Create any SVG node. To create a `<rect>` helper function, you would write:
