@@ -7,7 +7,7 @@ module Components.Test.Support.App
         , update
         )
 
-import Components exposing (Component, Container, Msg, State)
+import Components exposing (Component, Container, Msg, Node, State)
 import Components.Internal.Run as Run
 import Json.Encode
 import Test.Html.Event as Event exposing (Event)
@@ -15,7 +15,7 @@ import Test.Html.Query as Query
 
 
 init :
-    Component v (Container s m p) outMsg (Container s m p)
+    Component (Container s m p) (Node v w outMsg (Container s m p)) (Container s m p)
     -> State (Container s m p) outMsg
 init =
     initWithNamespace ""
@@ -23,7 +23,7 @@ init =
 
 initWithNamespace :
     String
-    -> Component v (Container s m p) outMsg (Container s m p)
+    -> Component (Container s m p) (Node v w outMsg (Container s m p)) (Container s m p)
     -> State (Container s m p) outMsg
 initWithNamespace namespace =
     Components.init

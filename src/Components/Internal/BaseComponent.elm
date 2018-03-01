@@ -60,13 +60,14 @@ type alias CommonArgs a m p =
     }
 
 
-make : Spec v w s m p oM oP -> Component v (Container s m p) oM oP
+make : Spec v w s m p oM oP -> Component (Container s m p) (Node v w oM oP) oP
 make spec =
     Component <|
         \slot ->
-            { status = status spec slot
-            , touch = touch spec slot
-            }
+            ComponentNode
+                { status = status spec slot
+                , touch = touch spec slot
+                }
 
 
 status :

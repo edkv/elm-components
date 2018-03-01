@@ -1,7 +1,6 @@
 module Components.Html
     exposing
         ( Attribute
-        , Component
         , Html
         , a
         , abbr
@@ -107,22 +106,18 @@ module Components.Html
         , wbr
         )
 
-import Components exposing (Container, Signal, Slot, send)
+import Components
 import Components.Internal.Core as Core
 import Components.Internal.Shared exposing (HtmlItem, SvgItem)
 import VirtualDom
 
 
 type alias Html m p =
-    Core.Node HtmlItem SvgItem m p
+    Components.Node HtmlItem SvgItem m p
 
 
 type alias Attribute m p =
-    Core.Attribute HtmlItem m p
-
-
-type alias Component container m p =
-    Core.Component HtmlItem container m p
+    Components.Attribute HtmlItem m p
 
 
 {-| General way to create HTML nodes. It is used to define all of the helper
@@ -158,7 +153,8 @@ text =
 
 plainNode : VirtualDom.Node m -> Html m p
 plainNode =
-    VirtualDom.map send >> Core.PlainNode
+    VirtualDom.map Core.LocalMsg
+        >> Core.PlainNode
 
 
 none : Html m p

@@ -1,6 +1,6 @@
 module Components.Test.Support.Counter exposing (Config, Container, counter)
 
-import Components exposing (Self, send)
+import Components exposing (Component, Self, send)
 import Components.Html as Html exposing (Html)
 import Components.Html.Attributes as Attributes
 import Components.Html.Events as Events
@@ -30,7 +30,7 @@ type alias Config =
     }
 
 
-counter : Config -> Html.Component Container m p
+counter : Config -> Component Container (Html m p) p
 counter config =
     Components.regular
         { init = \_ -> ( init config, Cmd.none, [] )

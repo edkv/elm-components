@@ -1,7 +1,6 @@
 module Components.Svg
     exposing
         ( Attribute
-        , Component
         , Svg
         , a
         , altGlyph
@@ -81,7 +80,7 @@ module Components.Svg
         , view
         )
 
-import Components exposing (Container, Signal, Slot, send)
+import Components
 import Components.Html exposing (Html)
 import Components.Internal.Core as Core
 import Components.Internal.Shared exposing (HtmlItem, SvgItem, svgNamespace)
@@ -89,15 +88,11 @@ import VirtualDom
 
 
 type alias Svg m p =
-    Core.Node SvgItem HtmlItem m p
+    Components.Node SvgItem HtmlItem m p
 
 
 type alias Attribute m p =
-    Core.Attribute SvgItem m p
-
-
-type alias Component container m p =
-    Core.Component SvgItem container m p
+    Components.Attribute SvgItem m p
 
 
 {-| Create any SVG node. To create a `<rect>` helper function, you would write:
@@ -131,7 +126,8 @@ text =
 
 plainNode : VirtualDom.Node m -> Svg m p
 plainNode =
-    VirtualDom.map send >> Core.PlainNode
+    VirtualDom.map Core.LocalMsg
+        >> Core.PlainNode
 
 
 none : Svg m p

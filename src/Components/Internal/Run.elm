@@ -38,7 +38,8 @@ import VirtualDom
 
 
 type State container outMsg
-    = WaitingForNamespace (RenderedComponent outMsg container)
+    = Empty
+    | WaitingForNamespace (RenderedComponent outMsg container)
     | Ready (ReadyState container outMsg)
 
 
@@ -64,12 +65,19 @@ type alias MsgPayload outMsg container =
 
 
 init :
-    Component v (Container s m p) outMsg (Container s m p)
+    Component (Container s m p) (Node v w outMsg (Container s m p)) (Container s m p)
     -> ( State (Container s m p) outMsg, Cmd (Msg (Container s m p) outMsg) )
 init (Component component) =
-    ( WaitingForNamespace (component ( \x -> x, \x _ -> x ))
-    , Random.generate NamespaceGenerated Uuid.uuidStringGenerator
-    )
+    case component ( \x -> x, \x _ -> x ) of
+        ComponentNode component ->
+            ( WaitingForNamespace component
+            , Random.generate NamespaceGenerated Uuid.uuidStringGenerator
+            )
+
+        _ ->
+            -- If the node isn't a `ComponentNode` for whatever reason
+            -- (and such case shouldn't normally occur), just do nothing.
+            ( Empty, Cmd.none )
 
 
 update :
@@ -112,10 +120,7 @@ update msg state =
             doUpdate [ componentSignal ] readyState Cmd.none []
                 |> transformUpdateResults
 
-        ( WaitingForNamespace _, ComponentMsg _ ) ->
-            ( state, Cmd.none, [] )
-
-        ( Ready _, NamespaceGenerated _ ) ->
+        ( _, _ ) ->
             ( state, Cmd.none, [] )
 
 
@@ -201,7 +206,7 @@ subscriptions state =
             component.subscriptions ()
                 |> Sub.map (transformSignal readyState >> ComponentMsg)
 
-        WaitingForNamespace _ ->
+        _ ->
             Sub.none
 
 
@@ -219,7 +224,7 @@ view state =
                 |> Html.Styled.toUnstyled
                 |> VirtualDom.map (transformSignal readyState >> ComponentMsg)
 
-        WaitingForNamespace _ ->
+        _ ->
             VirtualDom.text ""
 
 
