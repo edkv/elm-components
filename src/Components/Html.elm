@@ -70,7 +70,7 @@ module Components.Html
         , output
         , p
         , param
-        , plainNode
+        , plain
         , pre
         , progress
         , q
@@ -151,8 +151,8 @@ text =
     Core.Text
 
 
-plainNode : VirtualDom.Node m -> Html m p
-plainNode =
+plain : VirtualDom.Node m -> Html m p
+plain =
     VirtualDom.map Core.LocalMsg
         >> Core.PlainNode
 

@@ -58,7 +58,7 @@ module Components.Svg
         , none
         , path
         , pattern
-        , plainNode
+        , plain
         , polygon
         , polyline
         , radialGradient
@@ -124,8 +124,8 @@ text =
     Core.Text
 
 
-plainNode : VirtualDom.Node m -> Svg m p
-plainNode =
+plain : VirtualDom.Node m -> Svg m p
+plain =
     VirtualDom.map Core.LocalMsg
         >> Core.PlainNode
 

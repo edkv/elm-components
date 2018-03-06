@@ -68,7 +68,7 @@ module Components.Html.Attributes
         , pattern
         , ping
         , placeholder
-        , plainAttribute
+        , plain
         , poster
         , preload
         , property
@@ -259,8 +259,8 @@ none =
     Core.NullAttribute
 
 
-plainAttribute : VirtualDom.Property m -> Attribute m p
-plainAttribute =
+plain : VirtualDom.Property m -> Attribute m p
+plain =
     VirtualDom.mapProperty Core.LocalMsg
         >> Core.PlainAttribute
 

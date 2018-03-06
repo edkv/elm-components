@@ -147,7 +147,7 @@ module Components.Svg.Attributes
         , patternContentUnits
         , patternTransform
         , patternUnits
-        , plainAttribute
+        , plain
         , pointOrder
         , pointerEvents
         , points
@@ -315,8 +315,8 @@ none =
     Core.NullAttribute
 
 
-plainAttribute : VirtualDom.Property m -> Attribute m p
-plainAttribute =
+plain : VirtualDom.Property m -> Attribute m p
+plain =
     VirtualDom.mapProperty Core.LocalMsg
         >> Core.PlainAttribute
 
