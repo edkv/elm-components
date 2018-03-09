@@ -18,7 +18,7 @@ removed, etc. Common examples include:
 
 # Commonly Keyed Nodes
 
-@docs ol, ul, div
+@docs div, ol, ul
 
 -}
 
@@ -32,12 +32,14 @@ adding nodes, removing nodes, etc. In these cases, the unique identifiers help
 make the DOM modifications more efficient.
 -}
 node : String -> List (Attribute m p) -> List ( String, Html m p ) -> Html m p
-node tag attributes children =
-    Core.KeyedSimpleElement
-        { tag = tag
-        , attributes = attributes
-        , children = children
-        }
+node =
+    Core.KeyedElement
+
+
+{-| -}
+div : List (Attribute m p) -> List ( String, Html m p ) -> Html m p
+div =
+    node "div"
 
 
 {-| -}
@@ -50,9 +52,3 @@ ol =
 ul : List (Attribute m p) -> List ( String, Html m p ) -> Html m p
 ul =
     node "ul"
-
-
-{-| -}
-div : List (Attribute m p) -> List ( String, Html m p ) -> Html m p
-div =
-    node "div"

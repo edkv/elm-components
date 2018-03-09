@@ -2,7 +2,7 @@ module Components.Test.Support.Counter exposing (Config, Container, counter)
 
 import Components exposing (Component, Self, send)
 import Components.Html as Html exposing (Html)
-import Components.Html.Attributes as Attributes
+import Components.Html.Attributes as Attr
 import Components.Html.Events as Events
 
 
@@ -30,7 +30,7 @@ type alias Config =
     }
 
 
-counter : Config -> Component Container (Html m p) p
+counter : Config -> Component Container m p
 counter config =
     Components.regular
         { init = \_ -> ( init config, Cmd.none, [] )
@@ -59,17 +59,17 @@ update config msg state =
 
 view : Self State Msg Parts p -> State -> Html Msg Parts
 view self state =
-    Html.div [ Attributes.id self.id ]
-        [ Html.div [ Attributes.id "value" ]
+    Html.div [ Attr.id self.id ]
+        [ Html.div [ Attr.id "value" ]
             [ Html.text (toString state.value)
             ]
         , Html.button
-            [ Attributes.id "increment"
+            [ Attr.id "increment"
             , Events.onClick (send Increment)
             ]
             []
         , Html.button
-            [ Attributes.id "decrement"
+            [ Attr.id "decrement"
             , Events.onClick (send Decrement)
             ]
             []

@@ -108,16 +108,15 @@ module Components.Html
 
 import Components
 import Components.Internal.Core as Core
-import Components.Internal.Shared exposing (HtmlItem, SvgItem)
 import VirtualDom
 
 
 type alias Html m p =
-    Components.Node HtmlItem SvgItem m p
+    Components.Node m p
 
 
 type alias Attribute m p =
-    Components.Attribute HtmlItem m p
+    Components.Attribute m p
 
 
 {-| General way to create HTML nodes. It is used to define all of the helper
@@ -132,12 +131,8 @@ is not covered by the helper functions in this library.
 
 -}
 node : String -> List (Attribute m p) -> List (Html m p) -> Html m p
-node tag attributes children =
-    Core.SimpleElement
-        { tag = tag
-        , attributes = attributes
-        , children = children
-        }
+node =
+    Core.Element
 
 
 {-| Just put plain text in the DOM. It will escape the string so that it appears

@@ -89,12 +89,12 @@ import Dict exposing (Dict)
 import VirtualDom
 
 
-type alias Node v w m p =
-    Core.Node v w m p
+type alias Node m p =
+    Core.Node m p
 
 
-type alias Component container node p =
-    Core.Component container node p
+type alias Component container m p =
+    Core.Component container m p
 
 
 type alias Container s m p =
@@ -109,8 +109,8 @@ type alias Slot container p =
     Core.Slot container p
 
 
-type alias Attribute v m p =
-    Core.Attribute v m p
+type alias Attribute m p =
+    Core.Attribute m p
 
 
 type alias Self s m p oP =
@@ -140,10 +140,10 @@ regular :
     { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
     , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
     , subscriptions : Self s m p oP -> s -> Sub m
-    , view : Self s m p oP -> s -> Node v w m p
+    , view : Self s m p oP -> s -> Node m p
     , parts : p
     }
-    -> Component (Container s m p) (Node v w oM oP) oP
+    -> Component (Container s m p) oM oP
 regular spec =
     regularWithOptions
         { init = spec.init
@@ -159,11 +159,11 @@ regularWithOptions :
     { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
     , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
     , subscriptions : Self s m p oP -> s -> Sub m
-    , view : Self s m p oP -> s -> Node v w m p
+    , view : Self s m p oP -> s -> Node m p
     , parts : p
     , options : Options m
     }
-    -> Component (Container s m p) (Node v w oM oP) oP
+    -> Component (Container s m p) oM oP
 regularWithOptions spec =
     mixedWithOptions
         { spec | view = \self state -> convertNode self (spec.view self state) }
@@ -173,10 +173,10 @@ mixed :
     { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
     , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
     , subscriptions : Self s m p oP -> s -> Sub m
-    , view : Self s m p oP -> s -> Node v w oM oP
+    , view : Self s m p oP -> s -> Node oM oP
     , parts : p
     }
-    -> Component (Container s m p) (Node v w oM oP) oP
+    -> Component (Container s m p) oM oP
 mixed spec =
     mixedWithOptions
         { init = spec.init
@@ -192,11 +192,11 @@ mixedWithOptions :
     { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
     , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
     , subscriptions : Self s m p oP -> s -> Sub m
-    , view : Self s m p oP -> s -> Node v w oM oP
+    , view : Self s m p oP -> s -> Node oM oP
     , parts : p
     , options : Options m
     }
-    -> Component (Container s m p) (Node v w oM oP) oP
+    -> Component (Container s m p) oM oP
 mixedWithOptions spec =
     BaseComponent.make
         { init = spec.init
@@ -239,10 +239,10 @@ sendToPart self partSlot partMsg =
 
 slot :
     Slot (Container s m p) oP
-    -> Component (Container s m p) (Node v w oM oP) oP
-    -> Node v w oM oP
+    -> Component (Container s m p) oM oP
+    -> Node oM oP
 slot slot_ (Core.Component component) =
-    component slot_
+    Core.ComponentNode (component slot_)
 
 
 dictSlot :
@@ -269,12 +269,12 @@ convertSignal =
     BaseComponent.convertSignal
 
 
-convertAttribute : Self s m p oP -> Attribute v m p -> Attribute v oM oP
+convertAttribute : Self s m p oP -> Attribute m p -> Attribute oM oP
 convertAttribute =
     BaseComponent.convertAttribute
 
 
-convertNode : Self s m p oP -> Node v w m p -> Node v w oM oP
+convertNode : Self s m p oP -> Node m p -> Node oM oP
 convertNode =
     BaseComponent.convertNode
 
@@ -288,7 +288,7 @@ convertSlot =
 
 
 init :
-    Component (Container s m p) (Node v w outMsg (Container s m p)) (Container s m p)
+    Component (Container s m p) outMsg (Container s m p)
     -> ( State (Container s m p) outMsg, Cmd (Msg (Container s m p) outMsg) )
 init =
     Run.init

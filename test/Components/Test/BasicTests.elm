@@ -3,7 +3,7 @@ module Components.Test.BasicTests exposing (tests)
 import Components
 import Components.Test.Support.App as App
 import Components.Test.Support.Counter as Counter
-import Expect exposing (Expectation)
+import Expect
 import Fuzz
 import Test exposing (Test)
 import Test.Html.Event as Event

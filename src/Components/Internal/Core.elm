@@ -12,20 +12,8 @@ module Components.Internal.Core
         , ComponentStatus(NewOrChanged, Unchanged)
         , Container(EmptyContainer, SignalContainer, StateContainer)
         , DestroyArgs
-        , Element
         , Identify
-        , KeyedElement
-        , Node
-            ( ComponentNode
-            , Embedding
-            , KeyedEmbedding
-            , KeyedReversedEmbedding
-            , KeyedSimpleElement
-            , PlainNode
-            , ReversedEmbedding
-            , SimpleElement
-            , Text
-            )
+        , Node(ComponentNode, Element, KeyedElement, PlainNode, Text)
         , RenderedComponent
         , Signal(LocalMsg, PartMsg)
         , Slot
@@ -40,33 +28,15 @@ import Html.Styled
 import VirtualDom
 
 
-type Node v w m p
-    = SimpleElement (Element v v w m p)
-    | Embedding (Element w w v m p)
-    | ReversedEmbedding (Element v w v m p)
-    | KeyedSimpleElement (KeyedElement v v w m p)
-    | KeyedEmbedding (KeyedElement w w v m p)
-    | KeyedReversedEmbedding (KeyedElement v w v m p)
+type Node m p
+    = Element String (List (Attribute m p)) (List (Node m p))
+    | KeyedElement String (List (Attribute m p)) (List ( String, Node m p ))
     | Text String
     | PlainNode (VirtualDom.Node (Signal m p))
     | ComponentNode (RenderedComponent m p)
 
 
-type alias Element x y z m p =
-    { tag : String
-    , attributes : List (Attribute x m p)
-    , children : List (Node y z m p)
-    }
-
-
-type alias KeyedElement x y z m p =
-    { tag : String
-    , attributes : List (Attribute x m p)
-    , children : List ( String, Node y z m p )
-    }
-
-
-type Attribute v m p
+type Attribute m p
     = PlainAttribute (VirtualDom.Property (Signal m p))
     | Styles StylingStrategy (List Css.Style)
     | NullAttribute
@@ -77,8 +47,8 @@ type StylingStrategy
     | ClassAttribute
 
 
-type Component container node p
-    = Component (Slot container p -> node)
+type Component container m p
+    = Component (Slot container p -> RenderedComponent m p)
 
 
 type alias Slot container p =

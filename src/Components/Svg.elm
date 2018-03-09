@@ -83,16 +83,16 @@ module Components.Svg
 import Components
 import Components.Html exposing (Html)
 import Components.Internal.Core as Core
-import Components.Internal.Shared exposing (HtmlItem, SvgItem, svgNamespace)
+import Components.Internal.Shared exposing (svgNamespace)
 import VirtualDom
 
 
 type alias Svg m p =
-    Components.Node SvgItem HtmlItem m p
+    Components.Node m p
 
 
 type alias Attribute m p =
-    Components.Attribute SvgItem m p
+    Components.Attribute m p
 
 
 {-| Create any SVG node. To create a `<rect>` helper function, you would write:
@@ -107,11 +107,7 @@ library though!
 -}
 node : String -> List (Attribute m p) -> List (Svg m p) -> Svg m p
 node tag attributes children =
-    Core.SimpleElement
-        { tag = tag
-        , attributes = svgNamespace :: attributes
-        , children = children
-        }
+    Core.Element tag (svgNamespace :: attributes) children
 
 
 {-| A simple text node, no tags at all.
@@ -139,8 +135,8 @@ none =
 containing a rounded rectangle:
 
     import Components.Html exposing (Html)
-    import Svg exposing (..)
-    import Svg.Attributes exposing (..)
+    import Components.Svg exposing (..)
+    import Components.Svg.Attributes exposing (..)
 
     roundRect : Html m p
     roundRect =
@@ -159,22 +155,14 @@ containing a rounded rectangle:
 
 -}
 svg : List (Attribute m p) -> List (Svg m p) -> Html m p
-svg attributes children =
-    Core.Embedding
-        { tag = "svg"
-        , attributes = svgNamespace :: attributes
-        , children = children
-        }
+svg =
+    node "svg"
 
 
 {-| -}
 foreignObject : List (Attribute m p) -> List (Html m p) -> Svg m p
-foreignObject attributes children =
-    Core.ReversedEmbedding
-        { tag = "foreignObject"
-        , attributes = svgNamespace :: attributes
-        , children = children
-        }
+foreignObject =
+    node "foreignObject"
 
 
 

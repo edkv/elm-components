@@ -20,11 +20,11 @@ import Svg.Styled.Attributes
 import VirtualDom
 
 
-type alias Spec v w s m p oM oP =
+type alias Spec s m p oM oP =
     { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
     , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
     , subscriptions : Self s m p oP -> s -> Sub m
-    , view : Self s m p oP -> s -> Node v w oM oP
+    , view : Self s m p oP -> s -> Node oM oP
     , onContextUpdate : Maybe m
     , shouldRecalculate : s -> Bool
     , lazyRender : Bool
@@ -38,12 +38,12 @@ type alias Self s m p oP =
     }
 
 
-type alias Hidden v w s m p oM oP =
-    { spec : Spec v w s m p oM oP
+type alias Hidden s m p oM oP =
+    { spec : Spec s m p oM oP
     , slot : Slot (Container s m p) oP
     , id : ComponentId
     , sub : Sub (Signal oM oP)
-    , tree : Node v w oM oP
+    , tree : Node oM oP
     , children : Dict ComponentId (ComponentInterface oM oP)
     , orderedChildIds : List ComponentId
     }
@@ -60,18 +60,17 @@ type alias CommonArgs a m p =
     }
 
 
-make : Spec v w s m p oM oP -> Component (Container s m p) (Node v w oM oP) oP
+make : Spec s m p oM oP -> Component (Container s m p) oM oP
 make spec =
     Component <|
         \slot ->
-            ComponentNode
-                { status = status spec slot
-                , touch = touch spec slot
-                }
+            { status = status spec slot
+            , touch = touch spec slot
+            }
 
 
 status :
-    Spec v w s m p oM oP
+    Spec s m p oM oP
     -> Slot (Container s m p) oP
     -> { states : oP }
     -> ComponentStatus
@@ -88,7 +87,7 @@ status spec ( get, _ ) args =
 
 
 touch :
-    Spec v w s m p oM oP
+    Spec s m p oM oP
     -> Slot (Container s m p) oP
     -> TouchArgs oM oP
     -> ( ComponentId, Change oM oP )
@@ -111,7 +110,7 @@ touch spec (( get, _ ) as slot) args =
 
 
 init :
-    Spec v w s m p oM oP
+    Spec s m p oM oP
     -> Slot (Container s m p) oP
     -> TouchArgs oM oP
     -> ( ComponentId, Change oM oP )
@@ -148,7 +147,7 @@ init spec slot args =
 
 
 rebuild :
-    Spec v w s m p oM oP
+    Spec s m p oM oP
     -> Slot (Container s m p) oP
     -> ComponentState s m p
     -> TouchArgs oM oP
@@ -167,7 +166,7 @@ rebuild spec slot state args =
     doChange spec slot state Cmd.none sub [] tree args
 
 
-update : Hidden v w s m p oM oP -> UpdateArgs oM oP -> Change oM oP
+update : Hidden s m p oM oP -> UpdateArgs oM oP -> Change oM oP
 update ({ spec, slot } as hidden) args =
     let
         ( get, _ ) =
@@ -238,7 +237,7 @@ buildPathToPart args state identifyPart =
 
 
 doLocalUpdate :
-    Spec v w s m p oM oP
+    Spec s m p oM oP
     -> Slot (Container s m p) oP
     -> ComponentState s m p
     -> m
@@ -267,7 +266,7 @@ doLocalUpdate spec (( _, set ) as slot) state msg args =
 updateChild :
     ComponentId
     -> List ComponentId
-    -> Hidden v w s m p oM oP
+    -> Hidden s m p oM oP
     -> ComponentState s m p
     -> UpdateArgs oM oP
     -> Change oM oP
@@ -302,13 +301,13 @@ updateChild childId path hidden state args =
 
 
 doChange :
-    Spec v w s m p oM oP
+    Spec s m p oM oP
     -> Slot (Container s m p) oP
     -> ComponentState s m p
     -> Cmd m
     -> Sub m
     -> List (Signal oM oP)
-    -> Node v w oM oP
+    -> Node oM oP
     -> CommonArgs a oM oP
     -> Change oM oP
 doChange spec (( _, set ) as slot) state cmd sub signals tree args =
@@ -442,27 +441,15 @@ doChange spec (( _, set ) as slot) state cmd sub signals tree args =
 
 
 collectRenderedComponents :
-    Node v w m p
+    Node m p
     -> List (RenderedComponent m p)
     -> List (RenderedComponent m p)
 collectRenderedComponents node acc =
     case node of
-        SimpleElement { children } ->
+        Element _ _ children ->
             List.foldl collectRenderedComponents acc children
 
-        Embedding { children } ->
-            List.foldl collectRenderedComponents acc children
-
-        ReversedEmbedding { children } ->
-            List.foldl collectRenderedComponents acc children
-
-        KeyedSimpleElement { children } ->
-            List.foldl (Tuple.second >> collectRenderedComponents) acc children
-
-        KeyedEmbedding { children } ->
-            List.foldl (Tuple.second >> collectRenderedComponents) acc children
-
-        KeyedReversedEmbedding { children } ->
+        KeyedElement _ _ children ->
             List.foldl (Tuple.second >> collectRenderedComponents) acc children
 
         Text _ ->
@@ -483,7 +470,7 @@ combineCleanups cleanups args =
     List.foldl (\fn result -> fn result) args cleanups
 
 
-noUpdate : Hidden v w s m p oM oP -> UpdateArgs oM oP -> Change oM oP
+noUpdate : Hidden s m p oM oP -> UpdateArgs oM oP -> Change oM oP
 noUpdate hidden args =
     { component = buildComponent hidden
     , states = args.states
@@ -496,7 +483,7 @@ noUpdate hidden args =
     }
 
 
-buildComponent : Hidden v w s m p oM oP -> ComponentInterface oM oP
+buildComponent : Hidden s m p oM oP -> ComponentInterface oM oP
 buildComponent hidden =
     ComponentInterface
         { update = update hidden
@@ -506,7 +493,7 @@ buildComponent hidden =
         }
 
 
-destroy : Hidden v w s m p oM oP -> DestroyArgs oM oP -> DestroyArgs oM oP
+destroy : Hidden s m p oM oP -> DestroyArgs oM oP -> DestroyArgs oM oP
 destroy hidden args =
     let
         ( _, set ) =
@@ -542,7 +529,7 @@ destroyChildComponents parentId components args =
         components
 
 
-subscriptions : Hidden v w s m p oM oP -> () -> Sub (Signal oM oP)
+subscriptions : Hidden s m p oM oP -> () -> Sub (Signal oM oP)
 subscriptions hidden () =
     Dict.foldl
         (\_ (ComponentInterface child) acc ->
@@ -555,7 +542,7 @@ subscriptions hidden () =
         hidden.children
 
 
-view : Hidden v w s m p oM oP -> () -> Html.Styled.Html (Signal oM oP)
+view : Hidden s m p oM oP -> () -> Html.Styled.Html (Signal oM oP)
 view hidden () =
     if hidden.spec.lazyRender then
         Html.Styled.Lazy.lazy3 viewHelpLazy
@@ -572,7 +559,7 @@ view hidden () =
 viewHelp :
     Dict ComponentId (ComponentInterface m p)
     -> List ComponentId
-    -> Node v w m p
+    -> Node m p
     -> Html.Styled.Html (Signal m p)
 viewHelp components orderedComponentIds tree =
     render components orderedComponentIds tree
@@ -582,7 +569,7 @@ viewHelp components orderedComponentIds tree =
 viewHelpLazy :
     Dict ComponentId (ComponentInterface m p)
     -> List ComponentId
-    -> Node v w m p
+    -> Node m p
     -> VirtualDom.Node (Signal m p)
 viewHelpLazy components orderedComponentIds tree =
     viewHelp components orderedComponentIds tree
@@ -592,27 +579,51 @@ viewHelpLazy components orderedComponentIds tree =
 render :
     Dict ComponentId (ComponentInterface m p)
     -> List ComponentId
-    -> Node v w m p
+    -> Node m p
     -> ( Html.Styled.Html (Signal m p), List ComponentId )
 render components orderedComponentIds node =
     case node of
-        SimpleElement element ->
-            renderElement components orderedComponentIds element
+        Element tag attributes children ->
+            let
+                renderChild child ( renderedChildren, ids ) =
+                    let
+                        ( renderedChild, newIds ) =
+                            render components ids child
+                    in
+                    ( renderedChild :: renderedChildren
+                    , newIds
+                    )
 
-        Embedding element ->
-            renderElement components orderedComponentIds element
+                ( renderedChildren, remainingIds ) =
+                    List.foldr renderChild ( [], orderedComponentIds ) children
 
-        ReversedEmbedding element ->
-            renderElement components orderedComponentIds element
+                renderedElement =
+                    Html.Styled.node tag
+                        (List.filterMap toStyledAttribute attributes)
+                        renderedChildren
+            in
+            ( renderedElement, remainingIds )
 
-        KeyedSimpleElement element ->
-            renderKeyedElement components orderedComponentIds element
+        KeyedElement tag attributes children ->
+            let
+                renderChild ( key, child ) ( renderedChildren, ids ) =
+                    let
+                        ( renderedChild, newIds ) =
+                            render components ids child
+                    in
+                    ( ( key, renderedChild ) :: renderedChildren
+                    , newIds
+                    )
 
-        KeyedEmbedding element ->
-            renderKeyedElement components orderedComponentIds element
+                ( renderedChildren, remainingIds ) =
+                    List.foldr renderChild ( [], orderedComponentIds ) children
 
-        KeyedReversedEmbedding element ->
-            renderKeyedElement components orderedComponentIds element
+                renderedElement =
+                    Html.Styled.Keyed.node tag
+                        (List.filterMap toStyledAttribute attributes)
+                        renderedChildren
+            in
+            ( renderedElement, remainingIds )
 
         Text string ->
             ( Html.Styled.text string
@@ -644,65 +655,7 @@ render components orderedComponentIds node =
                     )
 
 
-renderElement :
-    Dict ComponentId (ComponentInterface m p)
-    -> List ComponentId
-    -> Element x y z m p
-    -> ( Html.Styled.Html (Signal m p), List ComponentId )
-renderElement components orderedComponentIds element =
-    let
-        renderChild child ( renderedChildren, ids ) =
-            let
-                ( renderedChild, newIds ) =
-                    render components ids child
-            in
-            ( renderedChild :: renderedChildren
-            , newIds
-            )
-
-        ( children, remainingIds ) =
-            List.foldr renderChild ( [], orderedComponentIds ) element.children
-
-        attributes =
-            List.filterMap toStyledAttribute element.attributes
-
-        renderedElement =
-            Html.Styled.node element.tag attributes children
-    in
-    ( renderedElement, remainingIds )
-
-
-renderKeyedElement :
-    Dict ComponentId (ComponentInterface m p)
-    -> List ComponentId
-    -> KeyedElement x y z m p
-    -> ( Html.Styled.Html (Signal m p), List ComponentId )
-renderKeyedElement components orderedComponentIds element =
-    let
-        renderChild ( key, child ) ( renderedChildren, ids ) =
-            let
-                ( renderedChild, newIds ) =
-                    render components ids child
-            in
-            ( ( key, renderedChild ) :: renderedChildren
-            , newIds
-            )
-
-        ( children, remainingIds ) =
-            List.foldr renderChild ( [], orderedComponentIds ) element.children
-
-        attributes =
-            List.filterMap toStyledAttribute element.attributes
-
-        renderedElement =
-            Html.Styled.Keyed.node element.tag attributes children
-    in
-    ( renderedElement, remainingIds )
-
-
-toStyledAttribute :
-    Attribute v m p
-    -> Maybe (Html.Styled.Attribute (Signal m p))
+toStyledAttribute : Attribute m p -> Maybe (Html.Styled.Attribute (Signal m p))
 toStyledAttribute attribute =
     case attribute of
         PlainAttribute property ->
@@ -719,7 +672,7 @@ toStyledAttribute attribute =
 
 
 getSelf :
-    Spec v w s m p oM oP
+    Spec s m p oM oP
     -> Slot (Container s m p) oP
     -> ComponentId
     -> { a | freshContainers : oP, namespace : String }
@@ -744,7 +697,7 @@ convertSignal self =
     toOwnerSignal slot freshOwnerContainers
 
 
-convertAttribute : Self s m p oP -> Attribute v m p -> Attribute v oM oP
+convertAttribute : Self s m p oP -> Attribute m p -> Attribute oM oP
 convertAttribute self attribute =
     case attribute of
         PlainAttribute property ->
@@ -759,26 +712,18 @@ convertAttribute self attribute =
             NullAttribute
 
 
-convertNode : Self s m p oP -> Node v w m p -> Node v w oM oP
+convertNode : Self s m p oP -> Node m p -> Node oM oP
 convertNode self node =
     case node of
-        SimpleElement element ->
-            SimpleElement (convertElement self element)
+        Element tag attributes children ->
+            Element tag
+                (List.map (convertAttribute self) attributes)
+                (List.map (convertNode self) children)
 
-        Embedding element ->
-            Embedding (convertElement self element)
-
-        ReversedEmbedding element ->
-            ReversedEmbedding (convertElement self element)
-
-        KeyedSimpleElement element ->
-            KeyedSimpleElement (convertKeyedElement self element)
-
-        KeyedEmbedding element ->
-            KeyedEmbedding (convertKeyedElement self element)
-
-        KeyedReversedEmbedding element ->
-            KeyedReversedEmbedding (convertKeyedElement self element)
+        KeyedElement tag attributes children ->
+            KeyedElement tag
+                (List.map (convertAttribute self) attributes)
+                (List.map (Tuple.mapSecond (convertNode self)) children)
 
         Text string ->
             Text string
@@ -788,25 +733,6 @@ convertNode self node =
 
         ComponentNode component ->
             ComponentNode (convertRenderedComponent self component)
-
-
-convertElement : Self s m p oP -> Element x y z m p -> Element x y z oM oP
-convertElement self element =
-    { tag = element.tag
-    , attributes = List.map (convertAttribute self) element.attributes
-    , children = List.map (convertNode self) element.children
-    }
-
-
-convertKeyedElement :
-    Self s m p oP
-    -> KeyedElement x y z m p
-    -> KeyedElement x y z oM oP
-convertKeyedElement self element =
-    { tag = element.tag
-    , attributes = List.map (convertAttribute self) element.attributes
-    , children = List.map (Tuple.mapSecond (convertNode self)) element.children
-    }
 
 
 convertRenderedComponent :

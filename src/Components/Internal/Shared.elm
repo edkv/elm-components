@@ -1,8 +1,6 @@
 module Components.Internal.Shared
     exposing
-        ( HtmlItem(HtmlItem)
-        , SvgItem(SvgItem)
-        , identify
+        ( identify
         , svgNamespace
         , toOwnerSignal
         )
@@ -10,14 +8,6 @@ module Components.Internal.Shared
 import Components.Internal.Core exposing (..)
 import Json.Encode as Json
 import VirtualDom
-
-
-type HtmlItem
-    = HtmlItem
-
-
-type SvgItem
-    = SvgItem
 
 
 toOwnerSignal :
@@ -41,7 +31,7 @@ identify ( get, _ ) args =
             Nothing
 
 
-svgNamespace : Attribute SvgItem m p
+svgNamespace : Attribute m p
 svgNamespace =
     VirtualDom.property "namespace" (Json.string "http://www.w3.org/2000/svg")
         |> PlainAttribute

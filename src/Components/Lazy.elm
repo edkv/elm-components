@@ -16,7 +16,7 @@ type Msg
     = UpdateInput
 
 
-lazy : (a -> Node v w m p) -> a -> Component (Container a) (Node v w m p) p
+lazy : (a -> Node m p) -> a -> Component (Container a) m p
 lazy func input =
     BaseComponent.make
         { init = \_ -> ( State input, Cmd.none, [] )
@@ -31,42 +31,42 @@ lazy func input =
 
 
 lazy2 :
-    (a -> b -> Node v w m p)
+    (a -> b -> Node m p)
     -> a
     -> b
-    -> Component (Container ( a, b )) (Node v w m p) p
+    -> Component (Container ( a, b )) m p
 lazy2 func arg1 arg2 =
     lazy (\( a, b ) -> func a b) ( arg1, arg2 )
 
 
 lazy3 :
-    (a -> b -> c -> Node v w m p)
+    (a -> b -> c -> Node m p)
     -> a
     -> b
     -> c
-    -> Component (Container ( a, b, c )) (Node v w m p) p
+    -> Component (Container ( a, b, c )) m p
 lazy3 func arg1 arg2 arg3 =
     lazy (\( a, b, c ) -> func a b c) ( arg1, arg2, arg3 )
 
 
 lazy4 :
-    (a -> b -> c -> d -> Node v w m p)
+    (a -> b -> c -> d -> Node m p)
     -> a
     -> b
     -> c
     -> d
-    -> Component (Container ( a, b, c, d )) (Node v w m p) p
+    -> Component (Container ( a, b, c, d )) m p
 lazy4 func arg1 arg2 arg3 arg4 =
     lazy (\( a, b, c, d ) -> func a b c d) ( arg1, arg2, arg3, arg4 )
 
 
 lazy5 :
-    (a -> b -> c -> d -> e -> Node v w m p)
+    (a -> b -> c -> d -> e -> Node m p)
     -> a
     -> b
     -> c
     -> d
     -> e
-    -> Component (Container ( a, b, c, d, e )) (Node v w m p) p
+    -> Component (Container ( a, b, c, d, e )) m p
 lazy5 func arg1 arg2 arg3 arg4 arg5 =
     lazy (\( a, b, c, d, e ) -> func a b c d e) ( arg1, arg2, arg3, arg4, arg5 )
