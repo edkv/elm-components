@@ -152,9 +152,9 @@ type alias ComponentId =
     Int
 
 
-type ComponentInternalStuff s m p oP
+type ComponentInternalStuff s m p cP
     = ComponentInternalStuff
-        { slot : Slot (Container s m p) oP
+        { slot : Slot (Container s m p) cP
         , freshContainers : p
-        , freshOwnerContainers : oP
+        , freshConsumerContainers : cP
         }

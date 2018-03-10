@@ -10,7 +10,7 @@ module Components.Internal.BaseComponent
         )
 
 import Components.Internal.Core exposing (..)
-import Components.Internal.Shared exposing (identify, toOwnerSignal)
+import Components.Internal.Shared exposing (identify, toConsumerSignal)
 import Dict exposing (Dict)
 import Html.Styled
 import Html.Styled.Attributes
@@ -20,11 +20,11 @@ import Svg.Styled.Attributes
 import VirtualDom
 
 
-type alias Spec s m p oM oP =
-    { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
-    , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
-    , subscriptions : Self s m p oP -> s -> Sub m
-    , view : Self s m p oP -> s -> Node oM oP
+type alias Spec s m p cM cP =
+    { init : Self s m p cP -> ( s, Cmd m, List (Signal cM cP) )
+    , update : Self s m p cP -> m -> s -> ( s, Cmd m, List (Signal cM cP) )
+    , subscriptions : Self s m p cP -> s -> Sub m
+    , view : Self s m p cP -> s -> Node cM cP
     , onContextUpdate : Maybe m
     , shouldRecalculate : s -> Bool
     , lazyRender : Bool
@@ -32,19 +32,19 @@ type alias Spec s m p oM oP =
     }
 
 
-type alias Self s m p oP =
+type alias Self s m p cP =
     { id : String
-    , internal : ComponentInternalStuff s m p oP
+    , internal : ComponentInternalStuff s m p cP
     }
 
 
-type alias Hidden s m p oM oP =
-    { spec : Spec s m p oM oP
-    , slot : Slot (Container s m p) oP
+type alias Hidden s m p cM cP =
+    { spec : Spec s m p cM cP
+    , slot : Slot (Container s m p) cP
     , id : ComponentId
-    , sub : Sub (Signal oM oP)
-    , tree : Node oM oP
-    , children : Dict ComponentId (ComponentInterface oM oP)
+    , sub : Sub (Signal cM cP)
+    , tree : Node cM cP
+    , children : Dict ComponentId (ComponentInterface cM cP)
     , orderedChildIds : List ComponentId
     }
 
@@ -60,7 +60,7 @@ type alias CommonArgs a m p =
     }
 
 
-make : Spec s m p oM oP -> Component (Container s m p) oM oP
+make : Spec s m p cM cP -> Component (Container s m p) cM cP
 make spec =
     Component <|
         \slot ->
@@ -70,9 +70,9 @@ make spec =
 
 
 status :
-    Spec s m p oM oP
-    -> Slot (Container s m p) oP
-    -> { states : oP }
+    Spec s m p cM cP
+    -> Slot (Container s m p) cP
+    -> { states : cP }
     -> ComponentStatus
 status spec ( get, _ ) args =
     case get args.states of
@@ -87,10 +87,10 @@ status spec ( get, _ ) args =
 
 
 touch :
-    Spec s m p oM oP
-    -> Slot (Container s m p) oP
-    -> TouchArgs oM oP
-    -> ( ComponentId, Change oM oP )
+    Spec s m p cM cP
+    -> Slot (Container s m p) cP
+    -> TouchArgs cM cP
+    -> ( ComponentId, Change cM cP )
 touch spec (( get, _ ) as slot) args =
     case get args.states of
         StateContainer state ->
@@ -110,10 +110,10 @@ touch spec (( get, _ ) as slot) args =
 
 
 init :
-    Spec s m p oM oP
-    -> Slot (Container s m p) oP
-    -> TouchArgs oM oP
-    -> ( ComponentId, Change oM oP )
+    Spec s m p cM cP
+    -> Slot (Container s m p) cP
+    -> TouchArgs cM cP
+    -> ( ComponentId, Change cM cP )
 init spec slot args =
     let
         id =
@@ -147,11 +147,11 @@ init spec slot args =
 
 
 rebuild :
-    Spec s m p oM oP
-    -> Slot (Container s m p) oP
+    Spec s m p cM cP
+    -> Slot (Container s m p) cP
     -> ComponentState s m p
-    -> TouchArgs oM oP
-    -> Change oM oP
+    -> TouchArgs cM cP
+    -> Change cM cP
 rebuild spec slot state args =
     let
         self =
@@ -166,7 +166,7 @@ rebuild spec slot state args =
     doChange spec slot state Cmd.none sub [] tree args
 
 
-update : Hidden s m p oM oP -> UpdateArgs oM oP -> Change oM oP
+update : Hidden s m p cM cP -> UpdateArgs cM cP -> Change cM cP
 update ({ spec, slot } as hidden) args =
     let
         ( get, _ ) =
@@ -211,7 +211,7 @@ update ({ spec, slot } as hidden) args =
 
 
 buildPathToPart :
-    UpdateArgs oM oP
+    UpdateArgs cM cP
     -> ComponentState s m p
     -> Identify p
     -> List ComponentId
@@ -237,12 +237,12 @@ buildPathToPart args state identifyPart =
 
 
 doLocalUpdate :
-    Spec s m p oM oP
-    -> Slot (Container s m p) oP
+    Spec s m p cM cP
+    -> Slot (Container s m p) cP
     -> ComponentState s m p
     -> m
-    -> CommonArgs a oM oP
-    -> Change oM oP
+    -> CommonArgs a cM cP
+    -> Change cM cP
 doLocalUpdate spec (( _, set ) as slot) state msg args =
     let
         self =
@@ -266,10 +266,10 @@ doLocalUpdate spec (( _, set ) as slot) state msg args =
 updateChild :
     ComponentId
     -> List ComponentId
-    -> Hidden s m p oM oP
+    -> Hidden s m p cM cP
     -> ComponentState s m p
-    -> UpdateArgs oM oP
-    -> Change oM oP
+    -> UpdateArgs cM cP
+    -> Change cM cP
 updateChild childId path hidden state args =
     case Dict.get childId hidden.children of
         Just (ComponentInterface component) ->
@@ -301,22 +301,22 @@ updateChild childId path hidden state args =
 
 
 doChange :
-    Spec s m p oM oP
-    -> Slot (Container s m p) oP
+    Spec s m p cM cP
+    -> Slot (Container s m p) cP
     -> ComponentState s m p
     -> Cmd m
     -> Sub m
-    -> List (Signal oM oP)
-    -> Node oM oP
-    -> CommonArgs a oM oP
-    -> Change oM oP
+    -> List (Signal cM cP)
+    -> Node cM cP
+    -> CommonArgs a cM cP
+    -> Change cM cP
 doChange spec (( _, set ) as slot) state cmd sub signals tree args =
     let
         mappedLocalCmd =
-            Cmd.map (LocalMsg >> toOwnerSignal slot args.freshContainers) cmd
+            Cmd.map (LocalMsg >> toConsumerSignal slot args.freshContainers) cmd
 
         mappedLocalSub =
-            Sub.map (LocalMsg >> toOwnerSignal slot args.freshContainers) sub
+            Sub.map (LocalMsg >> toConsumerSignal slot args.freshContainers) sub
 
         oldChildren =
             args.cache
@@ -470,7 +470,7 @@ combineCleanups cleanups args =
     List.foldl (\fn result -> fn result) args cleanups
 
 
-noUpdate : Hidden s m p oM oP -> UpdateArgs oM oP -> Change oM oP
+noUpdate : Hidden s m p cM cP -> UpdateArgs cM cP -> Change cM cP
 noUpdate hidden args =
     { component = buildComponent hidden
     , states = args.states
@@ -483,7 +483,7 @@ noUpdate hidden args =
     }
 
 
-buildComponent : Hidden s m p oM oP -> ComponentInterface oM oP
+buildComponent : Hidden s m p cM cP -> ComponentInterface cM cP
 buildComponent hidden =
     ComponentInterface
         { update = update hidden
@@ -493,7 +493,7 @@ buildComponent hidden =
         }
 
 
-destroy : Hidden s m p oM oP -> DestroyArgs oM oP -> DestroyArgs oM oP
+destroy : Hidden s m p cM cP -> DestroyArgs cM cP -> DestroyArgs cM cP
 destroy hidden args =
     let
         ( _, set ) =
@@ -529,7 +529,7 @@ destroyChildComponents parentId components args =
         components
 
 
-subscriptions : Hidden s m p oM oP -> () -> Sub (Signal oM oP)
+subscriptions : Hidden s m p cM cP -> () -> Sub (Signal cM cP)
 subscriptions hidden () =
     Dict.foldl
         (\_ (ComponentInterface child) acc ->
@@ -542,7 +542,7 @@ subscriptions hidden () =
         hidden.children
 
 
-view : Hidden s m p oM oP -> () -> Html.Styled.Html (Signal oM oP)
+view : Hidden s m p cM cP -> () -> Html.Styled.Html (Signal cM cP)
 view hidden () =
     if hidden.spec.lazyRender then
         Html.Styled.Lazy.lazy3 viewHelpLazy
@@ -672,32 +672,32 @@ toStyledAttribute attribute =
 
 
 getSelf :
-    Spec s m p oM oP
-    -> Slot (Container s m p) oP
+    Spec s m p cM cP
+    -> Slot (Container s m p) cP
     -> ComponentId
-    -> { a | freshContainers : oP, namespace : String }
-    -> Self s m p oP
+    -> { a | freshContainers : cP, namespace : String }
+    -> Self s m p cP
 getSelf spec slot id args =
     { id = "_" ++ args.namespace ++ "_" ++ toString id
     , internal =
         ComponentInternalStuff
             { slot = slot
             , freshContainers = spec.parts
-            , freshOwnerContainers = args.freshContainers
+            , freshConsumerContainers = args.freshContainers
             }
     }
 
 
-convertSignal : Self s m p oP -> Signal m p -> Signal oM oP
+convertSignal : Self s m p cP -> Signal m p -> Signal cM cP
 convertSignal self =
     let
-        (ComponentInternalStuff { slot, freshOwnerContainers }) =
+        (ComponentInternalStuff { slot, freshConsumerContainers }) =
             self.internal
     in
-    toOwnerSignal slot freshOwnerContainers
+    toConsumerSignal slot freshConsumerContainers
 
 
-convertAttribute : Self s m p oP -> Attribute m p -> Attribute oM oP
+convertAttribute : Self s m p cP -> Attribute m p -> Attribute cM cP
 convertAttribute self attribute =
     case attribute of
         PlainAttribute property ->
@@ -712,7 +712,7 @@ convertAttribute self attribute =
             NullAttribute
 
 
-convertNode : Self s m p oP -> Node m p -> Node oM oP
+convertNode : Self s m p cP -> Node m p -> Node cM cP
 convertNode self node =
     case node of
         Element tag attributes children ->
@@ -736,9 +736,9 @@ convertNode self node =
 
 
 convertRenderedComponent :
-    Self s m p oP
+    Self s m p cP
     -> RenderedComponent m p
-    -> RenderedComponent oM oP
+    -> RenderedComponent cM cP
 convertRenderedComponent self component =
     { status = convertStatus self component
     , touch = convertTouch self component
@@ -746,9 +746,9 @@ convertRenderedComponent self component =
 
 
 convertStatus :
-    Self s m p oP
+    Self s m p cP
     -> RenderedComponent m p
-    -> { states : oP }
+    -> { states : cP }
     -> ComponentStatus
 convertStatus self component args =
     let
@@ -767,10 +767,10 @@ convertStatus self component args =
 
 
 convertTouch :
-    Self s m p oP
+    Self s m p cP
     -> RenderedComponent m p
-    -> TouchArgs oM oP
-    -> ( ComponentId, Change oM oP )
+    -> TouchArgs cM cP
+    -> ( ComponentId, Change cM cP )
 convertTouch self component args =
     let
         (ComponentInternalStuff { slot, freshContainers }) =
@@ -796,9 +796,9 @@ convertTouch self component args =
 
 
 convertComponent :
-    Self s m p oP
+    Self s m p cP
     -> ComponentInterface m p
-    -> ComponentInterface oM oP
+    -> ComponentInterface cM cP
 convertComponent self component =
     ComponentInterface <|
         { update = convertUpdate self component
@@ -809,10 +809,10 @@ convertComponent self component =
 
 
 convertUpdate :
-    Self s m p oP
+    Self s m p cP
     -> ComponentInterface m p
-    -> UpdateArgs oM oP
-    -> Change oM oP
+    -> UpdateArgs cM cP
+    -> Change cM cP
 convertUpdate self (ComponentInterface component) args =
     let
         (ComponentInternalStuff { slot, freshContainers }) =
@@ -849,14 +849,14 @@ convertUpdate self (ComponentInterface component) args =
 
 
 convertChange :
-    Self s m p oP
-    -> CommonArgs a oM oP
+    Self s m p cP
+    -> CommonArgs a cM cP
     -> ComponentState s m p
     -> Change m p
-    -> Change oM oP
+    -> Change cM cP
 convertChange self args state change =
     let
-        (ComponentInternalStuff { slot, freshOwnerContainers }) =
+        (ComponentInternalStuff { slot, freshConsumerContainers }) =
             self.internal
 
         ( _, set ) =
@@ -870,11 +870,11 @@ convertChange self args state change =
 
         cmd =
             change.cmd
-                |> Cmd.map (toOwnerSignal slot freshOwnerContainers)
+                |> Cmd.map (toConsumerSignal slot freshConsumerContainers)
 
         signals =
             change.signals
-                |> List.map (toOwnerSignal slot freshOwnerContainers)
+                |> List.map (toConsumerSignal slot freshConsumerContainers)
     in
     { component = convertComponent self change.component
     , states = set (StateContainer updatedState) args.states
@@ -888,18 +888,18 @@ convertChange self args state change =
 
 
 convertDestroy :
-    Self s m p oP
+    Self s m p cP
     -> ComponentInterface m p
-    -> DestroyArgs oM oP
-    -> DestroyArgs oM oP
+    -> DestroyArgs cM cP
+    -> DestroyArgs cM cP
 convertDestroy self (ComponentInterface component) args =
     convertDestroyOrCleanup self component.destroy args
 
 
 convertDestroyOrCleanup :
-    Self s m p oP
+    Self s m p cP
     -> (DestroyArgs m p -> DestroyArgs m p)
-    -> (DestroyArgs oM oP -> DestroyArgs oM oP)
+    -> (DestroyArgs cM cP -> DestroyArgs cM cP)
 convertDestroyOrCleanup self fn args =
     let
         (ComponentInternalStuff { slot }) =
@@ -934,37 +934,37 @@ convertDestroyOrCleanup self fn args =
 
 
 convertSubscriptions :
-    Self s m p oP
+    Self s m p cP
     -> ComponentInterface m p
     -> ()
-    -> Sub (Signal oM oP)
+    -> Sub (Signal cM cP)
 convertSubscriptions self (ComponentInterface component) () =
     let
-        (ComponentInternalStuff { slot, freshOwnerContainers }) =
+        (ComponentInternalStuff { slot, freshConsumerContainers }) =
             self.internal
     in
     component.subscriptions ()
-        |> Sub.map (toOwnerSignal slot freshOwnerContainers)
+        |> Sub.map (toConsumerSignal slot freshConsumerContainers)
 
 
 convertView :
-    Self s m p oP
+    Self s m p cP
     -> ComponentInterface m p
     -> ()
-    -> Html.Styled.Html (Signal oM oP)
+    -> Html.Styled.Html (Signal cM cP)
 convertView self (ComponentInterface component) () =
     let
-        (ComponentInternalStuff { slot, freshOwnerContainers }) =
+        (ComponentInternalStuff { slot, freshConsumerContainers }) =
             self.internal
     in
     component.view ()
-        |> Html.Styled.map (toOwnerSignal slot freshOwnerContainers)
+        |> Html.Styled.map (toConsumerSignal slot freshConsumerContainers)
 
 
 convertSlot :
-    Self s m p oP
+    Self s m p cP
     -> Slot (Container pS pM pP) p
-    -> Slot (Container pS pM pP) oP
+    -> Slot (Container pS pM pP) cP
 convertSlot self (( getPart, setPart ) as partSlot) =
     let
         (ComponentInternalStuff { slot, freshContainers }) =
@@ -973,8 +973,8 @@ convertSlot self (( getPart, setPart ) as partSlot) =
         ( get, set ) =
             slot
 
-        convertedGet ownerContainers =
-            case get ownerContainers of
+        convertedGet consumerContainers =
+            case get consumerContainers of
                 EmptyContainer ->
                     EmptyContainer
 
@@ -987,21 +987,21 @@ convertSlot self (( getPart, setPart ) as partSlot) =
                 SignalContainer (PartMsg _ containers) ->
                     getPart containers
 
-        convertedSet partContainer ownerContainers =
-            case get ownerContainers of
+        convertedSet partContainer consumerContainers =
+            case get consumerContainers of
                 EmptyContainer ->
                     case partContainer of
                         EmptyContainer ->
-                            ownerContainers
+                            consumerContainers
 
                         StateContainer _ ->
                             -- We don't have current component's local state
                             -- so we can't do anything here. This situation
                             -- mustn't occur in practice anyway.
-                            ownerContainers
+                            consumerContainers
 
                         SignalContainer _ ->
-                            set (wrapSignal partContainer) ownerContainers
+                            set (wrapSignal partContainer) consumerContainers
 
                 StateContainer state ->
                     let
@@ -1011,10 +1011,10 @@ convertSlot self (( getPart, setPart ) as partSlot) =
                         updatedState =
                             { state | partStates = updatedPartStates }
                     in
-                    set (StateContainer updatedState) ownerContainers
+                    set (StateContainer updatedState) consumerContainers
 
                 SignalContainer _ ->
-                    set (wrapSignal partContainer) ownerContainers
+                    set (wrapSignal partContainer) consumerContainers
 
         wrapSignal partContainer =
             freshContainers

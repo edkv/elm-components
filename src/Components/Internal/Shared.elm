@@ -2,7 +2,7 @@ module Components.Internal.Shared
     exposing
         ( identify
         , svgNamespace
-        , toOwnerSignal
+        , toConsumerSignal
         )
 
 import Components.Internal.Core exposing (..)
@@ -10,18 +10,18 @@ import Json.Encode as Json
 import VirtualDom
 
 
-toOwnerSignal :
-    Slot (Container s m p) oP
-    -> oP
+toConsumerSignal :
+    Slot (Container s m p) cP
+    -> cP
     -> Signal m p
-    -> Signal oM oP
-toOwnerSignal (( _, set ) as slot) freshOwnerContainers signal =
-    freshOwnerContainers
+    -> Signal oM cP
+toConsumerSignal (( _, set ) as slot) freshConsumerContainers signal =
+    freshConsumerContainers
         |> set (SignalContainer signal)
         |> PartMsg (identify slot)
 
 
-identify : Slot (Container s m p) oP -> Identify oP
+identify : Slot (Container s m p) cP -> Identify cP
 identify ( get, _ ) args =
     case get args.states of
         StateContainer state ->

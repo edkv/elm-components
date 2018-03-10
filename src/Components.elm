@@ -84,7 +84,7 @@ module Components
 import Components.Internal.BaseComponent as BaseComponent
 import Components.Internal.Core as Core
 import Components.Internal.Run as Run
-import Components.Internal.Shared exposing (toOwnerSignal)
+import Components.Internal.Shared exposing (toConsumerSignal)
 import Dict exposing (Dict)
 import VirtualDom
 
@@ -113,9 +113,9 @@ type alias Attribute m p =
     Core.Attribute m p
 
 
-type alias Self s m p oP =
+type alias Self s m p cP =
     { id : String
-    , internal : ComponentInternalStuff s m p oP
+    , internal : ComponentInternalStuff s m p cP
     }
 
 
@@ -124,8 +124,8 @@ type alias Options m =
     }
 
 
-type alias ComponentInternalStuff s m p oP =
-    Core.ComponentInternalStuff s m p oP
+type alias ComponentInternalStuff s m p cP =
+    Core.ComponentInternalStuff s m p cP
 
 
 type alias State container outMsg =
@@ -137,13 +137,13 @@ type alias Msg container outMsg =
 
 
 regular :
-    { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
-    , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
-    , subscriptions : Self s m p oP -> s -> Sub m
-    , view : Self s m p oP -> s -> Node m p
+    { init : Self s m p cP -> ( s, Cmd m, List (Signal cM cP) )
+    , update : Self s m p cP -> m -> s -> ( s, Cmd m, List (Signal cM cP) )
+    , subscriptions : Self s m p cP -> s -> Sub m
+    , view : Self s m p cP -> s -> Node m p
     , parts : p
     }
-    -> Component (Container s m p) oM oP
+    -> Component (Container s m p) cM cP
 regular spec =
     regularWithOptions
         { init = spec.init
@@ -156,27 +156,27 @@ regular spec =
 
 
 regularWithOptions :
-    { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
-    , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
-    , subscriptions : Self s m p oP -> s -> Sub m
-    , view : Self s m p oP -> s -> Node m p
+    { init : Self s m p cP -> ( s, Cmd m, List (Signal cM cP) )
+    , update : Self s m p cP -> m -> s -> ( s, Cmd m, List (Signal cM cP) )
+    , subscriptions : Self s m p cP -> s -> Sub m
+    , view : Self s m p cP -> s -> Node m p
     , parts : p
     , options : Options m
     }
-    -> Component (Container s m p) oM oP
+    -> Component (Container s m p) cM cP
 regularWithOptions spec =
     mixedWithOptions
         { spec | view = \self state -> convertNode self (spec.view self state) }
 
 
 mixed :
-    { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
-    , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
-    , subscriptions : Self s m p oP -> s -> Sub m
-    , view : Self s m p oP -> s -> Node oM oP
+    { init : Self s m p cP -> ( s, Cmd m, List (Signal cM cP) )
+    , update : Self s m p cP -> m -> s -> ( s, Cmd m, List (Signal cM cP) )
+    , subscriptions : Self s m p cP -> s -> Sub m
+    , view : Self s m p cP -> s -> Node cM cP
     , parts : p
     }
-    -> Component (Container s m p) oM oP
+    -> Component (Container s m p) cM cP
 mixed spec =
     mixedWithOptions
         { init = spec.init
@@ -189,14 +189,14 @@ mixed spec =
 
 
 mixedWithOptions :
-    { init : Self s m p oP -> ( s, Cmd m, List (Signal oM oP) )
-    , update : Self s m p oP -> m -> s -> ( s, Cmd m, List (Signal oM oP) )
-    , subscriptions : Self s m p oP -> s -> Sub m
-    , view : Self s m p oP -> s -> Node oM oP
+    { init : Self s m p cP -> ( s, Cmd m, List (Signal cM cP) )
+    , update : Self s m p cP -> m -> s -> ( s, Cmd m, List (Signal cM cP) )
+    , subscriptions : Self s m p cP -> s -> Sub m
+    , view : Self s m p cP -> s -> Node cM cP
     , parts : p
     , options : Options m
     }
-    -> Component (Container s m p) oM oP
+    -> Component (Container s m p) cM cP
 mixedWithOptions spec =
     BaseComponent.make
         { init = spec.init
@@ -222,10 +222,10 @@ send =
 
 
 sendToPart :
-    Self s m p oP
+    Self s m p cP
     -> Slot (Container pS pM pP) p
     -> pM
-    -> Signal oM oP
+    -> Signal cM cP
 sendToPart self partSlot partMsg =
     let
         (Core.ComponentInternalStuff internal) =
@@ -233,22 +233,22 @@ sendToPart self partSlot partMsg =
     in
     partMsg
         |> Core.LocalMsg
-        |> toOwnerSignal partSlot internal.freshContainers
-        |> toOwnerSignal internal.slot internal.freshOwnerContainers
+        |> toConsumerSignal partSlot internal.freshContainers
+        |> toConsumerSignal internal.slot internal.freshConsumerContainers
 
 
 slot :
-    Slot (Container s m p) oP
-    -> Component (Container s m p) oM oP
-    -> Node oM oP
+    Slot (Container s m p) cP
+    -> Component (Container s m p) cM cP
+    -> Node cM cP
 slot slot_ (Core.Component component) =
     Core.ComponentNode (component slot_)
 
 
 dictSlot :
-    Slot (Dict comparable (Container s m p)) oP
+    Slot (Dict comparable (Container s m p)) cP
     -> comparable
-    -> Slot (Container s m p) oP
+    -> Slot (Container s m p) cP
 dictSlot ( getDict, setDict ) key =
     let
         get =
@@ -264,25 +264,25 @@ dictSlot ( getDict, setDict ) key =
     ( get, set )
 
 
-convertSignal : Self s m p oP -> Signal m p -> Signal oM oP
+convertSignal : Self s m p cP -> Signal m p -> Signal cM cP
 convertSignal =
     BaseComponent.convertSignal
 
 
-convertAttribute : Self s m p oP -> Attribute m p -> Attribute oM oP
+convertAttribute : Self s m p cP -> Attribute m p -> Attribute cM cP
 convertAttribute =
     BaseComponent.convertAttribute
 
 
-convertNode : Self s m p oP -> Node m p -> Node oM oP
+convertNode : Self s m p cP -> Node m p -> Node cM cP
 convertNode =
     BaseComponent.convertNode
 
 
 convertSlot :
-    Self s m p oP
+    Self s m p cP
     -> Slot (Container pS pM pP) p
-    -> Slot (Container pS pM pP) oP
+    -> Slot (Container pS pM pP) cP
 convertSlot =
     BaseComponent.convertSlot
 
