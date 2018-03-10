@@ -13,17 +13,17 @@ type State a
 
 
 type Msg
-    = UpdateInput
+    = Refresh
 
 
 lazy : (a -> Node m p) -> a -> Component (Container a) m p
 lazy func input =
     BaseComponent.make
         { init = \_ -> ( State input, Cmd.none, [] )
-        , update = \_ UpdateInput _ -> ( State input, Cmd.none, [] )
+        , update = \_ Refresh _ -> ( State input, Cmd.none, [] )
         , subscriptions = \_ _ -> Sub.none
         , view = \_ _ -> func input
-        , onContextUpdate = Just UpdateInput
+        , onContextUpdate = Just Refresh
         , shouldRecalculate = \(State prevInput) -> input /= prevInput
         , lazyRender = True
         , parts = ()
