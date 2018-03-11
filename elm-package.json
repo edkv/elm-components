@@ -7,6 +7,16 @@
         "src"
     ],
     "exposed-modules": [
+        "Components",
+        "Components.Lazy",
+        "Components.Html",
+        "Components.Html.Attributes",
+        "Components.Html.Events",
+        "Components.Html.Keyed",
+        "Components.Svg",
+        "Components.Svg.Attributes",
+        "Components.Svg.Events",
+        "Components.Svg.Keyed"
     ],
     "dependencies": {
         "elm-lang/core": "5.1.1 <= v < 6.0.0",
