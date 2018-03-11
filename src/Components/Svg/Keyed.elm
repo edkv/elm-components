@@ -11,7 +11,7 @@ removed, etc. Common examples include:
     more efficiently.
 
 
-# Keyed nodes
+# Keyed Nodes
 
 @docs node
 
@@ -28,6 +28,10 @@ each child node. You want this when you have a list of nodes that is changing:
 adding nodes, removing nodes, etc. In these cases, the unique identifiers help
 make the DOM modifications more efficient.
 -}
-node : String -> List (Attribute m p) -> List ( String, Svg m p ) -> Svg m p
+node :
+    String
+    -> List (Attribute msg parts)
+    -> List ( String, Svg msg parts )
+    -> Svg msg parts
 node tag attributes children =
     Core.KeyedElement tag (svgNamespace :: attributes) children

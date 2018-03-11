@@ -81,6 +81,170 @@ module Components
         , x9
         )
 
+{-| A typical component definition looks like this:
+
+    module MyComponent exposing (Container, myComponent)
+
+    import Components exposing (Component)
+    ...
+
+
+    type alias Container =
+        Components.Container State Msg Parts
+
+
+    type alias State =
+        { field : Int
+        , anotherField : String
+        }
+
+
+    type Msg
+        = DoSomething
+        | DoSomethingElse
+
+
+    type alias Parts =
+        { subcomponent : MyComponent1.Container
+        , anotherSubcomponent : MyComponent2.Container
+        }
+
+
+    myComponent : Component Container m p
+    myComponent =
+        Components.regular
+            { init = init
+            , update = update
+            , subscriptions = subscriptions
+            , view = view
+            , parts = Components.x2 Parts
+            }
+
+    ...
+
+Be sure to check out the README which contains a detailed guide for how to use
+this package.
+
+
+# Core Types
+
+@docs Node, Component, Container, Signal, Slot, Attribute
+
+
+# Working With Components
+
+@docs regular, regularWithOptions, mixed, mixedWithOptions, Self, ComponentInternalStuff, Options, defaultOptions, send, slot, dictSlot, sendToPart ,convertNode, convertSignal, convertAttribute, convertSlot
+
+
+# Running Components
+
+To run a component do the following:
+
+  - Add the [`State`](#State) to the `State`/`Model` of your program.
+  - Add the [`Msg`](#Msg) to the `Msg` of your program.
+  - Connect a component in the `init`, `update`, `subscriptions` and `view`
+    functions of your program with the help of the functions provided below.
+
+Example:
+
+    import MyComponent
+    import VirtualDom
+
+
+    type alias State =
+        { componentState : Components.State MyComponent.Container MsgFromComponent
+        }
+
+
+    type Msg
+        = ComponentMsg (Components.Msg MyComponent.Container MsgFromComponent)
+
+
+    type MsgFromComponent
+        = SomethingHappened
+
+
+    main : Program Never State Msg
+    main =
+        VirtualDom.program
+            { init = init
+            , update = update
+            , subscriptions = subscriptions
+            , view = view
+            }
+
+
+    init : ( State, Cmd Msg )
+    init =
+        let
+            ( componentState, componentCmd ) =
+                MyComponent.myComponent
+                    { onSomeEvent = send SomethingHappened
+                    }
+                    |> Components.init
+        in
+        ( { componentState = componentState
+          }
+        , Cmd.map ComponentMsg componentCmd
+        )
+
+    ...
+
+You will receive a `List MsgFromComponent` from the [`update`](#update)
+function. Alternatively, use `Never` in place of `MsgFromComponent` if your
+component doesn't send any messages to the surrounding context.
+
+Use [`wrapMsg`](#wrapMsg) to send messages to your component.
+
+@docs State, Msg, init, update, subscriptions, view, wrapMsg
+
+
+# Declaring Parts
+
+When you define a component you must explicitly create a `Parts` record
+populated with default values because `elm-components` can't do this
+automatically. You can do this in one line with the `x1`-`x50` helper functions
+listed below.
+
+    type alias Parts =
+        { button : Button.Container
+        , dialog : Dialog.Container
+        }
+
+    myComponent : Component Container m p
+    myComponent =
+        Components.regular
+            { init = init
+            , update = update
+            , subscriptions = subscriptions
+            , view = view
+            , parts = Components.x2 Parts
+            }
+
+If you have more than 50 `Parts` you can easily compose these functions:
+
+    x51 =
+        x50 >> x1
+
+Also, if you have a `Dict` of components you can declare your `Parts` like this:
+
+    type alias Parts =
+        { button : Button.Container
+        , dialog : Dialog.Container
+        , counterDict : Dict Counter.Container
+        }
+
+    myComponent : Component Container m p
+    myComponent =
+        Components.regular
+            { ...
+            , parts = Components.x2 Parts <| Dict.empty
+            }
+
+@docs x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30, x31, x32, x33, x34, x35, x36, x37, x38, x39, x40, x41, x42, x43, x44, x45, x46, x47, x48, x49, x50
+
+-}
+
 import Components.Internal.BaseComponent as BaseComponent
 import Components.Internal.Core as Core
 import Components.Internal.Run as Run
@@ -89,61 +253,179 @@ import Dict exposing (Dict)
 import VirtualDom
 
 
-type alias Node m p =
-    Core.Node m p
+-- CORE TYPES
 
 
-type alias Component container m p =
-    Core.Component container m p
+{-| Views are built with nodes. A node can be either an element or a component.
+It can emit messages of the type `msg` and contain components which are
+described by the type `parts`.
+-}
+type alias Node msg parts =
+    Core.Node msg parts
 
 
-type alias Container s m p =
-    Core.Container s m p
+{-| Represents a component.
+
+You can define components with the help of functions like [`regular`](#regular):
+
+    button : Component Container msg parts
+    button =
+        Components.regular
+            { init = ...
+            , ...
+            }
+
+The `msg` and `parts` type variables mean that it can be converted into a
+`Node msg parts` and therefore embedded inside a view of another component which
+has a `Msg` of type `msg` and `Parts` of type `parts`. It can be done by passing
+a `Component` into the [`slot`](#slot) function and giving it a [`Slot`](#Slot).
+
+-}
+type alias Component container msg parts =
+    Core.Component container msg parts
 
 
-type alias Signal m p =
-    Core.Signal m p
+{-| Each component should define a `Container` type:
+
+    type alias Container =
+        Components.Container State Msg Parts
+
+It can be then used by consumers to register that component in their `Parts`:
+
+    type alias Parts =
+        { button : Button.Container
+        , dialog : Dialog.Container
+        , ...
+        }
+
+Internally, a `Container` is used to group together a component's state and
+states of all its `Parts`, or to carry a message to a component or one of its
+`Parts`.
+
+-}
+type alias Container state msg parts =
+    Core.Container state msg parts
 
 
-type alias Slot container p =
-    Core.Slot container p
+{-| Represents a message that has been [`sent`](#send) either to a component or
+to one of its `Parts`.
+
+**Note:** it has nothing to do with the `Signal` type which Elm had in earlier
+versions.
+
+`Signal`s are used in views and for communication between components. One of the
+reason for this type to be exposed is to provide a way to [convert messages
+between types of different components](#convertSignal).
+
+-}
+type alias Signal msg parts =
+    Core.Signal msg parts
 
 
-type alias Attribute m p =
-    Core.Attribute m p
+{-| A `Slot` is just a pair of functions that define a strategy for reading and
+writing a component's [`Container`](#Container) from/to the `Parts` type of its
+consumer:
+
+    type alias Parts =
+        { button : Button.Container
+        , ...
+        }
 
 
-type alias Self s m p cP =
+    buttonSlot : Slot Button.Container Parts
+    buttonSlot =
+        ( .button, \x y -> { y | button = x } )
+
+You need to specify a `Slot` when you want to [embed a component in another
+component](#slot) or [send a message to it](#sendToPart).
+
+-}
+type alias Slot container parts =
+    Core.Slot container parts
+
+
+{-| Represents a DOM attribute/property. May emit `Signal msg parts` if it is
+an [event handler](Html-Events).
+-}
+type alias Attribute msg parts =
+    Core.Attribute msg parts
+
+
+
+-- WORKING WITH COMPONENTS
+
+
+{-| Contains some useful information about your component (currently only an
+`id` field) and some internal stuff that is used by functions like
+[`convertNode`](#convertNode).
+
+An `id` is a string of form `_06f8786c-fd3f-4057-ada2-9561883241db_9`. You can
+use it for things like HTML `id` attributes or CSS classes. It consists of an
+UUID and a sequential number. The UUID is the same for all components in the
+same tree.
+
+-}
+type alias Self state msg parts consumerParts =
     { id : String
-    , internal : ComponentInternalStuff s m p cP
+    , internal : ComponentInternalStuff state msg parts consumerParts
     }
 
 
-type alias Options m =
-    { onContextUpdate : Maybe m
+{-| Some internal stuff you don't have access to. It is stored inside of
+[`Self`](#Self) and is used in functions like [`sendToPart`](#sendToPart) or
+[`convertNode`](#convertNode) which receive `Self` as an argument.
+-}
+type alias ComponentInternalStuff state msg parts consumerParts =
+    Core.ComponentInternalStuff state msg parts consumerParts
+
+
+{-| The options you can provide when you define components.
+
+Currently this is only the `onContextUpdate` field. It allows you to specify a
+message that you want your component to receive each time its consumer is
+updated. In this way, you can check whether the input parameters of your
+component has changed. This might be useful when you can't synchronously
+calculate your view from the value of a parameter and want, for example, to
+perform an HTTP request or a call to a port when it changes, or when you need to
+know both its previous and its current values.
+
+-}
+type alias Options msg =
+    { onContextUpdate : Maybe msg
     }
 
 
-type alias ComponentInternalStuff s m p cP =
-    Core.ComponentInternalStuff s m p cP
+{-| Defines a regular component. If you need the ability to accept view blocks
+from a consumer and embed them inside your `view`, use the [`mixed`](#mixed)
+function instead.
 
+The `init` and `update` functions can transmit signals to a consumer (which the
+component need to accept as arguments) or [to `Parts`](#sendToPart).
 
-type alias State container outMsg =
-    Run.State container outMsg
+Read the [Declaring Parts](#declaring-parts) section to see how to specify
+`parts`.
 
-
-type alias Msg container outMsg =
-    Run.Msg container outMsg
-
-
+-}
 regular :
-    { init : Self s m p cP -> ( s, Cmd m, List (Signal cM cP) )
-    , update : Self s m p cP -> m -> s -> ( s, Cmd m, List (Signal cM cP) )
-    , subscriptions : Self s m p cP -> s -> Sub m
-    , view : Self s m p cP -> s -> Node m p
-    , parts : p
+    { init :
+        Self state msg parts consumerParts
+        -> ( state, Cmd msg, List (Signal consumerMsg consumerParts) )
+    , update :
+        Self state msg parts consumerParts
+        -> msg
+        -> state
+        -> ( state, Cmd msg, List (Signal consumerMsg consumerParts) )
+    , subscriptions :
+        Self state msg parts consumerParts
+        -> state
+        -> Sub msg
+    , view :
+        Self state msg parts consumerParts
+        -> state
+        -> Node msg parts
+    , parts : parts
     }
-    -> Component (Container s m p) cM cP
+    -> Component (Container state msg parts) consumerMsg consumerParts
 regular spec =
     regularWithOptions
         { init = spec.init
@@ -155,28 +437,64 @@ regular spec =
         }
 
 
+{-| Same as [`regular`](#regular) but with [`Options`](#Options).
+-}
 regularWithOptions :
-    { init : Self s m p cP -> ( s, Cmd m, List (Signal cM cP) )
-    , update : Self s m p cP -> m -> s -> ( s, Cmd m, List (Signal cM cP) )
-    , subscriptions : Self s m p cP -> s -> Sub m
-    , view : Self s m p cP -> s -> Node m p
-    , parts : p
-    , options : Options m
+    { init :
+        Self state msg parts consumerParts
+        -> ( state, Cmd msg, List (Signal consumerMsg consumerParts) )
+    , update :
+        Self state msg parts consumerParts
+        -> msg
+        -> state
+        -> ( state, Cmd msg, List (Signal consumerMsg consumerParts) )
+    , subscriptions :
+        Self state msg parts consumerParts
+        -> state
+        -> Sub msg
+    , view :
+        Self state msg parts consumerParts
+        -> state
+        -> Node msg parts
+    , parts : parts
+    , options : Options msg
     }
-    -> Component (Container s m p) cM cP
+    -> Component (Container state msg parts) consumerMsg consumerParts
 regularWithOptions spec =
     mixedWithOptions
         { spec | view = \self state -> convertNode self (spec.view self state) }
 
 
+{-| Same as [`regular`](#regular) but its `view` returns
+`Node consumerMsg consumerParts`. This gives you an ability to accept view
+blocks from a consumer and embed it inside the `view` function.
+
+See also [`convertNode`](#convertNode), [`convertSignal`](#convertSignal),
+[`convertAttribute`](#convertAttribute) and [`convertSlot`](#convertSlot)
+functions that are designed to help you compose differently typed views
+together.
+
+-}
 mixed :
-    { init : Self s m p cP -> ( s, Cmd m, List (Signal cM cP) )
-    , update : Self s m p cP -> m -> s -> ( s, Cmd m, List (Signal cM cP) )
-    , subscriptions : Self s m p cP -> s -> Sub m
-    , view : Self s m p cP -> s -> Node cM cP
-    , parts : p
+    { init :
+        Self state msg parts consumerParts
+        -> ( state, Cmd msg, List (Signal consumerMsg consumerParts) )
+    , update :
+        Self state msg parts consumerParts
+        -> msg
+        -> state
+        -> ( state, Cmd msg, List (Signal consumerMsg consumerParts) )
+    , subscriptions :
+        Self state msg parts consumerParts
+        -> state
+        -> Sub msg
+    , view :
+        Self state msg parts consumerParts
+        -> state
+        -> Node consumerMsg consumerParts
+    , parts : parts
     }
-    -> Component (Container s m p) cM cP
+    -> Component (Container state msg parts) consumerMsg consumerParts
 mixed spec =
     mixedWithOptions
         { init = spec.init
@@ -188,15 +506,29 @@ mixed spec =
         }
 
 
+{-| Same as [`mixed`](#mixed) but with [`Options`](#Options).
+-}
 mixedWithOptions :
-    { init : Self s m p cP -> ( s, Cmd m, List (Signal cM cP) )
-    , update : Self s m p cP -> m -> s -> ( s, Cmd m, List (Signal cM cP) )
-    , subscriptions : Self s m p cP -> s -> Sub m
-    , view : Self s m p cP -> s -> Node cM cP
-    , parts : p
-    , options : Options m
+    { init :
+        Self state msg parts consumerParts
+        -> ( state, Cmd msg, List (Signal consumerMsg consumerParts) )
+    , update :
+        Self state msg parts consumerParts
+        -> msg
+        -> state
+        -> ( state, Cmd msg, List (Signal consumerMsg consumerParts) )
+    , subscriptions :
+        Self state msg parts consumerParts
+        -> state
+        -> Sub msg
+    , view :
+        Self state msg parts consumerParts
+        -> state
+        -> Node consumerMsg consumerParts
+    , parts : parts
+    , options : Options msg
     }
-    -> Component (Container s m p) cM cP
+    -> Component (Container state msg parts) consumerMsg consumerParts
 mixedWithOptions spec =
     BaseComponent.make
         { init = spec.init
@@ -210,22 +542,51 @@ mixedWithOptions spec =
         }
 
 
-defaultOptions : Options m
+{-|
+
+    defaultOptions =
+        { onContextUpdate = Nothing
+        }
+
+-}
+defaultOptions : Options msg
 defaultOptions =
     { onContextUpdate = Nothing
     }
 
 
-send : m -> Signal m p
+{-| Turns a message to a `Signal`.
+
+Use this in your views:
+
+    button [ onClick (send DoSomething) ]
+        [ text "Do something"
+        ]
+
+-}
+send : msg -> Signal msg parts
 send =
     Core.LocalMsg
 
 
+{-| Allows you to send messages to the `Parts` of your component.
+
+Return the result from the `init` or `update` function:
+
+    update self msg state =
+        case msg of
+            ResetCounter ->
+                ( state
+                , Cmd.none
+                , [ sendToPart self counterSlot Counter.reset ]
+                )
+
+-}
 sendToPart :
-    Self s m p cP
-    -> Slot (Container pS pM pP) p
-    -> pM
-    -> Signal cM cP
+    Self state msg parts consumerParts
+    -> Slot (Container partState partMsg partParts) parts
+    -> partMsg
+    -> Signal consumerMsg consumerParts
 sendToPart self partSlot partMsg =
     let
         (Core.ComponentInternalStuff internal) =
@@ -237,18 +598,55 @@ sendToPart self partSlot partMsg =
         |> toConsumerSignal internal.slot internal.freshConsumerContainers
 
 
+{-| Converts a `Component` to a `Node` allowing you to embed it in the view of
+another component:
+
+    type alias Parts =
+        { button : Button.Container
+        }
+
+    button : Html Msg Parts
+    button =
+        Button.button
+            { label = "Do something"
+            , onClick = send DoSomething
+            }
+            |> slot ( .button, \x y -> { y | button = x } )
+
+**Don't use it with a particular `Slot` more than one time! This is not
+currently handled and the result is unpredictable!**
+
+-}
 slot :
-    Slot (Container s m p) cP
-    -> Component (Container s m p) cM cP
-    -> Node cM cP
+    Slot (Container state msg parts) consumerParts
+    -> Component (Container state msg parts) consumerMsg consumerParts
+    -> Node consumerMsg consumerParts
 slot slot_ (Core.Component component) =
     Core.ComponentNode (component slot_)
 
 
+{-| Given a `Slot` for a `Dict` of components and a key, produce a `Slot` for a
+specific component that is identified by that key. Then you can use it to
+[render that component](#slot) or to [send a message to it](#sendToPart):
+
+    type alias Parts =
+        { counterDict : Dict Counter.Container
+        }
+
+    counterFromDict : Int -> Html Msg Parts
+    counterFromDict key =
+        Counter.counter
+            |> slot (dictSlot counterDictSlot key)
+
+    counterDictSlot : Slot (Dict Int Counter.Container) Parts
+    counterDictSlot =
+        ( .counterDict, \x y -> { y | counterDict = x } )
+
+-}
 dictSlot :
-    Slot (Dict comparable (Container s m p)) cP
+    Slot (Dict comparable (Container state msg parts)) consumerParts
     -> comparable
-    -> Slot (Container s m p) cP
+    -> Slot (Container state msg parts) consumerParts
 dictSlot ( getDict, setDict ) key =
     let
         get =
@@ -264,73 +662,210 @@ dictSlot ( getDict, setDict ) key =
     ( get, set )
 
 
-convertSignal : Self s m p cP -> Signal m p -> Signal cM cP
-convertSignal =
-    BaseComponent.convertSignal
+{-| Convert a `Node` to consumer's types. Useful when working with
+[`mixed`](#mixed) components:
 
+    view : List (Html m p) -> Self State Msg Parts p -> State -> Html m p
+    view contents self state =
+        div []
+            [ div [] contents
+            , button |> convertNode self
+            , ...
+            ]
 
-convertAttribute : Self s m p cP -> Attribute m p -> Attribute cM cP
-convertAttribute =
-    BaseComponent.convertAttribute
+    button : Html Msg Parts
+    button =
+        Html.button [ onClick (send DoSomething) ]
+            [ text "Do something"
+            ]
 
-
-convertNode : Self s m p cP -> Node m p -> Node cM cP
+-}
+convertNode :
+    Self state msg parts consumerParts
+    -> Node msg parts
+    -> Node consumerMsg consumerParts
 convertNode =
     BaseComponent.convertNode
 
 
+{-| Convert a `Signal` to consumer's types.
+
+This is useful when you're working with a [`mixed`](#mixed) component and want
+to send a message to it from a [`Node`](#Node) that is parametrized on types of
+a consumer:
+
+    view : List (Html m p) -> Self State Msg Parts p -> State -> Html m p
+    view contents self state =
+        div [ onClick (send DoSomething |> convertSignal self) ]
+            [ div [] contents
+            , ...
+            ]
+
+-}
+convertSignal :
+    Self state msg parts consumerParts
+    -> Signal msg parts
+    -> Signal consumerMsg consumerParts
+convertSignal =
+    BaseComponent.convertSignal
+
+
+{-| Works the same way as [`convertSignal`](#convertSignal) but for an
+`Attribute`.
+-}
+convertAttribute :
+    Self state msg parts consumerParts
+    -> Attribute msg parts
+    -> Attribute consumerMsg consumerParts
+convertAttribute =
+    BaseComponent.convertAttribute
+
+
+{-| Given a `Slot` for a component that is registered in your `Parts`, convert
+it in a such way that will make everything to behave like if it's registered in
+the `Parts` of a consumer.
+
+This is useful when you're working with a [`mixed`](#mixed) component and want
+to accept a view block from a consumer and pass it further to one of your
+`Parts`:
+
+    type alias Parts =
+        { dialog : Dialog.Container
+        }
+
+    view : List (Html m p) -> Self State Msg Parts p -> State -> Html m p
+    view contents self state =
+        Dialog.dialog
+            { onClose = send Closed |> convertSignal self
+            }
+            contents
+            |> slot (convertSlot self dialogSlot)
+
+    dialogSlot : Slot Dialog.Container Parts
+    dialogSlot =
+        ( .dialog, \x y -> { y | dialog = x } )
+
+-}
 convertSlot :
-    Self s m p cP
-    -> Slot (Container pS pM pP) p
-    -> Slot (Container pS pM pP) cP
+    Self state msg parts consumerParts
+    -> Slot (Container partState partMsg partParts) parts
+    -> Slot (Container partState partMsg partParts) consumerParts
 convertSlot =
     BaseComponent.convertSlot
 
 
+
+-- RUNNING COMPONENTS
+
+
+{-| Add this to the `State`/`Model` of you program as shown in the example
+above.
+-}
+type alias State container outMsg =
+    Run.State container outMsg
+
+
+{-| Add this to the `Msg` of you program as shown in the example above.
+-}
+type alias Msg container outMsg =
+    Run.Msg container outMsg
+
+
+{-| Use this to init a component.
+
+Notice how `Container state msg parts` is used twice in the type of the first
+argument. It need to be like that to satifsy the type checker. If you're curious
+why: the second time it's used in place of the `parts` type variable of the
+[`Component`](#Component) type which simply means that the consumer (your
+program) is not going to have any other `Parts` (it can run as much components
+as it need, but they all will be completely independent from each other). In
+other words, it's the same if your program defined a `Parts` type like this (of
+course you don't need to define it at all):
+
+    type alias Parts =
+        MyComponent.Container
+
+And the `init` function uses a `Slot` for it that can be defined like this:
+
+    identitySlot : Slot (Container state msg parts) (Container state msg parts)
+    identitySlot =
+        ( \x -> x, \x _ -> x )
+
+You don't need to understand anything like that to use this function though. It
+should just accept any of your components.
+
+-}
 init :
-    Component (Container s m p) outMsg (Container s m p)
-    -> ( State (Container s m p) outMsg, Cmd (Msg (Container s m p) outMsg) )
+    Component (Container state msg parts) outMsg (Container state msg parts)
+    -> ( State (Container state msg parts) outMsg, Cmd (Msg (Container state msg parts) outMsg) )
 init =
     Run.init
 
 
+{-| Use this to connect a component in the `update` function of your program.
+-}
 update :
-    Msg (Container s m p) outMsg
-    -> State (Container s m p) outMsg
-    -> ( State (Container s m p) outMsg, Cmd (Msg (Container s m p) outMsg), List outMsg )
+    Msg (Container state msg parts) outMsg
+    -> State (Container state msg parts) outMsg
+    -> ( State (Container state msg parts) outMsg, Cmd (Msg (Container state msg parts) outMsg), List outMsg )
 update =
     Run.update
 
 
+{-| Use this to connect a component in the `subscriptions` function of your
+program.
+-}
 subscriptions :
-    State (Container s m p) outMsg
-    -> Sub (Msg (Container s m p) outMsg)
+    State (Container state msg parts) outMsg
+    -> Sub (Msg (Container state msg parts) outMsg)
 subscriptions =
     Run.subscriptions
 
 
+{-| Use this to render a component.
+-}
 view :
-    State (Container s m p) outMsg
-    -> VirtualDom.Node (Msg (Container s m p) outMsg)
+    State (Container state msg parts) outMsg
+    -> VirtualDom.Node (Msg (Container state msg parts) outMsg)
 view =
     Run.view
 
 
-wrapMsg : m -> Msg (Container s m p) outMsg
+{-| Allows you to send a message to a component from your program:
+
+    update msg state =
+        case msg of
+            LocationChanged newLocation ->
+                ( newAppState, appCmd, messagesFromApp ) =
+                    Components.update
+                        (Components.wrapMsg App.UpdateLocation)
+                        state.appState
+
+                ...
+
+-}
+wrapMsg : msg -> Msg (Container state msg parts) outMsg
 wrapMsg =
     Run.wrapMsg
 
 
+
+-- DECLARING PARTS
+
+
+{-| -}
 x1 : (Container s m p -> parts) -> parts
 x1 fn =
     fn Core.EmptyContainer
 
 
+{-| -}
 x2 : (Container s1 m1 p1 -> Container s2 m2 p2 -> parts) -> parts
 x2 =
     x1 >> x1
 
 
+{-| -}
 x3 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -342,6 +877,7 @@ x3 =
     x2 >> x1
 
 
+{-| -}
 x4 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -354,6 +890,7 @@ x4 =
     x3 >> x1
 
 
+{-| -}
 x5 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -367,6 +904,7 @@ x5 =
     x4 >> x1
 
 
+{-| -}
 x6 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -381,6 +919,7 @@ x6 =
     x5 >> x1
 
 
+{-| -}
 x7 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -396,6 +935,7 @@ x7 =
     x6 >> x1
 
 
+{-| -}
 x8 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -412,6 +952,7 @@ x8 =
     x7 >> x1
 
 
+{-| -}
 x9 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -429,6 +970,7 @@ x9 =
     x8 >> x1
 
 
+{-| -}
 x10 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -447,6 +989,7 @@ x10 =
     x9 >> x1
 
 
+{-| -}
 x11 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -466,6 +1009,7 @@ x11 =
     x10 >> x1
 
 
+{-| -}
 x12 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -486,6 +1030,7 @@ x12 =
     x11 >> x1
 
 
+{-| -}
 x13 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -507,6 +1052,7 @@ x13 =
     x12 >> x1
 
 
+{-| -}
 x14 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -529,6 +1075,7 @@ x14 =
     x13 >> x1
 
 
+{-| -}
 x15 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -552,6 +1099,7 @@ x15 =
     x14 >> x1
 
 
+{-| -}
 x16 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -576,6 +1124,7 @@ x16 =
     x15 >> x1
 
 
+{-| -}
 x17 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -601,6 +1150,7 @@ x17 =
     x16 >> x1
 
 
+{-| -}
 x18 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -627,6 +1177,7 @@ x18 =
     x17 >> x1
 
 
+{-| -}
 x19 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -654,6 +1205,7 @@ x19 =
     x18 >> x1
 
 
+{-| -}
 x20 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -682,6 +1234,7 @@ x20 =
     x19 >> x1
 
 
+{-| -}
 x21 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -711,6 +1264,7 @@ x21 =
     x20 >> x1
 
 
+{-| -}
 x22 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -741,6 +1295,7 @@ x22 =
     x21 >> x1
 
 
+{-| -}
 x23 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -772,6 +1327,7 @@ x23 =
     x22 >> x1
 
 
+{-| -}
 x24 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -804,6 +1360,7 @@ x24 =
     x23 >> x1
 
 
+{-| -}
 x25 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -837,6 +1394,7 @@ x25 =
     x24 >> x1
 
 
+{-| -}
 x26 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -871,6 +1429,7 @@ x26 =
     x25 >> x1
 
 
+{-| -}
 x27 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -906,6 +1465,7 @@ x27 =
     x26 >> x1
 
 
+{-| -}
 x28 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -942,6 +1502,7 @@ x28 =
     x27 >> x1
 
 
+{-| -}
 x29 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -979,6 +1540,7 @@ x29 =
     x28 >> x1
 
 
+{-| -}
 x30 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1017,6 +1579,7 @@ x30 =
     x29 >> x1
 
 
+{-| -}
 x31 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1056,6 +1619,7 @@ x31 =
     x30 >> x1
 
 
+{-| -}
 x32 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1096,6 +1660,7 @@ x32 =
     x31 >> x1
 
 
+{-| -}
 x33 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1137,6 +1702,7 @@ x33 =
     x32 >> x1
 
 
+{-| -}
 x34 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1179,6 +1745,7 @@ x34 =
     x33 >> x1
 
 
+{-| -}
 x35 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1222,6 +1789,7 @@ x35 =
     x34 >> x1
 
 
+{-| -}
 x36 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1266,6 +1834,7 @@ x36 =
     x35 >> x1
 
 
+{-| -}
 x37 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1311,6 +1880,7 @@ x37 =
     x36 >> x1
 
 
+{-| -}
 x38 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1357,6 +1927,7 @@ x38 =
     x37 >> x1
 
 
+{-| -}
 x39 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1404,6 +1975,7 @@ x39 =
     x38 >> x1
 
 
+{-| -}
 x40 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1452,6 +2024,7 @@ x40 =
     x39 >> x1
 
 
+{-| -}
 x41 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1501,6 +2074,7 @@ x41 =
     x40 >> x1
 
 
+{-| -}
 x42 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1551,6 +2125,7 @@ x42 =
     x41 >> x1
 
 
+{-| -}
 x43 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1602,6 +2177,7 @@ x43 =
     x42 >> x1
 
 
+{-| -}
 x44 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1654,6 +2230,7 @@ x44 =
     x43 >> x1
 
 
+{-| -}
 x45 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1707,6 +2284,7 @@ x45 =
     x44 >> x1
 
 
+{-| -}
 x46 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1761,6 +2339,7 @@ x46 =
     x45 >> x1
 
 
+{-| -}
 x47 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1816,6 +2395,7 @@ x47 =
     x46 >> x1
 
 
+{-| -}
 x48 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1872,6 +2452,7 @@ x48 =
     x47 >> x1
 
 
+{-| -}
 x49 :
     (Container s1 m1 p1
      -> Container s2 m2 p2
@@ -1929,6 +2510,7 @@ x49 =
     x48 >> x1
 
 
+{-| -}
 x50 :
     (Container s1 m1 p1
      -> Container s2 m2 p2

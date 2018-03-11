@@ -22,11 +22,7 @@ module Components.Html.Events
         , targetValue
         )
 
-{-| It is often helpful to create an [Union Type] so you can have many different
-kinds of events as seen in the [TodoMVC] example.
-
-[Union Type]: http://elm-lang.org/learn/Union-Types.elm
-[TodoMVC]: https://github.com/evancz/elm-todomvc/blob/master/Todo.elm
+{-|
 
 
 # Mouse Helpers
@@ -66,49 +62,49 @@ import VirtualDom
 
 
 {-| -}
-onClick : Signal m p -> Attribute m p
+onClick : Signal msg parts -> Attribute msg parts
 onClick signal =
     on "click" (Json.succeed signal)
 
 
 {-| -}
-onDoubleClick : Signal m p -> Attribute m p
+onDoubleClick : Signal msg parts -> Attribute msg parts
 onDoubleClick signal =
     on "dblclick" (Json.succeed signal)
 
 
 {-| -}
-onMouseDown : Signal m p -> Attribute m p
+onMouseDown : Signal msg parts -> Attribute msg parts
 onMouseDown signal =
     on "mousedown" (Json.succeed signal)
 
 
 {-| -}
-onMouseUp : Signal m p -> Attribute m p
+onMouseUp : Signal msg parts -> Attribute msg parts
 onMouseUp signal =
     on "mouseup" (Json.succeed signal)
 
 
 {-| -}
-onMouseEnter : Signal m p -> Attribute m p
+onMouseEnter : Signal msg parts -> Attribute msg parts
 onMouseEnter signal =
     on "mouseenter" (Json.succeed signal)
 
 
 {-| -}
-onMouseLeave : Signal m p -> Attribute m p
+onMouseLeave : Signal msg parts -> Attribute msg parts
 onMouseLeave signal =
     on "mouseleave" (Json.succeed signal)
 
 
 {-| -}
-onMouseOver : Signal m p -> Attribute m p
+onMouseOver : Signal msg parts -> Attribute msg parts
 onMouseOver signal =
     on "mouseover" (Json.succeed signal)
 
 
 {-| -}
-onMouseOut : Signal m p -> Attribute m p
+onMouseOut : Signal msg parts -> Attribute msg parts
 onMouseOut signal =
     on "mouseout" (Json.succeed signal)
 
@@ -127,7 +123,7 @@ inputs on a range slider, make a custom handler with [`on`](#on).
 For more details on how `onInput` works, check out [targetValue](#targetValue).
 
 -}
-onInput : (String -> Signal m p) -> Attribute m p
+onInput : (String -> Signal msg parts) -> Attribute msg parts
 onInput tagger =
     on "input" (Json.map tagger targetValue)
 
@@ -139,7 +135,7 @@ on any input event.
 Check out [targetChecked](#targetChecked) for more details on how this works.
 
 -}
-onCheck : (Bool -> Signal m p) -> Attribute m p
+onCheck : (Bool -> Signal msg parts) -> Attribute msg parts
 onCheck tagger =
     on "change" (Json.map tagger targetChecked)
 
@@ -150,7 +146,7 @@ in order to prevent the form from changing the page’s location. If you need
 different behavior, use `onWithOptions` to create a customized version of
 `onSubmit`.
 -}
-onSubmit : Signal m p -> Attribute m p
+onSubmit : Signal msg parts -> Attribute msg parts
 onSubmit signal =
     onWithOptions "submit"
         { defaultOptions | preventDefault = True }
@@ -162,13 +158,13 @@ onSubmit signal =
 
 
 {-| -}
-onBlur : Signal m p -> Attribute m p
+onBlur : Signal msg parts -> Attribute msg parts
 onBlur signal =
     on "blur" (Json.succeed signal)
 
 
 {-| -}
-onFocus : Signal m p -> Attribute m p
+onFocus : Signal msg parts -> Attribute msg parts
 onFocus signal =
     on "focus" (Json.succeed signal)
 
@@ -182,7 +178,7 @@ you have the power! Here is how `onClick` is defined for example:
 
     import Json.Decode as Json
 
-    onClick : Signal m p -> Attribute m p
+    onClick : Signal msg parts -> Attribute msg parts
     onClick signal =
         on "click" (Json.succeed signal)
 
@@ -202,7 +198,7 @@ It really does help!
 [tutorial]: https://github.com/evancz/elm-architecture-tutorial/
 
 -}
-on : String -> Json.Decoder (Signal m p) -> Attribute m p
+on : String -> Json.Decoder (Signal msg parts) -> Attribute msg parts
 on event decoder =
     VirtualDom.on event decoder
         |> Core.PlainAttribute
@@ -210,7 +206,11 @@ on event decoder =
 
 {-| Same as `on` but you can set a few options.
 -}
-onWithOptions : String -> Options -> Json.Decoder (Signal m p) -> Attribute m p
+onWithOptions :
+    String
+    -> Options
+    -> Json.Decoder (Signal msg parts)
+    -> Attribute msg parts
 onWithOptions event decoder options =
     VirtualDom.onWithOptions event decoder options
         |> Core.PlainAttribute
@@ -248,7 +248,7 @@ defaultOptions =
 
     import Json.Decode as Json
 
-    onInput : (String -> Signal m p) -> Attribute m p
+    onInput : (String -> Signal msg parts) -> Attribute msg parts
     onInput tagger =
         on "input" (Json.map tagger targetValue)
 
@@ -266,7 +266,7 @@ targetValue =
 
     import Json.Decode as Json
 
-    onCheck : (Bool -> Signal m p) -> Attribute m p
+    onCheck : (Bool -> Signal msg parts) -> Attribute msg parts
     onCheck tagger =
         on "input" (Json.map tagger targetChecked)
 
@@ -281,7 +281,7 @@ keyboard listeners like this:
 
     import Json.Decode as Json
 
-    onKeyUp : (Int -> Signal m p) -> Attribute m p
+    onKeyUp : (Int -> Signal msg parts) -> Attribute msg parts
     onKeyUp tagger =
         on "keyup" (Json.map tagger keyCode)
 

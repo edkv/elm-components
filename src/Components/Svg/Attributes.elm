@@ -263,9 +263,9 @@ module Components.Svg.Attributes
 {-|
 
 
-# Custom attributes
+# Primitives
 
-@docs attribute, attributeNS
+@docs attribute, attributeNS, none, plain
 
 
 # CSS
@@ -275,7 +275,7 @@ module Components.Svg.Attributes
 
 # Regular attributes
 
-@docs accentHeight, accelerate, accumulate, additive, alphabetic, allowReorder, amplitude, arabicForm, ascent, attributeName, attributeType, autoReverse, azimuth, baseFrequency, baseProfile, bbox, begin, bias, by, calcMode, capHeight, class, clipPathUnits, contentScriptType, contentStyleType, cx, cy, d, decelerate, descent, diffuseConstant, divisor, dur, dx, dy, edgeMode, elevation, end, exponent, externalResourcesRequired, filterRes, filterUnits, format, from, fx, fy, g1, g2, glyphName, glyphRef, gradientTransform, gradientUnits, hanging, height, horizAdvX, horizOriginX, horizOriginY, id, ideographic, in_, in2, intercept, k, k1, k2, k3, k4, kernelMatrix, kernelUnitLength, keyPoints, keySplines, keyTimes, lang, lengthAdjust, limitingConeAngle, local, markerHeight, markerUnits, markerWidth, maskContentUnits, maskUnits, mathematical, max, media, method, min, mode, name, numOctaves, offset, operator, order, orient, orientation, origin, overlinePosition, overlineThickness, panose1, path, pathLength, patternContentUnits, patternTransform, patternUnits, pointOrder, points, pointsAtX, pointsAtY, pointsAtZ, preserveAlpha, preserveAspectRatio, primitiveUnits, r, radius, refX, refY, renderingIntent, repeatCount, repeatDur, requiredExtensions, requiredFeatures, restart, result, rotate, rx, ry, scale, seed, slope, spacing, specularConstant, specularExponent, speed, spreadMethod, startOffset, stdDeviation, stemh, stemv, stitchTiles, strikethroughPosition, strikethroughThickness, string, style, surfaceScale, systemLanguage, tableValues, target, targetX, targetY, textLength, title, to, transform, type_, u1, u2, underlinePosition, underlineThickness, unicode, unicodeRange, unitsPerEm, vAlphabetic, vHanging, vIdeographic, vMathematical, values, version, vertAdvY, vertOriginX, vertOriginY, viewBox, viewTarget, width, widths, x, xHeight, x1, x2, xChannelSelector, xlinkActuate, xlinkArcrole, xlinkHref, xlinkRole, xlinkShow, xlinkTitle, xlinkType, xmlBase, xmlLang, xmlSpace, y, y1, y2, yChannelSelector, z, zoomAndPan
+@docs accentHeight, accelerate, accumulate, additive, alphabetic, allowReorder, amplitude, arabicForm, ascent, attributeName, attributeType, autoReverse, azimuth, baseFrequency, baseProfile, bbox, begin, bias, by, calcMode, capHeight, class, clipPathUnits, contentScriptType, contentStyleType, cx, cy, d, decelerate, descent, diffuseConstant, divisor, dur, dx, dy, edgeMode, elevation, end, exponent, externalResourcesRequired, filterRes, filterUnits, format, from, fx, fy, g1, g2, glyphName, glyphRef, gradientTransform, gradientUnits, hanging, height, horizAdvX, horizOriginX, horizOriginY, id, ideographic, in_, in2, intercept, k, k1, k2, k3, k4, kernelMatrix, kernelUnitLength, keyPoints, keySplines, keyTimes, lang, lengthAdjust, limitingConeAngle, local, markerHeight, markerUnits, markerWidth, maskContentUnits, maskUnits, mathematical, max, media, method, min, mode, name, numOctaves, offset, operator, order, orient, orientation, origin, overlinePosition, overlineThickness, panose1, path, pathLength, patternContentUnits, patternTransform, patternUnits, pointOrder, points, pointsAtX, pointsAtY, pointsAtZ, preserveAlpha, preserveAspectRatio, primitiveUnits, r, radius, refX, refY, renderingIntent, repeatCount, repeatDur, requiredExtensions, requiredFeatures, restart, result, rotate, rx, ry, scale, seed, slope, spacing, specularConstant, specularExponent, speed, spreadMethod, startOffset, stdDeviation, stemh, stemv, stitchTiles, strikethroughPosition, strikethroughThickness, string, surfaceScale, systemLanguage, tableValues, target, targetX, targetY, textLength, title, to, transform, type_, u1, u2, underlinePosition, underlineThickness, unicode, unicodeRange, unitsPerEm, vAlphabetic, vHanging, vIdeographic, vMathematical, values, version, vertAdvY, vertOriginX, vertOriginY, viewBox, viewTarget, width, widths, x, xHeight, x1, x2, xChannelSelector, xlinkActuate, xlinkArcrole, xlinkHref, xlinkRole, xlinkShow, xlinkTitle, xlinkType, xmlBase, xmlLang, xmlSpace, y, y1, y2, yChannelSelector, z, zoomAndPan
 
 
 # Presentation attributes
@@ -290,12 +290,12 @@ import Css
 import VirtualDom
 
 
--- Custom attributes
+-- Primitives
 
 
 {-| Create a custom attribute.
 -}
-attribute : String -> String -> Attribute m p
+attribute : String -> String -> Attribute msg parts
 attribute key value =
     VirtualDom.attribute key value
         |> Core.PlainAttribute
@@ -304,18 +304,34 @@ attribute key value =
 {-| Create a custom "namespaced" attribute. This corresponds to JavaScript's
 `setAttributeNS` function under the hood.
 -}
-attributeNS : String -> String -> String -> Attribute m p
+attributeNS : String -> String -> String -> Attribute msg parts
 attributeNS namespace key value =
     VirtualDom.attributeNS namespace key value
         |> Core.PlainAttribute
 
 
-none : Attribute m p
+{-| Don't generate any attribute.
+
+    let
+        class =
+            if someCondition then
+                Attributes.class "someClass"
+            else
+                Attributes.none
+
+    in
+    rect [ class ] [ ...  ]
+
+-}
+none : Attribute msg parts
 none =
     Core.NullAttribute
 
 
-plain : VirtualDom.Property m -> Attribute m p
+{-| Use an attribute that was created with another package like
+[`elm-lang/svg`](http://package.elm-lang.org/packages/elm-lang/svg/latest).
+-}
+plain : VirtualDom.Property msg -> Attribute msg parts
 plain =
     VirtualDom.mapProperty Core.LocalMsg
         >> Core.PlainAttribute
@@ -325,11 +341,14 @@ plain =
 -- CSS
 
 
-{-| Apply styles to an element. See the
-[`Css` module documentation](http://package.elm-lang.org/packages/rtfeldman/elm-css/latest/Css)
-for an overview of how to use this function.
+{-| Apply styles to an element.
+
+Styles are created with the help of
+[`rtfeldman/elm-css`](http://package.elm-lang.org/packages/rtfeldman/elm-css/latest/Css)
+package, so you need to install it.
+
 -}
-styles : List Css.Style -> Attribute m p
+styles : List Css.Style -> Attribute msg parts
 styles =
     Core.Styles Core.ClassAttribute
 
@@ -337,7 +356,7 @@ styles =
 {-| Specify a list of inline styles. This will generate a `style` attribute in
 the DOM.
 -}
-inlineStyles : List ( String, String ) -> Attribute m p
+inlineStyles : List ( String, String ) -> Attribute msg parts
 inlineStyles =
     VirtualDom.style >> Core.PlainAttribute
 
@@ -347,1159 +366,1159 @@ inlineStyles =
 
 
 {-| -}
-accentHeight : String -> Attribute m p
+accentHeight : String -> Attribute msg parts
 accentHeight =
     attribute "accent-height"
 
 
 {-| -}
-accelerate : String -> Attribute m p
+accelerate : String -> Attribute msg parts
 accelerate =
     attribute "accelerate"
 
 
 {-| -}
-accumulate : String -> Attribute m p
+accumulate : String -> Attribute msg parts
 accumulate =
     attribute "accumulate"
 
 
 {-| -}
-additive : String -> Attribute m p
+additive : String -> Attribute msg parts
 additive =
     attribute "additive"
 
 
 {-| -}
-alphabetic : String -> Attribute m p
+alphabetic : String -> Attribute msg parts
 alphabetic =
     attribute "alphabetic"
 
 
 {-| -}
-allowReorder : String -> Attribute m p
+allowReorder : String -> Attribute msg parts
 allowReorder =
     attribute "allowReorder"
 
 
 {-| -}
-amplitude : String -> Attribute m p
+amplitude : String -> Attribute msg parts
 amplitude =
     attribute "amplitude"
 
 
 {-| -}
-arabicForm : String -> Attribute m p
+arabicForm : String -> Attribute msg parts
 arabicForm =
     attribute "arabic-form"
 
 
 {-| -}
-ascent : String -> Attribute m p
+ascent : String -> Attribute msg parts
 ascent =
     attribute "ascent"
 
 
 {-| -}
-attributeName : String -> Attribute m p
+attributeName : String -> Attribute msg parts
 attributeName =
     attribute "attributeName"
 
 
 {-| -}
-attributeType : String -> Attribute m p
+attributeType : String -> Attribute msg parts
 attributeType =
     attribute "attributeType"
 
 
 {-| -}
-autoReverse : String -> Attribute m p
+autoReverse : String -> Attribute msg parts
 autoReverse =
     attribute "autoReverse"
 
 
 {-| -}
-azimuth : String -> Attribute m p
+azimuth : String -> Attribute msg parts
 azimuth =
     attribute "azimuth"
 
 
 {-| -}
-baseFrequency : String -> Attribute m p
+baseFrequency : String -> Attribute msg parts
 baseFrequency =
     attribute "baseFrequency"
 
 
 {-| -}
-baseProfile : String -> Attribute m p
+baseProfile : String -> Attribute msg parts
 baseProfile =
     attribute "baseProfile"
 
 
 {-| -}
-bbox : String -> Attribute m p
+bbox : String -> Attribute msg parts
 bbox =
     attribute "bbox"
 
 
 {-| -}
-begin : String -> Attribute m p
+begin : String -> Attribute msg parts
 begin =
     attribute "begin"
 
 
 {-| -}
-bias : String -> Attribute m p
+bias : String -> Attribute msg parts
 bias =
     attribute "bias"
 
 
 {-| -}
-by : String -> Attribute m p
+by : String -> Attribute msg parts
 by =
     attribute "by"
 
 
 {-| -}
-calcMode : String -> Attribute m p
+calcMode : String -> Attribute msg parts
 calcMode =
     attribute "calcMode"
 
 
 {-| -}
-capHeight : String -> Attribute m p
+capHeight : String -> Attribute msg parts
 capHeight =
     attribute "cap-height"
 
 
 {-| -}
-class : String -> Attribute m p
+class : String -> Attribute msg parts
 class =
     attribute "class"
 
 
 {-| -}
-clipPathUnits : String -> Attribute m p
+clipPathUnits : String -> Attribute msg parts
 clipPathUnits =
     attribute "clipPathUnits"
 
 
 {-| -}
-contentScriptType : String -> Attribute m p
+contentScriptType : String -> Attribute msg parts
 contentScriptType =
     attribute "contentScriptType"
 
 
 {-| -}
-contentStyleType : String -> Attribute m p
+contentStyleType : String -> Attribute msg parts
 contentStyleType =
     attribute "contentStyleType"
 
 
 {-| -}
-cx : String -> Attribute m p
+cx : String -> Attribute msg parts
 cx =
     attribute "cx"
 
 
 {-| -}
-cy : String -> Attribute m p
+cy : String -> Attribute msg parts
 cy =
     attribute "cy"
 
 
 {-| -}
-d : String -> Attribute m p
+d : String -> Attribute msg parts
 d =
     attribute "d"
 
 
 {-| -}
-decelerate : String -> Attribute m p
+decelerate : String -> Attribute msg parts
 decelerate =
     attribute "decelerate"
 
 
 {-| -}
-descent : String -> Attribute m p
+descent : String -> Attribute msg parts
 descent =
     attribute "descent"
 
 
 {-| -}
-diffuseConstant : String -> Attribute m p
+diffuseConstant : String -> Attribute msg parts
 diffuseConstant =
     attribute "diffuseConstant"
 
 
 {-| -}
-divisor : String -> Attribute m p
+divisor : String -> Attribute msg parts
 divisor =
     attribute "divisor"
 
 
 {-| -}
-dur : String -> Attribute m p
+dur : String -> Attribute msg parts
 dur =
     attribute "dur"
 
 
 {-| -}
-dx : String -> Attribute m p
+dx : String -> Attribute msg parts
 dx =
     attribute "dx"
 
 
 {-| -}
-dy : String -> Attribute m p
+dy : String -> Attribute msg parts
 dy =
     attribute "dy"
 
 
 {-| -}
-edgeMode : String -> Attribute m p
+edgeMode : String -> Attribute msg parts
 edgeMode =
     attribute "edgeMode"
 
 
 {-| -}
-elevation : String -> Attribute m p
+elevation : String -> Attribute msg parts
 elevation =
     attribute "elevation"
 
 
 {-| -}
-end : String -> Attribute m p
+end : String -> Attribute msg parts
 end =
     attribute "end"
 
 
 {-| -}
-exponent : String -> Attribute m p
+exponent : String -> Attribute msg parts
 exponent =
     attribute "exponent"
 
 
 {-| -}
-externalResourcesRequired : String -> Attribute m p
+externalResourcesRequired : String -> Attribute msg parts
 externalResourcesRequired =
     attribute "externalResourcesRequired"
 
 
 {-| -}
-filterRes : String -> Attribute m p
+filterRes : String -> Attribute msg parts
 filterRes =
     attribute "filterRes"
 
 
 {-| -}
-filterUnits : String -> Attribute m p
+filterUnits : String -> Attribute msg parts
 filterUnits =
     attribute "filterUnits"
 
 
 {-| -}
-format : String -> Attribute m p
+format : String -> Attribute msg parts
 format =
     attribute "format"
 
 
 {-| -}
-from : String -> Attribute m p
+from : String -> Attribute msg parts
 from =
     attribute "from"
 
 
 {-| -}
-fx : String -> Attribute m p
+fx : String -> Attribute msg parts
 fx =
     attribute "fx"
 
 
 {-| -}
-fy : String -> Attribute m p
+fy : String -> Attribute msg parts
 fy =
     attribute "fy"
 
 
 {-| -}
-g1 : String -> Attribute m p
+g1 : String -> Attribute msg parts
 g1 =
     attribute "g1"
 
 
 {-| -}
-g2 : String -> Attribute m p
+g2 : String -> Attribute msg parts
 g2 =
     attribute "g2"
 
 
 {-| -}
-glyphName : String -> Attribute m p
+glyphName : String -> Attribute msg parts
 glyphName =
     attribute "glyph-name"
 
 
 {-| -}
-glyphRef : String -> Attribute m p
+glyphRef : String -> Attribute msg parts
 glyphRef =
     attribute "glyphRef"
 
 
 {-| -}
-gradientTransform : String -> Attribute m p
+gradientTransform : String -> Attribute msg parts
 gradientTransform =
     attribute "gradientTransform"
 
 
 {-| -}
-gradientUnits : String -> Attribute m p
+gradientUnits : String -> Attribute msg parts
 gradientUnits =
     attribute "gradientUnits"
 
 
 {-| -}
-hanging : String -> Attribute m p
+hanging : String -> Attribute msg parts
 hanging =
     attribute "hanging"
 
 
 {-| -}
-height : String -> Attribute m p
+height : String -> Attribute msg parts
 height =
     attribute "height"
 
 
 {-| -}
-horizAdvX : String -> Attribute m p
+horizAdvX : String -> Attribute msg parts
 horizAdvX =
     attribute "horiz-adv-x"
 
 
 {-| -}
-horizOriginX : String -> Attribute m p
+horizOriginX : String -> Attribute msg parts
 horizOriginX =
     attribute "horiz-origin-x"
 
 
 {-| -}
-horizOriginY : String -> Attribute m p
+horizOriginY : String -> Attribute msg parts
 horizOriginY =
     attribute "horiz-origin-y"
 
 
 {-| -}
-id : String -> Attribute m p
+id : String -> Attribute msg parts
 id =
     attribute "id"
 
 
 {-| -}
-ideographic : String -> Attribute m p
+ideographic : String -> Attribute msg parts
 ideographic =
     attribute "ideographic"
 
 
 {-| -}
-in_ : String -> Attribute m p
+in_ : String -> Attribute msg parts
 in_ =
     attribute "in"
 
 
 {-| -}
-in2 : String -> Attribute m p
+in2 : String -> Attribute msg parts
 in2 =
     attribute "in2"
 
 
 {-| -}
-intercept : String -> Attribute m p
+intercept : String -> Attribute msg parts
 intercept =
     attribute "intercept"
 
 
 {-| -}
-k : String -> Attribute m p
+k : String -> Attribute msg parts
 k =
     attribute "k"
 
 
 {-| -}
-k1 : String -> Attribute m p
+k1 : String -> Attribute msg parts
 k1 =
     attribute "k1"
 
 
 {-| -}
-k2 : String -> Attribute m p
+k2 : String -> Attribute msg parts
 k2 =
     attribute "k2"
 
 
 {-| -}
-k3 : String -> Attribute m p
+k3 : String -> Attribute msg parts
 k3 =
     attribute "k3"
 
 
 {-| -}
-k4 : String -> Attribute m p
+k4 : String -> Attribute msg parts
 k4 =
     attribute "k4"
 
 
 {-| -}
-kernelMatrix : String -> Attribute m p
+kernelMatrix : String -> Attribute msg parts
 kernelMatrix =
     attribute "kernelMatrix"
 
 
 {-| -}
-kernelUnitLength : String -> Attribute m p
+kernelUnitLength : String -> Attribute msg parts
 kernelUnitLength =
     attribute "kernelUnitLength"
 
 
 {-| -}
-keyPoints : String -> Attribute m p
+keyPoints : String -> Attribute msg parts
 keyPoints =
     attribute "keyPoints"
 
 
 {-| -}
-keySplines : String -> Attribute m p
+keySplines : String -> Attribute msg parts
 keySplines =
     attribute "keySplines"
 
 
 {-| -}
-keyTimes : String -> Attribute m p
+keyTimes : String -> Attribute msg parts
 keyTimes =
     attribute "keyTimes"
 
 
 {-| -}
-lang : String -> Attribute m p
+lang : String -> Attribute msg parts
 lang =
     attribute "lang"
 
 
 {-| -}
-lengthAdjust : String -> Attribute m p
+lengthAdjust : String -> Attribute msg parts
 lengthAdjust =
     attribute "lengthAdjust"
 
 
 {-| -}
-limitingConeAngle : String -> Attribute m p
+limitingConeAngle : String -> Attribute msg parts
 limitingConeAngle =
     attribute "limitingConeAngle"
 
 
 {-| -}
-local : String -> Attribute m p
+local : String -> Attribute msg parts
 local =
     attribute "local"
 
 
 {-| -}
-markerHeight : String -> Attribute m p
+markerHeight : String -> Attribute msg parts
 markerHeight =
     attribute "markerHeight"
 
 
 {-| -}
-markerUnits : String -> Attribute m p
+markerUnits : String -> Attribute msg parts
 markerUnits =
     attribute "markerUnits"
 
 
 {-| -}
-markerWidth : String -> Attribute m p
+markerWidth : String -> Attribute msg parts
 markerWidth =
     attribute "markerWidth"
 
 
 {-| -}
-maskContentUnits : String -> Attribute m p
+maskContentUnits : String -> Attribute msg parts
 maskContentUnits =
     attribute "maskContentUnits"
 
 
 {-| -}
-maskUnits : String -> Attribute m p
+maskUnits : String -> Attribute msg parts
 maskUnits =
     attribute "maskUnits"
 
 
 {-| -}
-mathematical : String -> Attribute m p
+mathematical : String -> Attribute msg parts
 mathematical =
     attribute "mathematical"
 
 
 {-| -}
-max : String -> Attribute m p
+max : String -> Attribute msg parts
 max =
     attribute "max"
 
 
 {-| -}
-media : String -> Attribute m p
+media : String -> Attribute msg parts
 media =
     attribute "media"
 
 
 {-| -}
-method : String -> Attribute m p
+method : String -> Attribute msg parts
 method =
     attribute "method"
 
 
 {-| -}
-min : String -> Attribute m p
+min : String -> Attribute msg parts
 min =
     attribute "min"
 
 
 {-| -}
-mode : String -> Attribute m p
+mode : String -> Attribute msg parts
 mode =
     attribute "mode"
 
 
 {-| -}
-name : String -> Attribute m p
+name : String -> Attribute msg parts
 name =
     attribute "name"
 
 
 {-| -}
-numOctaves : String -> Attribute m p
+numOctaves : String -> Attribute msg parts
 numOctaves =
     attribute "numOctaves"
 
 
 {-| -}
-offset : String -> Attribute m p
+offset : String -> Attribute msg parts
 offset =
     attribute "offset"
 
 
 {-| -}
-operator : String -> Attribute m p
+operator : String -> Attribute msg parts
 operator =
     attribute "operator"
 
 
 {-| -}
-order : String -> Attribute m p
+order : String -> Attribute msg parts
 order =
     attribute "order"
 
 
 {-| -}
-orient : String -> Attribute m p
+orient : String -> Attribute msg parts
 orient =
     attribute "orient"
 
 
 {-| -}
-orientation : String -> Attribute m p
+orientation : String -> Attribute msg parts
 orientation =
     attribute "orientation"
 
 
 {-| -}
-origin : String -> Attribute m p
+origin : String -> Attribute msg parts
 origin =
     attribute "origin"
 
 
 {-| -}
-overlinePosition : String -> Attribute m p
+overlinePosition : String -> Attribute msg parts
 overlinePosition =
     attribute "overline-position"
 
 
 {-| -}
-overlineThickness : String -> Attribute m p
+overlineThickness : String -> Attribute msg parts
 overlineThickness =
     attribute "overline-thickness"
 
 
 {-| -}
-panose1 : String -> Attribute m p
+panose1 : String -> Attribute msg parts
 panose1 =
     attribute "panose-1"
 
 
 {-| -}
-path : String -> Attribute m p
+path : String -> Attribute msg parts
 path =
     attribute "path"
 
 
 {-| -}
-pathLength : String -> Attribute m p
+pathLength : String -> Attribute msg parts
 pathLength =
     attribute "pathLength"
 
 
 {-| -}
-patternContentUnits : String -> Attribute m p
+patternContentUnits : String -> Attribute msg parts
 patternContentUnits =
     attribute "patternContentUnits"
 
 
 {-| -}
-patternTransform : String -> Attribute m p
+patternTransform : String -> Attribute msg parts
 patternTransform =
     attribute "patternTransform"
 
 
 {-| -}
-patternUnits : String -> Attribute m p
+patternUnits : String -> Attribute msg parts
 patternUnits =
     attribute "patternUnits"
 
 
 {-| -}
-pointOrder : String -> Attribute m p
+pointOrder : String -> Attribute msg parts
 pointOrder =
     attribute "point-order"
 
 
 {-| -}
-points : String -> Attribute m p
+points : String -> Attribute msg parts
 points =
     attribute "points"
 
 
 {-| -}
-pointsAtX : String -> Attribute m p
+pointsAtX : String -> Attribute msg parts
 pointsAtX =
     attribute "pointsAtX"
 
 
 {-| -}
-pointsAtY : String -> Attribute m p
+pointsAtY : String -> Attribute msg parts
 pointsAtY =
     attribute "pointsAtY"
 
 
 {-| -}
-pointsAtZ : String -> Attribute m p
+pointsAtZ : String -> Attribute msg parts
 pointsAtZ =
     attribute "pointsAtZ"
 
 
 {-| -}
-preserveAlpha : String -> Attribute m p
+preserveAlpha : String -> Attribute msg parts
 preserveAlpha =
     attribute "preserveAlpha"
 
 
 {-| -}
-preserveAspectRatio : String -> Attribute m p
+preserveAspectRatio : String -> Attribute msg parts
 preserveAspectRatio =
     attribute "preserveAspectRatio"
 
 
 {-| -}
-primitiveUnits : String -> Attribute m p
+primitiveUnits : String -> Attribute msg parts
 primitiveUnits =
     attribute "primitiveUnits"
 
 
 {-| -}
-r : String -> Attribute m p
+r : String -> Attribute msg parts
 r =
     attribute "r"
 
 
 {-| -}
-radius : String -> Attribute m p
+radius : String -> Attribute msg parts
 radius =
     attribute "radius"
 
 
 {-| -}
-refX : String -> Attribute m p
+refX : String -> Attribute msg parts
 refX =
     attribute "refX"
 
 
 {-| -}
-refY : String -> Attribute m p
+refY : String -> Attribute msg parts
 refY =
     attribute "refY"
 
 
 {-| -}
-renderingIntent : String -> Attribute m p
+renderingIntent : String -> Attribute msg parts
 renderingIntent =
     attribute "rendering-intent"
 
 
 {-| -}
-repeatCount : String -> Attribute m p
+repeatCount : String -> Attribute msg parts
 repeatCount =
     attribute "repeatCount"
 
 
 {-| -}
-repeatDur : String -> Attribute m p
+repeatDur : String -> Attribute msg parts
 repeatDur =
     attribute "repeatDur"
 
 
 {-| -}
-requiredExtensions : String -> Attribute m p
+requiredExtensions : String -> Attribute msg parts
 requiredExtensions =
     attribute "requiredExtensions"
 
 
 {-| -}
-requiredFeatures : String -> Attribute m p
+requiredFeatures : String -> Attribute msg parts
 requiredFeatures =
     attribute "requiredFeatures"
 
 
 {-| -}
-restart : String -> Attribute m p
+restart : String -> Attribute msg parts
 restart =
     attribute "restart"
 
 
 {-| -}
-result : String -> Attribute m p
+result : String -> Attribute msg parts
 result =
     attribute "result"
 
 
 {-| -}
-rotate : String -> Attribute m p
+rotate : String -> Attribute msg parts
 rotate =
     attribute "rotate"
 
 
 {-| -}
-rx : String -> Attribute m p
+rx : String -> Attribute msg parts
 rx =
     attribute "rx"
 
 
 {-| -}
-ry : String -> Attribute m p
+ry : String -> Attribute msg parts
 ry =
     attribute "ry"
 
 
 {-| -}
-scale : String -> Attribute m p
+scale : String -> Attribute msg parts
 scale =
     attribute "scale"
 
 
 {-| -}
-seed : String -> Attribute m p
+seed : String -> Attribute msg parts
 seed =
     attribute "seed"
 
 
 {-| -}
-slope : String -> Attribute m p
+slope : String -> Attribute msg parts
 slope =
     attribute "slope"
 
 
 {-| -}
-spacing : String -> Attribute m p
+spacing : String -> Attribute msg parts
 spacing =
     attribute "spacing"
 
 
 {-| -}
-specularConstant : String -> Attribute m p
+specularConstant : String -> Attribute msg parts
 specularConstant =
     attribute "specularConstant"
 
 
 {-| -}
-specularExponent : String -> Attribute m p
+specularExponent : String -> Attribute msg parts
 specularExponent =
     attribute "specularExponent"
 
 
 {-| -}
-speed : String -> Attribute m p
+speed : String -> Attribute msg parts
 speed =
     attribute "speed"
 
 
 {-| -}
-spreadMethod : String -> Attribute m p
+spreadMethod : String -> Attribute msg parts
 spreadMethod =
     attribute "spreadMethod"
 
 
 {-| -}
-startOffset : String -> Attribute m p
+startOffset : String -> Attribute msg parts
 startOffset =
     attribute "startOffset"
 
 
 {-| -}
-stdDeviation : String -> Attribute m p
+stdDeviation : String -> Attribute msg parts
 stdDeviation =
     attribute "stdDeviation"
 
 
 {-| -}
-stemh : String -> Attribute m p
+stemh : String -> Attribute msg parts
 stemh =
     attribute "stemh"
 
 
 {-| -}
-stemv : String -> Attribute m p
+stemv : String -> Attribute msg parts
 stemv =
     attribute "stemv"
 
 
 {-| -}
-stitchTiles : String -> Attribute m p
+stitchTiles : String -> Attribute msg parts
 stitchTiles =
     attribute "stitchTiles"
 
 
 {-| -}
-strikethroughPosition : String -> Attribute m p
+strikethroughPosition : String -> Attribute msg parts
 strikethroughPosition =
     attribute "strikethrough-position"
 
 
 {-| -}
-strikethroughThickness : String -> Attribute m p
+strikethroughThickness : String -> Attribute msg parts
 strikethroughThickness =
     attribute "strikethrough-thickness"
 
 
 {-| -}
-string : String -> Attribute m p
+string : String -> Attribute msg parts
 string =
     attribute "string"
 
 
 {-| -}
-surfaceScale : String -> Attribute m p
+surfaceScale : String -> Attribute msg parts
 surfaceScale =
     attribute "surfaceScale"
 
 
 {-| -}
-systemLanguage : String -> Attribute m p
+systemLanguage : String -> Attribute msg parts
 systemLanguage =
     attribute "systemLanguage"
 
 
 {-| -}
-tableValues : String -> Attribute m p
+tableValues : String -> Attribute msg parts
 tableValues =
     attribute "tableValues"
 
 
 {-| -}
-target : String -> Attribute m p
+target : String -> Attribute msg parts
 target =
     attribute "target"
 
 
 {-| -}
-targetX : String -> Attribute m p
+targetX : String -> Attribute msg parts
 targetX =
     attribute "targetX"
 
 
 {-| -}
-targetY : String -> Attribute m p
+targetY : String -> Attribute msg parts
 targetY =
     attribute "targetY"
 
 
 {-| -}
-textLength : String -> Attribute m p
+textLength : String -> Attribute msg parts
 textLength =
     attribute "textLength"
 
 
 {-| -}
-title : String -> Attribute m p
+title : String -> Attribute msg parts
 title =
     attribute "title"
 
 
 {-| -}
-to : String -> Attribute m p
+to : String -> Attribute msg parts
 to =
     attribute "to"
 
 
 {-| -}
-transform : String -> Attribute m p
+transform : String -> Attribute msg parts
 transform =
     attribute "transform"
 
 
 {-| -}
-type_ : String -> Attribute m p
+type_ : String -> Attribute msg parts
 type_ =
     attribute "type"
 
 
 {-| -}
-u1 : String -> Attribute m p
+u1 : String -> Attribute msg parts
 u1 =
     attribute "u1"
 
 
 {-| -}
-u2 : String -> Attribute m p
+u2 : String -> Attribute msg parts
 u2 =
     attribute "u2"
 
 
 {-| -}
-underlinePosition : String -> Attribute m p
+underlinePosition : String -> Attribute msg parts
 underlinePosition =
     attribute "underline-position"
 
 
 {-| -}
-underlineThickness : String -> Attribute m p
+underlineThickness : String -> Attribute msg parts
 underlineThickness =
     attribute "underline-thickness"
 
 
 {-| -}
-unicode : String -> Attribute m p
+unicode : String -> Attribute msg parts
 unicode =
     attribute "unicode"
 
 
 {-| -}
-unicodeRange : String -> Attribute m p
+unicodeRange : String -> Attribute msg parts
 unicodeRange =
     attribute "unicode-range"
 
 
 {-| -}
-unitsPerEm : String -> Attribute m p
+unitsPerEm : String -> Attribute msg parts
 unitsPerEm =
     attribute "units-per-em"
 
 
 {-| -}
-vAlphabetic : String -> Attribute m p
+vAlphabetic : String -> Attribute msg parts
 vAlphabetic =
     attribute "v-alphabetic"
 
 
 {-| -}
-vHanging : String -> Attribute m p
+vHanging : String -> Attribute msg parts
 vHanging =
     attribute "v-hanging"
 
 
 {-| -}
-vIdeographic : String -> Attribute m p
+vIdeographic : String -> Attribute msg parts
 vIdeographic =
     attribute "v-ideographic"
 
 
 {-| -}
-vMathematical : String -> Attribute m p
+vMathematical : String -> Attribute msg parts
 vMathematical =
     attribute "v-mathematical"
 
 
 {-| -}
-values : String -> Attribute m p
+values : String -> Attribute msg parts
 values =
     attribute "values"
 
 
 {-| -}
-version : String -> Attribute m p
+version : String -> Attribute msg parts
 version =
     attribute "version"
 
 
 {-| -}
-vertAdvY : String -> Attribute m p
+vertAdvY : String -> Attribute msg parts
 vertAdvY =
     attribute "vert-adv-y"
 
 
 {-| -}
-vertOriginX : String -> Attribute m p
+vertOriginX : String -> Attribute msg parts
 vertOriginX =
     attribute "vert-origin-x"
 
 
 {-| -}
-vertOriginY : String -> Attribute m p
+vertOriginY : String -> Attribute msg parts
 vertOriginY =
     attribute "vert-origin-y"
 
 
 {-| -}
-viewBox : String -> Attribute m p
+viewBox : String -> Attribute msg parts
 viewBox =
     attribute "viewBox"
 
 
 {-| -}
-viewTarget : String -> Attribute m p
+viewTarget : String -> Attribute msg parts
 viewTarget =
     attribute "viewTarget"
 
 
 {-| -}
-width : String -> Attribute m p
+width : String -> Attribute msg parts
 width =
     attribute "width"
 
 
 {-| -}
-widths : String -> Attribute m p
+widths : String -> Attribute msg parts
 widths =
     attribute "widths"
 
 
 {-| -}
-x : String -> Attribute m p
+x : String -> Attribute msg parts
 x =
     attribute "x"
 
 
 {-| -}
-xHeight : String -> Attribute m p
+xHeight : String -> Attribute msg parts
 xHeight =
     attribute "x-height"
 
 
 {-| -}
-x1 : String -> Attribute m p
+x1 : String -> Attribute msg parts
 x1 =
     attribute "x1"
 
 
 {-| -}
-x2 : String -> Attribute m p
+x2 : String -> Attribute msg parts
 x2 =
     attribute "x2"
 
 
 {-| -}
-xChannelSelector : String -> Attribute m p
+xChannelSelector : String -> Attribute msg parts
 xChannelSelector =
     attribute "xChannelSelector"
 
 
 {-| -}
-xlinkActuate : String -> Attribute m p
+xlinkActuate : String -> Attribute msg parts
 xlinkActuate =
     attributeNS "http://www.w3.org/1999/xlink" "xlink:actuate"
 
 
 {-| -}
-xlinkArcrole : String -> Attribute m p
+xlinkArcrole : String -> Attribute msg parts
 xlinkArcrole =
     attributeNS "http://www.w3.org/1999/xlink" "xlink:arcrole"
 
 
 {-| -}
-xlinkHref : String -> Attribute m p
+xlinkHref : String -> Attribute msg parts
 xlinkHref =
     attributeNS "http://www.w3.org/1999/xlink" "xlink:href"
 
 
 {-| -}
-xlinkRole : String -> Attribute m p
+xlinkRole : String -> Attribute msg parts
 xlinkRole =
     attributeNS "http://www.w3.org/1999/xlink" "xlink:role"
 
 
 {-| -}
-xlinkShow : String -> Attribute m p
+xlinkShow : String -> Attribute msg parts
 xlinkShow =
     attributeNS "http://www.w3.org/1999/xlink" "xlink:show"
 
 
 {-| -}
-xlinkTitle : String -> Attribute m p
+xlinkTitle : String -> Attribute msg parts
 xlinkTitle =
     attributeNS "http://www.w3.org/1999/xlink" "xlink:title"
 
 
 {-| -}
-xlinkType : String -> Attribute m p
+xlinkType : String -> Attribute msg parts
 xlinkType =
     attributeNS "http://www.w3.org/1999/xlink" "xlink:type"
 
 
 {-| -}
-xmlBase : String -> Attribute m p
+xmlBase : String -> Attribute msg parts
 xmlBase =
     attributeNS "http://www.w3.org/XML/1998/namespace" "xml:base"
 
 
 {-| -}
-xmlLang : String -> Attribute m p
+xmlLang : String -> Attribute msg parts
 xmlLang =
     attributeNS "http://www.w3.org/XML/1998/namespace" "xml:lang"
 
 
 {-| -}
-xmlSpace : String -> Attribute m p
+xmlSpace : String -> Attribute msg parts
 xmlSpace =
     attributeNS "http://www.w3.org/XML/1998/namespace" "xml:space"
 
 
 {-| -}
-y : String -> Attribute m p
+y : String -> Attribute msg parts
 y =
     attribute "y"
 
 
 {-| -}
-y1 : String -> Attribute m p
+y1 : String -> Attribute msg parts
 y1 =
     attribute "y1"
 
 
 {-| -}
-y2 : String -> Attribute m p
+y2 : String -> Attribute msg parts
 y2 =
     attribute "y2"
 
 
 {-| -}
-yChannelSelector : String -> Attribute m p
+yChannelSelector : String -> Attribute msg parts
 yChannelSelector =
     attribute "yChannelSelector"
 
 
 {-| -}
-z : String -> Attribute m p
+z : String -> Attribute msg parts
 z =
     attribute "z"
 
 
 {-| -}
-zoomAndPan : String -> Attribute m p
+zoomAndPan : String -> Attribute msg parts
 zoomAndPan =
     attribute "zoomAndPan"
 
@@ -1509,354 +1528,354 @@ zoomAndPan =
 
 
 {-| -}
-alignmentBaseline : String -> Attribute m p
+alignmentBaseline : String -> Attribute msg parts
 alignmentBaseline =
     attribute "alignment-baseline"
 
 
 {-| -}
-baselineShift : String -> Attribute m p
+baselineShift : String -> Attribute msg parts
 baselineShift =
     attribute "baseline-shift"
 
 
 {-| -}
-clipPath : String -> Attribute m p
+clipPath : String -> Attribute msg parts
 clipPath =
     attribute "clip-path"
 
 
 {-| -}
-clipRule : String -> Attribute m p
+clipRule : String -> Attribute msg parts
 clipRule =
     attribute "clip-rule"
 
 
 {-| -}
-clip : String -> Attribute m p
+clip : String -> Attribute msg parts
 clip =
     attribute "clip"
 
 
 {-| -}
-colorInterpolationFilters : String -> Attribute m p
+colorInterpolationFilters : String -> Attribute msg parts
 colorInterpolationFilters =
     attribute "color-interpolation-filters"
 
 
 {-| -}
-colorInterpolation : String -> Attribute m p
+colorInterpolation : String -> Attribute msg parts
 colorInterpolation =
     attribute "color-interpolation"
 
 
 {-| -}
-colorProfile : String -> Attribute m p
+colorProfile : String -> Attribute msg parts
 colorProfile =
     attribute "color-profile"
 
 
 {-| -}
-colorRendering : String -> Attribute m p
+colorRendering : String -> Attribute msg parts
 colorRendering =
     attribute "color-rendering"
 
 
 {-| -}
-color : String -> Attribute m p
+color : String -> Attribute msg parts
 color =
     attribute "color"
 
 
 {-| -}
-cursor : String -> Attribute m p
+cursor : String -> Attribute msg parts
 cursor =
     attribute "cursor"
 
 
 {-| -}
-direction : String -> Attribute m p
+direction : String -> Attribute msg parts
 direction =
     attribute "direction"
 
 
 {-| -}
-display : String -> Attribute m p
+display : String -> Attribute msg parts
 display =
     attribute "display"
 
 
 {-| -}
-dominantBaseline : String -> Attribute m p
+dominantBaseline : String -> Attribute msg parts
 dominantBaseline =
     attribute "dominant-baseline"
 
 
 {-| -}
-enableBackground : String -> Attribute m p
+enableBackground : String -> Attribute msg parts
 enableBackground =
     attribute "enable-background"
 
 
 {-| -}
-fillOpacity : String -> Attribute m p
+fillOpacity : String -> Attribute msg parts
 fillOpacity =
     attribute "fill-opacity"
 
 
 {-| -}
-fillRule : String -> Attribute m p
+fillRule : String -> Attribute msg parts
 fillRule =
     attribute "fill-rule"
 
 
 {-| -}
-fill : String -> Attribute m p
+fill : String -> Attribute msg parts
 fill =
     attribute "fill"
 
 
 {-| -}
-filter : String -> Attribute m p
+filter : String -> Attribute msg parts
 filter =
     attribute "filter"
 
 
 {-| -}
-floodColor : String -> Attribute m p
+floodColor : String -> Attribute msg parts
 floodColor =
     attribute "flood-color"
 
 
 {-| -}
-floodOpacity : String -> Attribute m p
+floodOpacity : String -> Attribute msg parts
 floodOpacity =
     attribute "flood-opacity"
 
 
 {-| -}
-fontFamily : String -> Attribute m p
+fontFamily : String -> Attribute msg parts
 fontFamily =
     attribute "font-family"
 
 
 {-| -}
-fontSizeAdjust : String -> Attribute m p
+fontSizeAdjust : String -> Attribute msg parts
 fontSizeAdjust =
     attribute "font-size-adjust"
 
 
 {-| -}
-fontSize : String -> Attribute m p
+fontSize : String -> Attribute msg parts
 fontSize =
     attribute "font-size"
 
 
 {-| -}
-fontStretch : String -> Attribute m p
+fontStretch : String -> Attribute msg parts
 fontStretch =
     attribute "font-stretch"
 
 
 {-| -}
-fontStyle : String -> Attribute m p
+fontStyle : String -> Attribute msg parts
 fontStyle =
     attribute "font-style"
 
 
 {-| -}
-fontVariant : String -> Attribute m p
+fontVariant : String -> Attribute msg parts
 fontVariant =
     attribute "font-variant"
 
 
 {-| -}
-fontWeight : String -> Attribute m p
+fontWeight : String -> Attribute msg parts
 fontWeight =
     attribute "font-weight"
 
 
 {-| -}
-glyphOrientationHorizontal : String -> Attribute m p
+glyphOrientationHorizontal : String -> Attribute msg parts
 glyphOrientationHorizontal =
     attribute "glyph-orientation-horizontal"
 
 
 {-| -}
-glyphOrientationVertical : String -> Attribute m p
+glyphOrientationVertical : String -> Attribute msg parts
 glyphOrientationVertical =
     attribute "glyph-orientation-vertical"
 
 
 {-| -}
-imageRendering : String -> Attribute m p
+imageRendering : String -> Attribute msg parts
 imageRendering =
     attribute "image-rendering"
 
 
 {-| -}
-kerning : String -> Attribute m p
+kerning : String -> Attribute msg parts
 kerning =
     attribute "kerning"
 
 
 {-| -}
-letterSpacing : String -> Attribute m p
+letterSpacing : String -> Attribute msg parts
 letterSpacing =
     attribute "letter-spacing"
 
 
 {-| -}
-lightingColor : String -> Attribute m p
+lightingColor : String -> Attribute msg parts
 lightingColor =
     attribute "lighting-color"
 
 
 {-| -}
-markerEnd : String -> Attribute m p
+markerEnd : String -> Attribute msg parts
 markerEnd =
     attribute "marker-end"
 
 
 {-| -}
-markerMid : String -> Attribute m p
+markerMid : String -> Attribute msg parts
 markerMid =
     attribute "marker-mid"
 
 
 {-| -}
-markerStart : String -> Attribute m p
+markerStart : String -> Attribute msg parts
 markerStart =
     attribute "marker-start"
 
 
 {-| -}
-mask : String -> Attribute m p
+mask : String -> Attribute msg parts
 mask =
     attribute "mask"
 
 
 {-| -}
-opacity : String -> Attribute m p
+opacity : String -> Attribute msg parts
 opacity =
     attribute "opacity"
 
 
 {-| -}
-overflow : String -> Attribute m p
+overflow : String -> Attribute msg parts
 overflow =
     attribute "overflow"
 
 
 {-| -}
-pointerEvents : String -> Attribute m p
+pointerEvents : String -> Attribute msg parts
 pointerEvents =
     attribute "pointer-events"
 
 
 {-| -}
-shapeRendering : String -> Attribute m p
+shapeRendering : String -> Attribute msg parts
 shapeRendering =
     attribute "shape-rendering"
 
 
 {-| -}
-stopColor : String -> Attribute m p
+stopColor : String -> Attribute msg parts
 stopColor =
     attribute "stop-color"
 
 
 {-| -}
-stopOpacity : String -> Attribute m p
+stopOpacity : String -> Attribute msg parts
 stopOpacity =
     attribute "stop-opacity"
 
 
 {-| -}
-strokeDasharray : String -> Attribute m p
+strokeDasharray : String -> Attribute msg parts
 strokeDasharray =
     attribute "stroke-dasharray"
 
 
 {-| -}
-strokeDashoffset : String -> Attribute m p
+strokeDashoffset : String -> Attribute msg parts
 strokeDashoffset =
     attribute "stroke-dashoffset"
 
 
 {-| -}
-strokeLinecap : String -> Attribute m p
+strokeLinecap : String -> Attribute msg parts
 strokeLinecap =
     attribute "stroke-linecap"
 
 
 {-| -}
-strokeLinejoin : String -> Attribute m p
+strokeLinejoin : String -> Attribute msg parts
 strokeLinejoin =
     attribute "stroke-linejoin"
 
 
 {-| -}
-strokeMiterlimit : String -> Attribute m p
+strokeMiterlimit : String -> Attribute msg parts
 strokeMiterlimit =
     attribute "stroke-miterlimit"
 
 
 {-| -}
-strokeOpacity : String -> Attribute m p
+strokeOpacity : String -> Attribute msg parts
 strokeOpacity =
     attribute "stroke-opacity"
 
 
 {-| -}
-strokeWidth : String -> Attribute m p
+strokeWidth : String -> Attribute msg parts
 strokeWidth =
     attribute "stroke-width"
 
 
 {-| -}
-stroke : String -> Attribute m p
+stroke : String -> Attribute msg parts
 stroke =
     attribute "stroke"
 
 
 {-| -}
-textAnchor : String -> Attribute m p
+textAnchor : String -> Attribute msg parts
 textAnchor =
     attribute "text-anchor"
 
 
 {-| -}
-textDecoration : String -> Attribute m p
+textDecoration : String -> Attribute msg parts
 textDecoration =
     attribute "text-decoration"
 
 
 {-| -}
-textRendering : String -> Attribute m p
+textRendering : String -> Attribute msg parts
 textRendering =
     attribute "text-rendering"
 
 
 {-| -}
-unicodeBidi : String -> Attribute m p
+unicodeBidi : String -> Attribute msg parts
 unicodeBidi =
     attribute "unicode-bidi"
 
 
 {-| -}
-visibility : String -> Attribute m p
+visibility : String -> Attribute msg parts
 visibility =
     attribute "visibility"
 
 
 {-| -}
-wordSpacing : String -> Attribute m p
+wordSpacing : String -> Attribute msg parts
 wordSpacing =
     attribute "word-spacing"
 
 
 {-| -}
-writingMode : String -> Attribute m p
+writingMode : String -> Attribute msg parts
 writingMode =
     attribute "writing-mode"

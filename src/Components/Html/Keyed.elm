@@ -31,24 +31,37 @@ each child node. You want this when you have a list of nodes that is changing:
 adding nodes, removing nodes, etc. In these cases, the unique identifiers help
 make the DOM modifications more efficient.
 -}
-node : String -> List (Attribute m p) -> List ( String, Html m p ) -> Html m p
+node :
+    String
+    -> List (Attribute msg parts)
+    -> List ( String, Html msg parts )
+    -> Html msg parts
 node =
     Core.KeyedElement
 
 
 {-| -}
-div : List (Attribute m p) -> List ( String, Html m p ) -> Html m p
+div :
+    List (Attribute msg parts)
+    -> List ( String, Html msg parts )
+    -> Html msg parts
 div =
     node "div"
 
 
 {-| -}
-ol : List (Attribute m p) -> List ( String, Html m p ) -> Html m p
+ol :
+    List (Attribute msg parts)
+    -> List ( String, Html msg parts )
+    -> Html msg parts
 ol =
     node "ol"
 
 
 {-| -}
-ul : List (Attribute m p) -> List ( String, Html m p ) -> Html m p
+ul :
+    List (Attribute msg parts)
+    -> List ( String, Html msg parts )
+    -> Html msg parts
 ul =
     node "ul"
