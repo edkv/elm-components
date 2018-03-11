@@ -555,7 +555,7 @@ defaultOptions =
     }
 
 
-{-| Turns a message to a `Signal`.
+{-| Turns a message into a `Signal`.
 
 Use this in your views:
 
@@ -758,14 +758,14 @@ convertSlot =
 -- RUNNING COMPONENTS
 
 
-{-| Add this to the `State`/`Model` of you program as shown in the example
+{-| Add this to the `State`/`Model` of your program as shown in the example
 above.
 -}
 type alias State container outMsg =
     Run.State container outMsg
 
 
-{-| Add this to the `Msg` of you program as shown in the example above.
+{-| Add this to the `Msg` of your program as shown in the example above.
 -}
 type alias Msg container outMsg =
     Run.Msg container outMsg
