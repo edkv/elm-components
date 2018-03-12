@@ -256,28 +256,31 @@ import VirtualDom
 -- CORE TYPES
 
 
-{-| Views are built with nodes. A node can be either an element or a component.
-It can emit messages of the type `msg` and contain components which are
-described by the type `parts`.
+{-| Views are built with nodes. A node can be either an
+[element](Components-Html) or a [component](#Component). It can emit messages of
+type `msg` and contain components which are described by the type `parts`.
 -}
 type alias Node msg parts =
     Core.Node msg parts
 
 
-{-| Represents a component.
-
-You can define components with the help of functions like [`regular`](#regular):
+{-| Represents a component. You can define components with the help of functions
+like [`regular`](#regular):
 
     button : Component Container msg parts
     button =
         Components.regular
-            { init = ...
-            , ...
+            { init = init
+            , update = update
+            , subscriptions = subscriptions
+            , view = view
+            , parts = ()
             }
 
-The `msg` and `parts` type variables mean that it can be converted into a
+This can be read as the following: a button is a component which defines a
+[container](#Container) of type `Container` and can be converted into a
 `Node msg parts` and therefore embedded inside a view of another component which
-has a `Msg` of type `msg` and `Parts` of type `parts`. It can be done by passing
+has a `Msg` of type `msg` and `Parts` of type `parts`. You can do it passing
 a `Component` into the [`slot`](#slot) function and giving it a [`Slot`](#Slot).
 
 -}
@@ -345,7 +348,7 @@ type alias Slot container parts =
 
 
 {-| Represents a DOM attribute/property. May emit `Signal msg parts` if it is
-an [event handler](Html-Events).
+an [event handler](Components-Html-Events).
 -}
 type alias Attribute msg parts =
     Core.Attribute msg parts
@@ -356,8 +359,9 @@ type alias Attribute msg parts =
 
 
 {-| Contains some useful information about your component (currently only an
-`id` field) and some internal stuff that is used by functions like
-[`convertNode`](#convertNode).
+`id` field) and some internal stuff which is used by functions like
+[`sendToPart`](#sendToPart) or [`convertNode`](#convertNode) that receive
+`Self` as an argument.
 
 An `id` is a string of form `_06f8786c-fd3f-4057-ada2-9561883241db_9`. You can
 use it for things like HTML `id` attributes or CSS classes. It consists of an
@@ -373,7 +377,7 @@ type alias Self state msg parts consumerParts =
 
 {-| Some internal stuff you don't have access to. It is stored inside of
 [`Self`](#Self) and is used in functions like [`sendToPart`](#sendToPart) or
-[`convertNode`](#convertNode) which receive `Self` as an argument.
+[`convertNode`](#convertNode) that receive `Self` as an argument.
 -}
 type alias ComponentInternalStuff state msg parts consumerParts =
     Core.ComponentInternalStuff state msg parts consumerParts
@@ -400,7 +404,7 @@ from a consumer and embed them inside your `view`, use the [`mixed`](#mixed)
 function instead.
 
 The `init` and `update` functions can transmit signals to a consumer (which the
-component need to accept as arguments) or [to `Parts`](#sendToPart).
+component need to accept as arguments) or [to the `parts`](#sendToPart).
 
 Read the [Declaring Parts](#declaring-parts) section to see how to specify
 `parts`.
@@ -555,9 +559,7 @@ defaultOptions =
     }
 
 
-{-| Turns a message into a `Signal`.
-
-Use this in your views:
+{-| Turns a message into a `Signal`. Use this in your views:
 
     button [ onClick (send DoSomething) ]
         [ text "Do something"
@@ -569,9 +571,8 @@ send =
     Core.LocalMsg
 
 
-{-| Allows you to send messages to the `Parts` of your component.
-
-Return the result from the `init` or `update` function:
+{-| Allows you to send messages to the `Parts` of your component. Return the
+result from the `init` or `update` function:
 
     update self msg state =
         case msg of
@@ -613,8 +614,8 @@ another component:
             }
             |> slot ( .button, \x y -> { y | button = x } )
 
-**Don't use it with a particular `Slot` more than one time! This is not
-currently handled and the result is unpredictable!**
+**Don't use it with the same `Slot` more than one time! This is not currently
+handled and the result is unpredictable!**
 
 -}
 slot :
@@ -722,8 +723,8 @@ convertAttribute =
 
 
 {-| Given a `Slot` for a component that is registered in your `Parts`, convert
-it in a such way that will make everything to behave like if it's registered in
-the `Parts` of a consumer.
+it in a such way that will make everything behave like if it's registered in the
+`Parts` of a consumer.
 
 This is useful when you're working with a [`mixed`](#mixed) component and want
 to accept a view block from a consumer and pass it further to one of your
@@ -776,11 +777,11 @@ type alias Msg container outMsg =
 Notice how `Container state msg parts` is used twice in the type of the first
 argument. It need to be like that to satifsy the type checker. If you're curious
 why: the second time it's used in place of the `parts` type variable of the
-[`Component`](#Component) type which simply means that the consumer (your
-program) is not going to have any other `Parts` (it can run as much components
-as it need, but they all will be completely independent from each other). In
-other words, it's the same if your program defined a `Parts` type like this (of
-course you don't need to define it at all):
+`Component` type which simply means that the consumer (your program) is not
+going to have any other `Parts` (it can run as much components as it needs, but
+they all will be completely independent from each other). In other words, it's
+the same if your program defined a `Parts` type like this (of course you don't
+need to define it at all):
 
     type alias Parts =
         MyComponent.Container

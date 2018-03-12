@@ -25,7 +25,8 @@ module Components.Svg.Events
         , onZoom
         )
 
-{-|
+{-| The only difference from the `elm-lang/html` package is that the functions
+accept [`Signal`s](Components#Signal) instead of raw messages.
 
 
 # Animation event attributes

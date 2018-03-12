@@ -80,7 +80,16 @@ module Components.Svg
         , view
         )
 
-{-|
+{-| Build SVG views, just like with the `elm-lang/svg` package.
+
+Differences from `elm-lang/svg`:
+
+  - New functions: [`none`](#none) and [`plain`](#plain).
+  - No [`map`](http://package.elm-lang.org/packages/elm-lang/svg/latest/Svg#map).
+  - It supports [adding dynamic styles](Components-Svg-Attributes#styles)
+    via the
+    [`elm-css`](http://package.elm-lang.org/packages/rtfeldman/elm-css/latest)
+    package.
 
 
 # SVG Nodes
@@ -197,8 +206,7 @@ none =
     text ""
 
 
-{-| Embed a node that was created with another package like
-[`elm-lang/svg`](http://package.elm-lang.org/packages/elm-lang/svg/latest).
+{-| Embed a node that was created with another package like `elm-lang/svg`.
 -}
 plain : VirtualDom.Node msg -> Svg msg parts
 plain =

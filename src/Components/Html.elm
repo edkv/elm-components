@@ -106,7 +106,18 @@ module Components.Html
         , wbr
         )
 
-{-|
+{-| Build HTML views, just like with the `elm-lang/html` package.
+
+Differences from `elm-lang/html`:
+
+  - New functions: [`none`](#none) and [`plain`](#plain).
+  - Functions for tags that can't contain children like [`input`](#input) or
+    [`br`](#br) don't require a second argument.
+  - No [`map`](http://package.elm-lang.org/packages/elm-lang/html/latest/Html#map).
+  - It supports [adding dynamic styles](Components-Html-Attributes#styles)
+    via the
+    [`elm-css`](http://package.elm-lang.org/packages/rtfeldman/elm-css/latest)
+    package.
 
 
 # Primitives
@@ -254,8 +265,7 @@ none =
     text ""
 
 
-{-| Embed a node that was created with another package like
-[`elm-lang/html`](http://package.elm-lang.org/packages/elm-lang/html/latest).
+{-| Embed a node that was created with another package like `elm-lang/html`.
 -}
 plain : VirtualDom.Node msg -> Html msg parts
 plain =

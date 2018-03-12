@@ -22,7 +22,8 @@ module Components.Html.Events
         , targetValue
         )
 
-{-|
+{-| The only difference from the `elm-lang/html` package is that the functions
+accept [`Signal`s](Components#Signal) instead of raw messages.
 
 
 # Mouse Helpers

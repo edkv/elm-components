@@ -260,7 +260,16 @@ module Components.Svg.Attributes
         , zoomAndPan
         )
 
-{-|
+{-| Differences from the `elm-lang/svg` package:
+
+  - New functions: [`none`](#none), [`plain`](#plain) and [`styles`](#styles).
+    The last one allows you to specify dynamic styles via the
+    [`elm-css`](http://package.elm-lang.org/packages/rtfeldman/elm-css/latest)
+    package.
+  - The
+    [`style`](http://package.elm-lang.org/packages/elm-lang/svg/latest/Svg-Attributes#style)
+    function is renamed to [`inlineStyles`](#inlineStyles).
+  - No [`map`](http://package.elm-lang.org/packages/elm-lang/svg/latest/Svg-Attributes#map).
 
 
 # Primitives

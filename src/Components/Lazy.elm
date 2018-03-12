@@ -4,8 +4,8 @@ module Components.Lazy exposing (Container, lazy, lazy2, lazy3, lazy4, lazy5)
 checking whether the values they depend on have changed since the last update.
 
 Internally it is implemented as a special kind of
-[`Component`](http://package.elm-lang.org/packages/edkv/elm-components/latest/Components#Component)
-so you need to use it like any other component:
+[`Component`](Components#Component) so you need to use it like any other
+component:
 
     import Components exposing (Component, send, slot, x1)
     import Components.Html exposing (Html, button, div, text)
@@ -50,7 +50,7 @@ so you need to use it like any other component:
 There are some issues/limitations of laziness that you should be aware of:
 
   - Things that you pass to `lazy` are compared
-    [_by value_](http://package.elm-lang.org/packages/elm-lang/core/latest/Basics#==)
+    [_by value_](http://package.elm-lang.org/packages/elm-lang/core/latest/Basics#==).
     This means that you should be careful when you use laziness with large data
     structures. Also, this means that you can't use it with values that contain
     functions. This includes `Signal`s and `Node`s.
@@ -105,10 +105,17 @@ detect the change. Use different slots instead:
     able to compare those functions by references so it disables laziness in
     such cases and saves you from silly mistakes. `elm-components` can't do
     this.
-  - `elm-components` uses
-    [`Html.Styled`](http://package.elm-lang.org/packages/rtfeldman/elm-css/latest/Html-Styled)
-    so under the hood, using `lazy` on a node will prepend a `style` element to
-    its children if you style it with `elm-css` which can break your markup.
+  - Currently lazy blocks are cached on the level of the component inside which
+    they are rendered (not where they are registered in the `Parts` type). This
+    means that if you change the place where they are rendered during the update
+    (for example, if you pass it to some `Layout` [`mixed`](Components#mixed)
+    component and then move it to `AnotherLayout`), it will be invalidated and
+    recalculated.
+  - Using `lazy` on a node will prepend a `style` element to its children if you
+    [style](Components-Html-Attributes#styles)
+    it with
+    [`elm-css`](http://package.elm-lang.org/packages/rtfeldman/elm-css/latest)
+    This can break your markup.
 
 @docs Container, lazy, lazy2, lazy3, lazy4, lazy5
 

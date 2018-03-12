@@ -103,7 +103,16 @@ module Components.Html.Attributes
         , wrap
         )
 
-{-|
+{-| Differences from the `elm-lang/html` package:
+
+  - New functions: [`none`](#none), [`plain`](#plain) and [`styles`](#styles).
+    The last one allows you to specify dynamic styles via the
+    [`elm-css`](http://package.elm-lang.org/packages/rtfeldman/elm-css/latest)
+    package.
+  - The
+    [`style`](http://package.elm-lang.org/packages/elm-lang/html/latest/Html-Attributes#style)
+    function is renamed to [`inlineStyles`](#inlineStyles).
+  - No [`map`](http://package.elm-lang.org/packages/elm-lang/html/latest/Html-Attributes#map).
 
 
 # Primitives
