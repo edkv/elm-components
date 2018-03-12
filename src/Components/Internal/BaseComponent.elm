@@ -1,7 +1,6 @@
 module Components.Internal.BaseComponent
     exposing
-        ( Self
-        , Spec
+        ( Spec
         , convertAttribute
         , convertNode
         , convertSignal
