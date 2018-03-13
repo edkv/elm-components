@@ -55,6 +55,7 @@ module Components.Html.Attributes
         , list
         , loop
         , manifest
+        , map
         , max
         , maxlength
         , media
@@ -112,12 +113,11 @@ module Components.Html.Attributes
   - The
     [`style`](http://package.elm-lang.org/packages/elm-lang/html/latest/Html-Attributes#style)
     function is renamed to [`inlineStyles`](#inlineStyles).
-  - No [`map`](http://package.elm-lang.org/packages/elm-lang/html/latest/Html-Attributes#map).
 
 
 # Primitives
 
-@docs property, attribute, none, plain
+@docs property, attribute, none, plain, map
 
 
 # CSS
@@ -208,8 +208,10 @@ Attributes that can be attached to any HTML tag but are less commonly used.
 
 -}
 
+import Components exposing (Signal)
 import Components.Html exposing (Attribute)
 import Components.Internal.Core as Core
+import Components.Internal.Shared as Shared
 import Css
 import Json.Encode as Json
 import VirtualDom
@@ -286,6 +288,13 @@ plain : VirtualDom.Property msg -> Attribute msg parts
 plain =
     VirtualDom.mapProperty Core.LocalMsg
         >> Core.PlainAttribute
+
+
+{-| Transform the [`Signal`s](Components#Signal) produced by an `Attribute`.
+-}
+map : (Signal a b -> Signal c d) -> Attribute a b -> Attribute c d
+map =
+    Shared.mapAttribute
 
 
 {-| Apply styles to an element.

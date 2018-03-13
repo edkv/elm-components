@@ -224,7 +224,7 @@ type alias Html msg parts =
 
 {-| -}
 type alias Attribute msg parts =
-    Components.Attribute msg parts
+    Core.Attribute msg parts
 
 
 {-| General way to create HTML nodes. It is used to define all of the helper

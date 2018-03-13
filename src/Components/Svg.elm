@@ -167,7 +167,7 @@ type alias Svg msg parts =
 
 {-| -}
 type alias Attribute msg parts =
-    Components.Attribute msg parts
+    Core.Attribute msg parts
 
 
 {-| Create any SVG node. To create a `<rect>` helper function, you would write:

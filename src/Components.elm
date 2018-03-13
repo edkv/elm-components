@@ -1,7 +1,6 @@
 module Components
     exposing
-        ( Attribute
-        , Component
+        ( Component
         , ComponentInternalStuff
         , Container
         , Msg
@@ -11,7 +10,6 @@ module Components
         , Signal
         , Slot
         , State
-        , convertAttribute
         , convertNode
         , convertSignal
         , convertSlot
@@ -128,12 +126,12 @@ this package.
 
 # Core Types
 
-@docs Node, Component, Container, Signal, Slot, Attribute
+@docs Node, Component, Container, Signal, Slot
 
 
 # Working With Components
 
-@docs regular, regularWithOptions, mixed, mixedWithOptions, Self, ComponentInternalStuff, Options, defaultOptions, send, slot, dictSlot, sendToPart ,convertNode, convertSignal, convertAttribute, convertSlot
+@docs regular, regularWithOptions, mixed, mixedWithOptions, Self, ComponentInternalStuff, Options, defaultOptions, send, slot, dictSlot, sendToPart ,convertNode, convertSignal, convertSlot
 
 
 # Running Components
@@ -347,13 +345,6 @@ type alias Slot container parts =
     Core.Slot container parts
 
 
-{-| Represents a DOM attribute/property. May emit `Signal msg parts` if it is
-an [event handler](Components-Html-Events).
--}
-type alias Attribute msg parts =
-    Core.Attribute msg parts
-
-
 
 -- WORKING WITH COMPONENTS
 
@@ -473,10 +464,9 @@ regularWithOptions spec =
 `Node consumerMsg consumerParts`. This gives you an ability to accept view
 blocks from a consumer and embed it inside the `view` function.
 
-See also [`convertNode`](#convertNode), [`convertSignal`](#convertSignal),
-[`convertAttribute`](#convertAttribute) and [`convertSlot`](#convertSlot)
-functions that are designed to help you compose differently typed views
-together.
+See also [`convertNode`](#convertNode), [`convertSignal`](#convertSignal) and
+[`convertSlot`](#convertSlot) functions that are designed to help you compose
+differently typed views together.
 
 -}
 mixed :
@@ -709,17 +699,6 @@ convertSignal :
     -> Signal consumerMsg consumerParts
 convertSignal =
     BaseComponent.convertSignal
-
-
-{-| Works the same way as [`convertSignal`](#convertSignal) but for an
-`Attribute`.
--}
-convertAttribute :
-    Self state msg parts consumerParts
-    -> Attribute msg parts
-    -> Attribute consumerMsg consumerParts
-convertAttribute =
-    BaseComponent.convertAttribute
 
 
 {-| Given a `Slot` for a component that is registered in your `Parts`, convert

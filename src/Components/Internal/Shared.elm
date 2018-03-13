@@ -1,6 +1,7 @@
 module Components.Internal.Shared
     exposing
         ( identify
+        , mapAttribute
         , svgNamespace
         , toConsumerSignal
         )
@@ -29,6 +30,19 @@ identify ( get, _ ) args =
 
         _ ->
             Nothing
+
+
+mapAttribute : (Signal a b -> Signal c d) -> Attribute a b -> Attribute c d
+mapAttribute transform attribute =
+    case attribute of
+        PlainAttribute plainAttribute ->
+            PlainAttribute (VirtualDom.mapProperty transform plainAttribute)
+
+        Styles strategy styles ->
+            Styles strategy styles
+
+        NullAttribute ->
+            NullAttribute
 
 
 svgNamespace : Attribute m p

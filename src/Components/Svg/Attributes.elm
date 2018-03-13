@@ -113,6 +113,7 @@ module Components.Svg.Attributes
         , lightingColor
         , limitingConeAngle
         , local
+        , map
         , markerEnd
         , markerHeight
         , markerMid
@@ -269,12 +270,11 @@ module Components.Svg.Attributes
   - The
     [`style`](http://package.elm-lang.org/packages/elm-lang/svg/latest/Svg-Attributes#style)
     function is renamed to [`inlineStyles`](#inlineStyles).
-  - No [`map`](http://package.elm-lang.org/packages/elm-lang/svg/latest/Svg-Attributes#map).
 
 
 # Primitives
 
-@docs attribute, attributeNS, none, plain
+@docs attribute, attributeNS, none, plain, map
 
 
 # CSS
@@ -293,7 +293,9 @@ module Components.Svg.Attributes
 
 -}
 
+import Components exposing (Signal)
 import Components.Internal.Core as Core
+import Components.Internal.Shared as Shared
 import Components.Svg exposing (Attribute)
 import Css
 import VirtualDom
@@ -344,6 +346,13 @@ plain : VirtualDom.Property msg -> Attribute msg parts
 plain =
     VirtualDom.mapProperty Core.LocalMsg
         >> Core.PlainAttribute
+
+
+{-| Transform the [`Signal`s](Components#Signal) produced by an `Attribute`.
+-}
+map : (Signal a b -> Signal c d) -> Attribute a b -> Attribute c d
+map =
+    Shared.mapAttribute
 
 
 
