@@ -2391,15 +2391,14 @@ will be collected (this is a matter of folding over cached components and doing
 will be rendered (possibly not immediately due to `requestAnimationFrame` from
 what your animations will benefit). At this point views of all your components
 will be already built and cached, so there is no need to execute them again.
-Here things like calculating hashes of your styles, converting your entire
-component tree into `VirtualDom.Node` and diffing will happen. It's important to
-know that this process will be done for the entire tree except for places where
-you explicitly use laziness. It's theoretically possible to apply
-`VirtualDom.lazy` automatically for parts of the tree above the updated
-component like it's done for `Html` rebuilds, but `elm-components` doesn't do
-this, mainly because this may introduce `style` nodes in random places and break
-your markup (since it actually uses `Html.Styled.lazy` instead of
-`VirtualDom.lazy` directly).
+Here things like calculating hashes of your styles, converting your component
+tree into `VirtualDom.Node` and diffing will happen. It's important to know that
+this process will be done for the entire tree except for places where you
+explicitly use laziness. It's theoretically possible to apply `VirtualDom.lazy`
+automatically for parts of the tree above the updated component like it's done
+for `Html` rebuilds, but `elm-components` doesn't do this, mainly because this
+may introduce `style` nodes in random places and break your markup (since it
+actually uses `Html.Styled.lazy` instead of `VirtualDom.lazy` directly).
 
 As you can see, by using laziness and relying on the ability of `elm-components`
 to skip parts of the tree, you should be able to minimize what is re-rendered
@@ -2412,8 +2411,8 @@ is recalculated. This gives you a way for optimizing animations — extract them
 into separate components so that only a very small portion of view is
 recalculated every time the animation is updated. This should work great for
 isolated animations like effects inside buttons or a loading spinner, but of
-course you won't be able to use this technique for any kind of animation, for
-example, a page transition effect. You might still be able to use pure CSS for
+course you won't be able to use this technique for any kind of animation
+(imagine a page transition effect). You might still be able to use pure CSS for
 such animations though! It all depends on your requirements.
 
 
