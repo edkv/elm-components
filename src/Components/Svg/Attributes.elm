@@ -37,6 +37,7 @@ module Components.Svg.Attributes
         , colorRendering
         , contentScriptType
         , contentStyleType
+        , css
         , cursor
         , cx
         , cy
@@ -94,7 +95,6 @@ module Components.Svg.Attributes
         , imageRendering
         , in2
         , in_
-        , inlineStyles
         , intercept
         , k
         , k1
@@ -199,7 +199,7 @@ module Components.Svg.Attributes
         , strokeMiterlimit
         , strokeOpacity
         , strokeWidth
-        , styles
+        , style
         , surfaceScale
         , systemLanguage
         , tableValues
@@ -261,15 +261,8 @@ module Components.Svg.Attributes
         , zoomAndPan
         )
 
-{-| Differences from the `elm-lang/svg` package:
-
-  - New functions: [`none`](#none), [`plain`](#plain) and [`styles`](#styles).
-    The last one allows you to specify dynamic styles via the
-    [`elm-css`](http://package.elm-lang.org/packages/rtfeldman/elm-css/latest)
-    package.
-  - The
-    [`style`](http://package.elm-lang.org/packages/elm-lang/svg/latest/Svg-Attributes#style)
-    function is renamed to [`inlineStyles`](#inlineStyles).
+{-| Differences from the `elm-lang/svg` package: new [`none`](#none),
+[`plain`](#plain) and [`css`](#css) functions.
 
 
 # Primitives
@@ -279,7 +272,7 @@ module Components.Svg.Attributes
 
 # CSS
 
-@docs styles, inlineStyles
+@docs css, style
 
 
 # Regular attributes
@@ -366,16 +359,16 @@ Styles are created with the help of
 package, so you need to install it.
 
 -}
-styles : List Css.Style -> Attribute msg parts
-styles =
+css : List Css.Style -> Attribute msg parts
+css =
     Core.Styles Core.ClassAttribute
 
 
 {-| Specify a list of inline styles. This will generate a `style` attribute in
 the DOM.
 -}
-inlineStyles : List ( String, String ) -> Attribute msg parts
-inlineStyles =
+style : List ( String, String ) -> Attribute msg parts
+style =
     VirtualDom.style >> Core.PlainAttribute
 
 

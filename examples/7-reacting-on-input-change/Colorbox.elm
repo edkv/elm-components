@@ -2,7 +2,7 @@ module Colorbox exposing (Container, colorbox)
 
 import Components exposing (Component)
 import Components.Html exposing (Html, div, text)
-import Components.Html.Attributes exposing (styles)
+import Components.Html.Attributes exposing (css)
 import Css
 
 
@@ -88,7 +88,7 @@ view state =
             state.currentTheme
     in
     div
-        [ styles
+        [ css
             [ Css.display Css.inlineBlock
             , Css.backgroundColor backgroundColor
             , Css.color textColor

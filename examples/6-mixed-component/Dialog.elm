@@ -2,7 +2,7 @@ module Dialog exposing (Config, Container, dialog)
 
 import Components exposing (Component, Signal, convertNode, convertSignal, send)
 import Components.Html exposing (Html, button, div, text)
-import Components.Html.Attributes exposing (styles)
+import Components.Html.Attributes exposing (css)
 import Components.Html.Events exposing (onClick, onMouseOut, onMouseOver)
 import Css
 
@@ -69,7 +69,7 @@ update msg state =
 
 view : Config m p -> List (Html m p) -> Self p -> State -> Html m p
 view config contents self state =
-    div [ styles rootStyles ]
+    div [ css rootStyles ]
         [ background config state
         , box config contents self state
         ]
@@ -78,7 +78,7 @@ view config contents self state =
 background : Config m p -> State -> Html m p
 background config state =
     div
-        [ styles (backgroundStyles state)
+        [ css (backgroundStyles state)
         , onClick config.onClose
         ]
         []
@@ -87,7 +87,7 @@ background config state =
 box : Config m p -> List (Html m p) -> Self p -> State -> Html m p
 box config contents self state =
     div
-        [ styles boxStyles
+        [ css boxStyles
         , onMouseOver (send DarkenBackground |> convertSignal self)
         , onMouseOut (send LightenBackground |> convertSignal self)
         ]
@@ -107,7 +107,7 @@ maybeContents contents state =
 
 buttons : Config m p -> Self p -> Html m p
 buttons config self =
-    div [ styles buttonsWrapperStyles ]
+    div [ css buttonsWrapperStyles ]
         [ toggleButton self
         , closeButton config
         ]

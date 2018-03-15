@@ -24,6 +24,7 @@ module Components.Html.Attributes
         , contextmenu
         , controls
         , coords
+        , css
         , datetime
         , default
         , defaultValue
@@ -45,7 +46,6 @@ module Components.Html.Attributes
         , hreflang
         , httpEquiv
         , id
-        , inlineStyles
         , ismap
         , itemprop
         , keytype
@@ -93,7 +93,7 @@ module Components.Html.Attributes
         , srclang
         , start
         , step
-        , styles
+        , style
         , tabindex
         , target
         , title
@@ -104,15 +104,8 @@ module Components.Html.Attributes
         , wrap
         )
 
-{-| Differences from the `elm-lang/html` package:
-
-  - New functions: [`none`](#none), [`plain`](#plain) and [`styles`](#styles).
-    The last one allows you to specify dynamic styles via the
-    [`elm-css`](http://package.elm-lang.org/packages/rtfeldman/elm-css/latest)
-    package.
-  - The
-    [`style`](http://package.elm-lang.org/packages/elm-lang/html/latest/Html-Attributes#style)
-    function is renamed to [`inlineStyles`](#inlineStyles).
+{-| Differences from the `elm-lang/html` package : new [`none`](#none),
+[`plain`](#plain) and [`css`](#css) functions.
 
 
 # Primitives
@@ -122,7 +115,7 @@ module Components.Html.Attributes
 
 # CSS
 
-@docs styles, inlineStyles
+@docs css, style
 
 
 # Super Common Attributes
@@ -304,8 +297,8 @@ Styles are created with the help of
 package, so you need to install it.
 
 -}
-styles : List Css.Style -> Attribute msg parts
-styles =
+css : List Css.Style -> Attribute msg parts
+css =
     Core.Styles Core.ClassNameProperty
 
 
@@ -314,7 +307,7 @@ the DOM.
 
     myStyle : Attribute msg parts
     myStyle =
-        inlineStyles
+        style
             [ ( "backgroundColor", "red" )
             , ( "height", "90px" )
             , ( "width", "100%" )
@@ -325,8 +318,8 @@ the DOM.
         div [ myStyle ] [ text "Hello!" ]
 
 -}
-inlineStyles : List ( String, String ) -> Attribute msg parts
-inlineStyles =
+style : List ( String, String ) -> Attribute msg parts
+style =
     VirtualDom.style >> Core.PlainAttribute
 
 

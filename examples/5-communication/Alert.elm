@@ -3,7 +3,7 @@ module Alert exposing (Config, Container, alert)
 import Animation
 import Components exposing (Component, Signal, send)
 import Components.Html exposing (Html, button, div, text)
-import Components.Html.Attributes as Attributes exposing (styles)
+import Components.Html.Attributes as Attributes exposing (css)
 import Components.Html.Events exposing (onClick)
 import Css
 
@@ -80,13 +80,13 @@ subscriptions state =
 
 view : Config m p -> State -> Html Msg Parts
 view config state =
-    div [ styles rootStyles ]
+    div [ css rootStyles ]
         [ background state
-        , div [ styles boxStyles ]
+        , div [ css boxStyles ]
             [ div []
                 [ text config.text
                 ]
-            , button [ styles closeButtonStyles, onClick (send Closed) ]
+            , button [ css closeButtonStyles, onClick (send Closed) ]
                 [ text "Close"
                 ]
             ]
@@ -97,7 +97,7 @@ background : State -> Html Msg Parts
 background state =
     let
         attributes =
-            [ styles backgroundStyles
+            [ css backgroundStyles
             , onClick (send Closed)
             ]
 

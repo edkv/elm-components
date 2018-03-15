@@ -114,7 +114,7 @@ Differences from `elm-lang/html`:
   - Functions for tags that can't contain children like [`input`](#input) or
     [`br`](#br) don't require a second argument.
   - No [`map`](http://package.elm-lang.org/packages/elm-lang/html/latest/Html#map).
-  - It supports [adding dynamic styles](Components-Html-Attributes#styles)
+  - It supports [adding dynamic styles](Components-Html-Attributes#css)
     via the
     [`elm-css`](http://package.elm-lang.org/packages/rtfeldman/elm-css/latest)
     package.

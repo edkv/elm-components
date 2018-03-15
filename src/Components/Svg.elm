@@ -86,7 +86,7 @@ Differences from `elm-lang/svg`:
 
   - New functions: [`none`](#none) and [`plain`](#plain).
   - No [`map`](http://package.elm-lang.org/packages/elm-lang/svg/latest/Svg#map).
-  - It supports [adding dynamic styles](Components-Svg-Attributes#styles)
+  - It supports [adding dynamic styles](Components-Svg-Attributes#css)
     via the
     [`elm-css`](http://package.elm-lang.org/packages/rtfeldman/elm-css/latest)
     package.

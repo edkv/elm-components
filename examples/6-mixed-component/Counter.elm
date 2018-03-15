@@ -2,7 +2,7 @@ module Counter exposing (Config, Container, Msg, counter, reset)
 
 import Components exposing (Component, send)
 import Components.Html exposing (Html, button, div, text)
-import Components.Html.Attributes exposing (styles)
+import Components.Html.Attributes exposing (css)
 import Components.Html.Events exposing (onClick)
 import Css exposing (padding, px)
 
@@ -69,7 +69,7 @@ update config msg state =
 
 view : State -> Html Msg Parts
 view state =
-    div [ styles [ padding (px 10) ] ]
+    div [ css [ padding (px 10) ] ]
         [ button [ onClick (send Decrement) ] [ text "-" ]
         , div [] [ text (toString state.value) ]
         , button [ onClick (send Increment) ] [ text "+" ]
